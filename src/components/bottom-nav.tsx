@@ -113,14 +113,10 @@ export function BottomNav() {
               }}
               href={item.href}
               // Signal visuel immédiat au tap (voir IndicateurNavigation dans
-              // layout.tsx) : ces 3 routes n'ont pas de prefetch (juste
-              // en-dessous), rien d'autre n'indique que le tap a été pris en
+              // layout.tsx) : le squelette est préchargé mais les données
+              // arrivent du serveur, rien d'autre n'indique que le tap a été pris en
               // compte tant que le serveur n'a pas répondu.
               onClick={() => demarrerNavigation(item.href)}
-              // prefetch={false} conservé uniquement sur /, /liaison et /agenda :
-              // ces pages sont en Cache-Control no-store (voir next.config.ts),
-              // le prefetch resservirait un contenu obsolète (ex. non lus).
-              prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
               // Sens du slide de page-view-transition.tsx, déduit de l'ordre
               // des onglets (voir deriveDirectionNav) : absent si l'onglet
               // ciblé est déjà actif, retombe alors sur le fondu par défaut.

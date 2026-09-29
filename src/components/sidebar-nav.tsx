@@ -56,10 +56,9 @@ export function SidebarNav({
             <Link
               key={item.href}
               href={item.href}
-              // prefetch={false} conservé uniquement sur /, /liaison et /agenda :
-              // ces pages sont en Cache-Control no-store (voir next.config.ts),
-              // le prefetch resservirait un contenu obsolète (ex. non lus).
-              prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
+              // Prefetch par défaut, y compris sur /, /liaison et /agenda : ces pages sont
+              // dynamiques avec un loading.tsx, donc Next ne préchauffe que le squelette
+              // (staleTimes.dynamic à 0) et les données restent chargées à chaque tap.
               className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
               }`}

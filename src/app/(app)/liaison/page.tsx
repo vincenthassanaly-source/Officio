@@ -7,6 +7,7 @@ import { getEquipe } from '@/lib/data/equipe'
 import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { CahierDeLiaison } from '@/components/cahier-de-liaison'
 import { PullToRefresh } from '@/components/PullToRefresh'
+import { SqueletteCartes, SqueletteChamp, SqueletteOnglets, SquelettePage } from '@/components/page-loading'
 
 // Même régime que l'accueil et l'agenda : rendu à chaque requête, jamais
 // d'instantané statique (la route est aussi en Cache-Control no-store, voir
@@ -39,7 +40,15 @@ export default async function LiaisonPage({
           cliquer une notification depuis /liaison bascule bien d'onglet et
           rejoue le scroll + la mise en évidence sans logique de
           resynchronisation manuelle. */}
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <SquelettePage>
+            <SqueletteOnglets />
+            <SqueletteChamp />
+            <SqueletteCartes nombre={4} hauteur="h-32" />
+          </SquelettePage>
+        }
+      >
         <CahierDeLiaison
           key={`${params.onglet ?? ''}-${params.message ?? ''}-${params.tache ?? ''}`}
           messages={messages}
