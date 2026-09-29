@@ -25,10 +25,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // (le layout de (app) n'est pas couvert par (app)/error.tsx, seuls ses
   // enfants le sont), qui affiche déjà un écran "Réessayer" dans le style
   // de l'app — sans jamais atteindre le redirect ci-dessous.
-  const adhesions = await getMesAdhesions()
+  //
+  // Adhésions et profil sont indépendants : lancés ensemble (une vague
+  // réseau au lieu de deux en cascade). getOfficineActive() réutilise le
+  // résultat de getMesAdhesions() via React.cache, sans requête de plus.
+  const [adhesions, profilActuel] = await Promise.all([getMesAdhesions(), getCurrentProfil()])
   if (adhesions.length === 0) redirect('/bienvenue')
 
-  const [officineActive, profilActuel] = await Promise.all([getOfficineActive(), getCurrentProfil()])
+  const officineActive = await getOfficineActive()
 
   const [notifications, nombreNonLues, couleursMembres] = await Promise.all([
     getNotifications(officineActive!.officine_id, profilActuel?.id ?? ''),
