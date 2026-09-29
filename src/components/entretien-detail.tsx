@@ -120,6 +120,7 @@ export function EntretienDetail({
         {onglet === 'methodologie' && (
           <EntretienMethodologie
             typeEntretienId={type.id}
+            nomType={type.nom}
             items={items.methodologie}
             modeEdition={modeEdition}
             etatEntretien={etatEntretien}
