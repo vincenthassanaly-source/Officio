@@ -8,8 +8,8 @@ import {
 
 // Squelette dédié à l'accueil plutôt que le PageLoading générique : c'est la
 // route la plus vue de l'app, et la seule dont le squelette s'affiche à
-// chaque visite (force-dynamic + fetchCache no-store + prefetch={false} sur
-// les liens de navigation, voir page.tsx et bottom-nav.tsx). Reprend sa forme
+// chaque visite (force-dynamic + fetchCache no-store, voir page.tsx : les données
+// sont rechargées à chaque visite, seul ce squelette est préchargé). Reprend sa forme
 // réelle — salutation, recherche globale, encarts tâches/messages, grille de
 // tuiles de modules — pour éviter le saut visuel au remplacement.
 export default function Loading() {

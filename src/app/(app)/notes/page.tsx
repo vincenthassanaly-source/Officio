@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { SqueletteCartes, SquelettePage } from '@/components/page-loading'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getNotes } from '@/lib/data/notes'
@@ -29,7 +30,13 @@ export default async function NotesPage({
           seulement au premier chargement — pour que cliquer une notification
           depuis /notes rejoue bien le scroll + la mise en évidence. Même
           pattern que liaison/page.tsx. */}
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <SquelettePage>
+            <SqueletteCartes nombre={4} hauteur="h-28" />
+          </SquelettePage>
+        }
+      >
         <Notes key={params.note ?? ''} notes={notes} profilActuelId={profil.id} couleurs={couleurs} />
       </Suspense>
     </>
