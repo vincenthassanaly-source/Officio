@@ -3,7 +3,8 @@
 import { useId, useMemo, useState } from 'react'
 import type { ItemEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
-import { BadgeTypeItem, EnteteAlerte, classesLigneItem, libelleActionItem } from '@/components/entretien-type-item'
+import { LigneItem } from '@/components/entretien-ligne-item'
+import { EntretienPasAPas } from '@/components/entretien-pas-a-pas'
 import { CLASSE_FOCUS, Icone } from '@/components/entretien-ui'
 import {
   compterCoches,
@@ -29,11 +30,22 @@ export type EtatModeEntretien = {
   onChangerPhasesOuvertes: (phasesOuvertes: ReadonlySet<string> | null) => void
 }
 
-export function ScriptModeEntretien({ items, etat }: { items: ItemEntretien[]; etat: EtatModeEntretien }) {
+export function ScriptModeEntretien({
+  items,
+  etat,
+  typeEntretienId,
+  nomType,
+}: {
+  items: ItemEntretien[]
+  etat: EtatModeEntretien
+  typeEntretienId: string
+  nomType: string
+}) {
   const { coches, phasesOuvertes, onChangerCoches, onChangerPhasesOuvertes } = etat
   const idBase = useId()
   const [confirmerReinit, setConfirmerReinit] = useState(false)
   const [annonce, setAnnonce] = useState('')
+  const [pasAPasOuvert, setPasAPasOuvert] = useState(false)
 
   const { groupes, aPhases } = useMemo(() => regrouperScript(items), [items])
   const nbCoches = useMemo(() => compterCoches(items, coches), [items, coches])
@@ -110,6 +122,15 @@ export function ScriptModeEntretien({ items, etat }: { items: ItemEntretien[]; e
 
   return (
     <div className="flex flex-col gap-3 pb-2">
+      <button
+        type="button"
+        onClick={() => setPasAPasOuvert(true)}
+        className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-[15px] font-bold text-white ${CLASSE_FOCUS}`}
+      >
+        <Icone nom="chevron-droite" taille={18} />
+        {nbCoches > 0 && !termine ? 'Reprendre l’entretien' : 'Démarrer l’entretien'}
+      </button>
+
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[15px] font-bold text-ink">Script de l’entretien</h2>
         {nbCoches > 0 && (
@@ -178,6 +199,17 @@ export function ScriptModeEntretien({ items, etat }: { items: ItemEntretien[]; e
           <Icone nom="coche" taille={18} className="text-green" />
           Script terminé : tous les éléments sont cochés.
         </p>
+      )}
+
+      {pasAPasOuvert && (
+        <EntretienPasAPas
+          groupes={groupes}
+          coches={coches}
+          onChangerCoches={onChangerCoches}
+          typeEntretienId={typeEntretienId}
+          nomType={nomType}
+          onQuitter={() => setPasAPasOuvert(false)}
+        />
       )}
 
       <ModaleConfirmation
@@ -267,53 +299,5 @@ function ListeItems({
         </li>
       ))}
     </ul>
-  )
-}
-
-// Toute la ligne est la zone de tap (≥ 48 px) : le <label> enveloppe la case
-// et le texte. Le nom accessible de la case = libellé d'action adapté au type
-// (« Question posée »…) + texte de l'item ; le badge de type est la
-// description. Question et explication : badge compact devant le texte ;
-// alerte : en-tête à part, plus marqué.
-function LigneItem({ item, coche, onBasculer }: { item: ItemEntretien; coche: boolean; onBasculer: () => void }) {
-  const id = useId()
-  const type = item.type_item
-
-  return (
-    <label
-      className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl p-2.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${classesLigneItem(type, coche)}`}
-    >
-      <input
-        type="checkbox"
-        checked={coche}
-        onChange={onBasculer}
-        aria-labelledby={`${id}-action ${id}-texte`}
-        aria-describedby={type ? `${id}-type` : undefined}
-        className="mt-0.5 size-6 shrink-0 cursor-pointer accent-primary"
-      />
-      <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-        {type === 'alerte' && (
-          <span id={`${id}-type`} className="block">
-            <EnteteAlerte />
-          </span>
-        )}
-        <span id={`${id}-action`} className="sr-only">
-          {libelleActionItem(type)} :
-        </span>
-        <span className="block">
-          {(type === 'question' || type === 'explication') && (
-            <span id={`${id}-type`}>
-              <BadgeTypeItem type={type} variante="inline" />
-            </span>
-          )}
-          <span
-            id={`${id}-texte`}
-            className={`whitespace-pre-wrap break-words text-[15px] leading-normal ${coche ? 'text-muted' : 'text-ink'}`}
-          >
-            {item.contenu}
-          </span>
-        </span>
-      </span>
-    </label>
   )
 }

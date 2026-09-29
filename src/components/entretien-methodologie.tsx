@@ -26,10 +26,12 @@ import { useEcranAllume } from '@/lib/use-ecran-allume'
 export function EntretienMethodologie({
   typeEntretienId,
   items,
+  nomType,
   modeEdition,
   etatEntretien,
 }: {
   typeEntretienId: string
+  nomType: string
   items: ItemEntretien[]
   modeEdition: boolean
   etatEntretien: EtatModeEntretien
@@ -238,7 +240,7 @@ export function EntretienMethodologie({
           <StepperEtapes general={general} groupes={groupes} rendreItem={ligneItem} />
         </>
       ) : (
-        <ScriptModeEntretien items={tries} etat={etatEntretien} />
+        <ScriptModeEntretien items={tries} etat={etatEntretien} typeEntretienId={typeEntretienId} nomType={nomType} />
       )}
 
       {modeEdition && (
