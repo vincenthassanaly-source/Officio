@@ -90,21 +90,13 @@ function IconCorbeille({ className }: { className?: string }) {
 
 // ─── Utilitaires d'affichage ──────────────────────────────────────────────
 
-type Groupe = { cle: string; medicament: string; promesses: PromessePatient[] }
-
-// Regroupe par médicament normalisé ("Doliprane 1000" et "doliprane 1000"
-// ne font qu'un groupe, libellé = première saisie), groupes triés par
-// ordre alphabétique pour être retrouvés d'un coup d'œil ; à l'intérieur,
-// l'ordre serveur (plus ancienne d'abord) est conservé.
-function regrouper(promesses: PromessePatient[]): Groupe[] {
-  const groupes = new Map<string, Groupe>()
-  for (const p of promesses) {
-    const cle = normaliserRecherche(p.nom_medicament)
-    const groupe = groupes.get(cle)
-    if (groupe) groupe.promesses.push(p)
-    else groupes.set(cle, { cle, medicament: p.nom_medicament, promesses: [p] })
-  }
-  return [...groupes.values()].sort((a, b) => a.cle.localeCompare(b.cle, 'fr'))
+// Une carte par promesse, triées par médicament (ordre alphabétique, pour
+// être retrouvées d'un coup d'œil). Deux promesses du même médicament se
+// suivent sans être fusionnées ; à médicament égal, l'ordre serveur (plus
+// ancienne d'abord) est conservé, le tri étant stable.
+function trier(promesses: PromessePatient[]): PromessePatient[] {
+  const cles = new Map(promesses.map((p) => [p.id, normaliserRecherche(p.nom_medicament)]))
+  return [...promesses].sort((a, b) => (cles.get(a.id) ?? '').localeCompare(cles.get(b.id) ?? '', 'fr'))
 }
 
 function libellePatients(n: number) {
@@ -144,13 +136,13 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
   })
 
   const rechercheNormalisee = normaliserRecherche(rechercheDifferee)
-  const groupes = useMemo(() => {
+  const promessesVisibles = useMemo(() => {
     const visibles = rechercheNormalisee
       ? promessesOptimistes.filter((p) => correspondRecherche(normaliserRecherche(p.nom_medicament), rechercheNormalisee))
       : promessesOptimistes
-    return regrouper(visibles)
+    return trier(visibles)
   }, [promessesOptimistes, rechercheNormalisee])
-  const nombreVisibles = groupes.reduce((total, g) => total + g.promesses.length, 0)
+  const nombreVisibles = promessesVisibles.length
 
   function ouvrirFormulaire(medicament: string) {
     setFormulaire({ ouvert: true, medicament, focus: true })
@@ -322,7 +314,7 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
             livraison.
           </p>
         </div>
-      ) : groupes.length === 0 ? (
+      ) : promessesVisibles.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-[20px] bg-surface px-5 py-8 text-center shadow-card">
           <div className="flex flex-col gap-1">
             <p className="text-[14px] font-semibold text-ink">
@@ -343,22 +335,21 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
           )}
         </div>
       ) : (
-        // Deux colonnes façon "maçonnerie" sur desktop : des groupes de hauteurs
-        // très différentes (1 patient / 6 patients) laisseraient des trous
-        // dans une grille à lignes alignées.
-        <div className="flex flex-col gap-3 lg:block lg:columns-2 lg:gap-3 lg:[&>*]:mb-3 lg:[&>*]:break-inside-avoid">
-          {groupes.map((g) => (
-            <GroupeMedicament
-              key={g.cle}
-              groupe={g}
-              estEnSortie={estEnSortie}
-              onAjouter={() => ouvrirFormulaire(g.medicament)}
+        // Deux colonnes façon "maçonnerie" sur desktop : des cartes de
+        // hauteurs différentes (nom long, téléphone absent) laisseraient des
+        // trous dans une grille à lignes alignées.
+        <ul className="flex flex-col gap-3 lg:block lg:columns-2 lg:gap-3 lg:[&>*]:mb-3 lg:[&>*]:break-inside-avoid">
+          {promessesVisibles.map((p) => (
+            <CartePromesse
+              key={p.id}
+              promesse={p}
+              enSortie={estEnSortie(p.id)}
               onTraiter={traiter}
               onBasculerFacture={basculerFacture}
               onDemanderSuppression={setASupprimer}
             />
           ))}
-        </div>
+        </ul>
       )}
 
       <ModaleConfirmation
@@ -376,69 +367,9 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
   )
 }
 
-// ─── Groupe d'un médicament ───────────────────────────────────────────────
+// ─── Carte d'une promesse ─────────────────────────────────────────────────
 
-function GroupeMedicament({
-  groupe,
-  estEnSortie,
-  onAjouter,
-  onTraiter,
-  onBasculerFacture,
-  onDemanderSuppression,
-}: {
-  groupe: Groupe
-  estEnSortie: (id: string) => boolean
-  onAjouter: () => void
-  onTraiter: (p: PromessePatient, bouton: HTMLElement | null) => void
-  onBasculerFacture: (p: PromessePatient) => void
-  onDemanderSuppression: (p: PromessePatient) => void
-}) {
-  const idTitre = useId()
-  // Total promis tous patients confondus : ce qu'il faut mettre de côté à
-  // la livraison. Affiché seulement s'il diffère du nombre de patients
-  // (sinon redondant : une unité chacun).
-  const total = groupe.promesses.reduce((somme, p) => somme + p.quantite, 0)
-
-  return (
-    <section aria-labelledby={idTitre} className="item-entree rounded-[20px] bg-surface p-4 shadow-card">
-      <div className="mb-1 flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <h2 id={idTitre} className="wrap-anywhere text-[16px] font-semibold leading-snug text-ink">
-            {groupe.medicament}
-          </h2>
-          <p className="text-[12px] text-muted">
-            {libellePatients(groupe.promesses.length)} en attente
-            {total !== groupe.promesses.length && ` · ${total} au total`}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onAjouter}
-          aria-label={`Ajouter un patient en attente de ${groupe.medicament}`}
-          className={`group -m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary group-hover:bg-primary group-hover:text-white motion-safe:transition-colors">
-            <IconAjouter className="h-4 w-4" />
-          </span>
-        </button>
-      </div>
-      <ul className="divide-y divide-border">
-        {groupe.promesses.map((p) => (
-          <LignePromesse
-            key={p.id}
-            promesse={p}
-            enSortie={estEnSortie(p.id)}
-            onTraiter={onTraiter}
-            onBasculerFacture={onBasculerFacture}
-            onDemanderSuppression={onDemanderSuppression}
-          />
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-function LignePromesse({
+function CartePromesse({
   promesse: p,
   enSortie,
   onTraiter,
@@ -459,24 +390,25 @@ function LignePromesse({
   const temporaire = p.id.startsWith(PREFIXE_TEMPORAIRE)
   const desactive = temporaire
 
+  const idTitre = useId()
+
   return (
     <li
-      className={`flex flex-col gap-0.5 py-3 last:pb-0 ${temporaire ? 'opacity-60' : ''} ${
+      aria-labelledby={idTitre}
+      className={`flex flex-col gap-0.5 rounded-[20px] bg-surface p-4 shadow-card ${temporaire ? 'opacity-60' : ''} ${
         enSortie ? 'item-sortie' : 'item-entree'
       }`}
     >
+      <h2 id={idTitre} className="wrap-anywhere text-[16px] font-semibold leading-snug text-ink">
+        {p.nom_medicament}{' '}
+        <span className="inline-block whitespace-nowrap rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-bold leading-none tabular-nums text-ink">
+          <span aria-hidden="true">× {p.quantite}</span>
+          <span className="sr-only">, quantité {p.quantite}</span>
+        </span>
+      </h2>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          {/* Quantité dans le flux du texte, séparée par une espace (et non
-              une marge) : si elle passe à la ligne sous un nom long, elle se
-              cale à gauche sans décalage, et le nom garde toute la largeur. */}
-          <p className="wrap-anywhere text-[14.5px] font-semibold leading-snug text-ink">
-            {p.nom_patient}{' '}
-            <span className="inline-block whitespace-nowrap rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-bold leading-none tabular-nums text-ink">
-              <span aria-hidden="true">× {p.quantite}</span>
-              <span className="sr-only">, quantité {p.quantite}</span>
-            </span>
-          </p>
+          <p className="wrap-anywhere text-[14.5px] font-semibold leading-snug text-ink">{p.nom_patient}</p>
           {p.telephone_patient ? (
             <a
               href={lienTelephone(p.telephone_patient)}
