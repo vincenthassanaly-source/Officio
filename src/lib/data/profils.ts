@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { avecRetrySession } from '@/lib/supabase/avec-retry-session'
+import { getUtilisateur } from './utilisateur'
 
 export type Role = 'titulaire' | 'adjoint' | 'preparateur'
 
@@ -29,16 +30,10 @@ export type Profil = {
 // aucun lecteur ne matche) — voir
 // scripts/RAPPORT-fix-profil-null-messages-non-lus-2026-08-25.md.
 export const getCurrentProfil = cache(async (): Promise<Profil | null> => {
-  const supabase = await createClient()
-
-  // Retry avec backoff progressif : laisse le temps à une rotation
-  // concurrente du refresh token de se terminer avant d'abandonner.
-  const user = await avecRetrySession(
-    () => supabase.auth.getUser().then(({ data: { user }, error }) => ({ data: user, error })),
-    { label: 'getCurrentProfil: auth.getUser()', messageErreur: 'Impossible de vérifier la session utilisateur' }
-  )
-
+  // auth.getUser() est partagé avec getMesAdhesions() (voir utilisateur.ts).
+  const user = await getUtilisateur()
   if (!user) return null
+  const supabase = await createClient()
 
   // Même retry avec backoff progressif, pour la même raison qu'auth.getUser()
   // ci-dessus. PGRST116 : .single() n'a trouvé aucune ligne (ou plusieurs).

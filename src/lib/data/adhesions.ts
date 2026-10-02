@@ -1,6 +1,7 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { avecRetrySession } from '@/lib/supabase/avec-retry-session'
+import { getUtilisateur } from './utilisateur'
 import type { Role } from './profils'
 
 export type Adhesion = {
@@ -10,11 +11,9 @@ export type Adhesion = {
 }
 
 export const getMesAdhesions = cache(async (): Promise<Adhesion[]> => {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getUtilisateur()
   if (!user) return []
+  const supabase = await createClient()
 
   // Retry avec backoff progressif avant de throw ci-dessous : laisse le
   // temps à une rotation concurrente du refresh token Supabase de se
