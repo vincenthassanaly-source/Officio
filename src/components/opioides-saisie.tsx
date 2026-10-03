@@ -17,6 +17,7 @@ import { creerEntreeJournal } from '@/app/actions/entretien-journal'
 import {
   CHAMPS_PRESCRIPTION,
   CHAMPS_TEXTE,
+  AIDES_BON_USAGE,
   INTRO_BON_USAGE,
   QUESTIONS_POMI,
   RAPPELS_REGLEMENTAIRES,
@@ -26,7 +27,9 @@ import {
   construireSectionsOpioides,
   etapeOpioidesRenseignee,
   mettreAJourAlerteAuto,
+  segmenterSurlignage,
   texteAlertePomi,
+  type AideBonUsage,
   type CleTexteOpioides,
   type ClePrescription,
   type DonneesOpioides,
@@ -351,7 +354,17 @@ function EtapeRappels() {
             {bloc.points.map((p) => (
               <li key={p} className="flex gap-2.5">
                 <span aria-hidden="true" className="mt-[7px] size-1.5 shrink-0 rounded-full bg-primary" />
-                <span>{p}</span>
+                <span>
+                  {segmenterSurlignage(p).map((segment, i) =>
+                    segment.surligne ? (
+                      <mark key={i} className="rounded-sm bg-accent-soft px-0.5 font-semibold text-ink">
+                        {segment.texte}
+                      </mark>
+                    ) : (
+                      segment.texte
+                    )
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -414,12 +427,11 @@ function EtapeBonUsage({ coches, onBasculer }: { coches: boolean[]; onBasculer: 
       </p>
       <ul className="flex flex-col gap-2">
         {REGLES_BON_USAGE.map((regle, i) => (
-          <li key={regle}>
-            <label
-              className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl px-3.5 py-3 text-[13.5px] leading-snug text-ink shadow-card ${
-                coches[i] ? 'bg-primary-soft' : 'bg-surface'
-              }`}
-            >
+          <li
+            key={regle}
+            className={`rounded-2xl shadow-card ${coches[i] ? 'bg-primary-soft' : 'bg-surface'}`}
+          >
+            <label className="flex min-h-12 cursor-pointer items-start gap-3 px-3.5 py-3 text-[13.5px] leading-snug text-ink">
               <input
                 type="checkbox"
                 checked={coches[i]}
@@ -428,12 +440,51 @@ function EtapeBonUsage({ coches, onBasculer }: { coches: boolean[]; onBasculer: 
               />
               <span>{regle}</span>
             </label>
+            {AIDES_BON_USAGE[i] && <AideRegle aide={AIDES_BON_USAGE[i]} carteCochee={coches[i]} />}
           </li>
         ))}
       </ul>
       <p className="text-[13px] font-semibold tabular-nums text-muted">
         {nb} / {REGLES_BON_USAGE.length} règles abordées
       </p>
+    </div>
+  )
+}
+
+// Aide-mémoire sous une règle : fermé par défaut, ouvert d'un tap. Hors du
+// <label> de la règle : l'ouvrir ne coche ni ne décoche la règle.
+function AideRegle({ aide, carteCochee }: { aide: AideBonUsage; carteCochee: boolean }) {
+  const [ouvert, setOuvert] = useState(false)
+  const idCorps = useId()
+
+  return (
+    <div className="px-2 pb-2">
+      <button
+        type="button"
+        aria-expanded={ouvert}
+        aria-controls={idCorps}
+        onClick={() => setOuvert(!ouvert)}
+        className={`flex min-h-11 w-full items-center gap-2 rounded-xl px-2.5 text-left text-[13px] font-semibold text-primary hover:bg-primary-soft ${CLASSE_FOCUS}`}
+      >
+        <Icone nom="explication" taille={16} />
+        <span className="min-w-0 flex-1">{ouvert ? 'Masquer' : aide.bouton}</span>
+        <Icone nom="chevron-bas" taille={16} className={`motion-safe:transition-transform ${ouvert ? 'rotate-180' : ''}`} />
+      </button>
+      {ouvert && (
+        // Fond blanc sur une carte cochée (déjà indigo pâle), indigo pâle sinon : l'encadré se détache toujours.
+        <div
+          id={idCorps}
+          className={`mt-1 flex flex-col gap-2.5 rounded-xl px-3 py-2.5 text-primary-dark ${carteCochee ? 'bg-surface' : 'bg-primary-soft'}`}
+        >
+          {aide.blocs.map((bloc) => (
+            <p key={bloc.titre} className="text-[13px] leading-snug">
+              <span className="block font-bold">{bloc.titre}</span>
+              {bloc.texte}
+              {bloc.urgence && <span className="mt-0.5 block font-bold">{bloc.urgence}</span>}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

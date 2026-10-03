@@ -39,37 +39,50 @@ export type DonneesOpioides = {
 
 // --- Rappels réglementaires (affichés dans l'app, jamais imprimés) -------------------
 
+// Les termes à mettre en évidence sont encadrés par `==` (« ==12 semaines== ») :
+// l'écran de rappels les surligne (voir segmenterSurlignage). Aucun autre balisage.
 export const RAPPELS_REGLEMENTAIRES: { titre: string; points: string[] }[] = [
   {
     titre: 'Durée de prescription',
     points: [
-      'Depuis le 15 avril 2020 : la durée maximale de prescription des spécialités à base de tramadol par voie orale est limitée à 12 semaines. Au-delà de 3 mois, la poursuite d’un traitement à base de tramadol (voie orale) nécessite une nouvelle ordonnance.',
-      'À partir du 1er mars 2025, ces restrictions s’appliquent aussi aux spécialités à base de codéine ou de dihydrocodéine.',
-      'De plus, les spécialités à base de tramadol, codéine ou dihydrocodéine devront être prescrites sur des ordonnances sécurisées.',
+      'Depuis le ==15 avril 2020== : la durée maximale de prescription des spécialités à base de ==tramadol== par voie orale est limitée à ==12 semaines==. Au-delà de ==3 mois==, la poursuite d’un traitement à base de tramadol (voie orale) nécessite une nouvelle ordonnance.',
+      'À partir du ==1er mars 2025==, ces restrictions s’appliquent aussi aux spécialités à base de ==codéine ou de dihydrocodéine==.',
+      'De plus, les spécialités à base de ==tramadol, codéine ou dihydrocodéine== devront être prescrites sur des ==ordonnances sécurisées==.',
     ],
   },
   {
     titre: 'Vigilance lors de la prescription et de la délivrance du tramadol',
     points: [
       'Le tramadol est un antalgique opioïde indiqué uniquement dans le traitement des douleurs modérées à intenses ou sévères.',
-      'Il doit être prescrit pendant la durée la plus courte possible.',
+      'Il doit être prescrit pendant la ==durée la plus courte possible==.',
       'Pour une douleur aiguë ou post-opératoire, la nécessité de poursuivre le traitement doit être réévaluée rapidement.',
       'Il n’est pas recommandé dans le traitement de la migraine.',
-      'Le risque de convulsions est majoré en cas de dépassement de la dose maximale recommandée.',
-      'Pour éviter un syndrome de sevrage, la posologie doit être diminuée progressivement avant l’arrêt du traitement.',
-      'Il doit être délivré dans les plus petits conditionnements possibles, adaptés à la prescription.',
+      'Le ==risque de convulsions== est majoré en cas de dépassement de la dose maximale recommandée.',
+      'Pour éviter un syndrome de sevrage, la posologie doit être ==diminuée progressivement== avant l’arrêt du traitement.',
+      'Il doit être délivré dans les ==plus petits conditionnements possibles==, adaptés à la prescription.',
     ],
   },
   {
     titre: 'Associations contenant du paracétamol',
     points: [
       'Une attention particulière doit être portée au risque de surdosage, notamment en intégrant les médicaments obtenus sans prescription. La dose totale quotidienne maximale de paracétamol ne doit pas excéder :',
-      '80 mg/kg/jour chez l’enfant de moins de 37 kg',
-      '3 g par jour chez l’enfant de 38 kg à 50 kg',
-      '4 g par jour chez l’adulte et l’enfant de plus de 50 kg',
+      '==80 mg/kg/jour== chez l’enfant de moins de 37 kg',
+      '==3 g par jour== chez l’enfant de 38 kg à 50 kg',
+      '==4 g par jour== chez l’adulte et l’enfant de plus de 50 kg',
     ],
   },
 ]
+
+export type SegmentTexte = { texte: string; surligne: boolean }
+
+// Découpe un texte balisé par `==` en segments, surlignés ou non. Un marqueur
+// sans fermant reste affiché tel quel : le texte n'est jamais perdu.
+export function segmenterSurlignage(texte: string): SegmentTexte[] {
+  return texte
+    .split(/==(.+?)==/)
+    .map((partie, i) => ({ texte: partie, surligne: i % 2 === 1 }))
+    .filter((segment) => segment.texte !== '')
+}
 
 // --- Règles de bon usage ------------------------------------------------------------------
 
@@ -86,6 +99,66 @@ export const REGLES_BON_USAGE: string[] = [
   'D’insister auprès du patient sur le fait de ne pas donner son traitement opioïde à une autre personne, même si les symptômes semblent identiques (risque possiblement mortel).',
   'D’évaluer ou identifier l’existence d’un besoin impérieux de consommer lors des renouvellements.',
 ]
+
+// Aide-mémoire repliable sous certaines règles : ce qu'il faut repérer ou
+// expliquer. Affiché à l'écran seulement (jamais imprimé), clé = position de la
+// règle dans REGLES_BON_USAGE (0 = première).
+export type AideBonUsage = {
+  bouton: string
+  blocs: { titre: string; texte: string; urgence?: string }[]
+}
+
+export const AIDES_BON_USAGE: Record<number, AideBonUsage> = {
+  // D'informer sur les effets indésirables les plus fréquents, les signes d'alerte précoces en cas de surdose…
+  2: {
+    bouton: 'Voir les effets et les signes d’alerte',
+    blocs: [
+      {
+        titre: 'Effets indésirables fréquents',
+        texte: 'Somnolence, vertiges, nausées, vomissements, constipation, bouche sèche, démangeaisons, sueurs, maux de tête.',
+      },
+      {
+        titre: 'Signes d’alerte précoces de surdose',
+        texte:
+          'Somnolence anormale ou difficulté à rester éveillé, confusion, pupilles très petites, respiration lente ou irrégulière, ronflements ou gargouillis, lèvres ou ongles bleutés.',
+        urgence: 'Appeler le 15.',
+      },
+    ],
+  },
+  // D'informer sur le risque de surdose en opioïdes.
+  3: {
+    bouton: 'Voir les facteurs de risque',
+    blocs: [
+      {
+        titre: 'Facteurs de risque de surdose',
+        texte:
+          'Dose supérieure à la prescription, prises trop rapprochées, association à l’alcool, aux benzodiazépines, aux somnifères ou à d’autres opioïdes ou sédatifs, insuffisance rénale ou hépatique, personne âgée.',
+      },
+    ],
+  },
+  // D'informer sur la démarche d'arrêt du traitement, … signes de sevrage lors de l'arrêt du traitement.
+  5: {
+    bouton: 'Voir les signes de sevrage',
+    blocs: [
+      {
+        titre: 'Signes de sevrage à l’arrêt',
+        texte:
+          'Anxiété, irritabilité, agitation, insomnie, bâillements, sueurs, frissons, tremblements, nez qui coule, larmoiement, pupilles dilatées, nausées, vomissements, crampes abdominales, diarrhée, douleurs musculaires ou articulaires.',
+      },
+    ],
+  },
+  // D'évaluer ou identifier l'existence d'un besoin impérieux de consommer lors des renouvellements.
+  8: {
+    bouton: 'Voir des exemples',
+    blocs: [
+      {
+        titre: 'Exemples de besoin impérieux de consommer',
+        texte:
+          'Envie irrépressible ou pensées envahissantes du médicament, anxiété à l’idée d’en manquer, demande de renouvellement avant la date prévue, prise plus forte ou plus fréquente que prescrit, prise pour le stress, le sommeil ou l’humeur plutôt que pour la douleur, ordonnance « perdue », plusieurs médecins ou pharmacies.',
+      },
+    ],
+  },
+}
 
 // --- Questionnaire POMI ------------------------------------------------------------------------
 
