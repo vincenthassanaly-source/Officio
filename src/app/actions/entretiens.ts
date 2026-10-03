@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
+import { erreurEligibilite, normaliserEligibilite } from '@/lib/eligibilite'
 import type {
   SectionEntretien,
   PhaseEntretien,
@@ -49,6 +50,23 @@ export async function renommerTypeEntretien(id: string, nom: string) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/entretiens-pharmaceutiques')
+  revalidatePath(`/entretiens-pharmaceutiques/${id}`)
+}
+
+// Conditions d'éligibilité affichées en tête de la page du type : un critère par
+// ligne. Le texte reçu est renormalisé et borné ici (jamais confiance au client) ;
+// un texte vide supprime l'encadré. La fonction SQL réserve l'écriture aux
+// membres de l'officine du type.
+export async function modifierEligibiliteTypeEntretien(id: string, texte: string) {
+  const normalise = normaliserEligibilite(typeof texte === 'string' ? texte : '')
+  const erreur = erreurEligibilite(normalise)
+  if (erreur) throw new Error(erreur)
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('modifier_eligibilite_type_entretien', { p_id: id, p_texte: normalise })
+
+  if (error) throw new Error(error.message)
+
   revalidatePath(`/entretiens-pharmaceutiques/${id}`)
 }
 
