@@ -16,6 +16,8 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { enregistrerFicheBpm } from '@/app/actions/bpm'
 import { creerEntreeJournal } from '@/app/actions/entretien-journal'
+import { obtenirUrlDocumentEntretien } from '@/app/actions/entretiens'
+import { ouvrirDocumentDansOnglet } from '@/lib/ouvrir-document-onglet'
 import {
   CHAMPS_ANALYSE,
   QUESTION_PAR_CLE,
@@ -30,6 +32,7 @@ import {
   texteObservanceGirerd,
   type CleAnalyse,
   type CleRecueil,
+  type DocumentAdhesion,
   type DonneesBpm,
   type EnteteBpm,
   type EtapeBpm,
@@ -73,6 +76,8 @@ function titreQuestion(intitule: string): string {
 
 function titreEtape(etape: EtapeBpm): string {
   switch (etape.type) {
+    case 'adhesion':
+      return 'Bulletin d’adhésion'
     case 'patient':
       return 'Le patient'
     case 'question':
@@ -99,18 +104,27 @@ export function BpmSaisie({
   typeEntretienId,
   nomType,
   initial,
+  documentAdhesion,
 }: {
   ficheId: string
   typeEntretienId: string
   nomType: string
   initial: DonneesBpm
+  // Bulletin d'adhésion du BPM (document de l'onglet Documents), null s'il n'y en a pas.
+  documentAdhesion: DocumentAdhesion | null
 }) {
   const router = useRouter()
   const toast = useToast()
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
 
   const [donnees, setDonnees] = useState<DonneesBpm>(initial)
-  const [index, setIndex] = useState(0)
+  // Une fiche déjà commencée (patient nommé) s'ouvre sur « Le patient » : le
+  // bulletin d'adhésion se fait une fois, au tout début, pas à chaque ouverture.
+  const [index, setIndex] = useState(() =>
+    initial.entete.nom.trim() !== '' || initial.entete.prenom.trim() !== ''
+      ? ETAPES.findIndex((e) => e.type === 'patient')
+      : 0
+  )
   const [statut, setStatut] = useState<StatutEnregistrement>('enregistre')
   const [sectionsOuvertes, setSectionsOuvertes] = useState(false)
 
@@ -330,6 +344,8 @@ export function BpmSaisie({
             {titreEtape(etape)}
           </h2>
 
+          {etape.type === 'adhesion' && <EtapeAdhesion document={documentAdhesion} />}
+
           {etape.type === 'patient' && <EtapePatient entete={donnees.entete} onChanger={changerEntete} />}
 
           {etape.type === 'question' && (
@@ -527,6 +543,73 @@ export function ChampTexte({
 }
 
 // --- Étapes ------------------------------------------------------------------------
+
+// Première chose à faire : faire adhérer le patient au dispositif. Le bulletin
+// (PDF de l'onglet Documents) s'ouvre dans un nouvel onglet pour être imprimé,
+// rempli et signé. Aucune trace n'est gardée et rien ne bloque la suite : le
+// patient peut avoir déjà adhéré.
+function EtapeAdhesion({ document: bulletin }: { document: DocumentAdhesion | null }) {
+  const toast = useToast()
+  const [ouverture, setOuverture] = useState(false)
+
+  async function ouvrir() {
+    if (!bulletin) return
+    setOuverture(true)
+    const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocumentEntretien(bulletin.cheminStockage))
+    setOuverture(false)
+    if (!resultat.succes) toast({ type: 'erreur', message: resultat.message })
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[13.5px] leading-snug text-muted">
+        À faire en premier : le patient adhère au dispositif d’accompagnement des patients âgés polymédiqués. Si c’est déjà
+        fait, passez à l’étape suivante.
+      </p>
+
+      <ol className="flex flex-col gap-2 rounded-[20px] bg-surface p-3.5 text-[13.5px] leading-snug text-ink shadow-card">
+        {[
+          'Imprimez le bulletin d’adhésion.',
+          'Faites-le compléter en majuscules, au stylo à bille.',
+          'Faites-le signer par le patient et par le pharmacien titulaire, avec le cachet de la pharmacie.',
+          'Le patient et la pharmacie conservent chacun l’exemplaire original ; la pharmacie le tient à la disposition du contrôle médical.',
+        ].map((consigne, i) => (
+          <li key={consigne} className="flex gap-2.5">
+            <span
+              aria-hidden="true"
+              className="mt-px flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-soft text-[12px] font-bold tabular-nums text-primary"
+            >
+              {i + 1}
+            </span>
+            <span>{consigne}</span>
+          </li>
+        ))}
+      </ol>
+
+      {bulletin ? (
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => void ouvrir()}
+            disabled={ouverture}
+            className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+          >
+            <Icone nom="imprimante" taille={18} />
+            {ouverture ? 'Ouverture…' : 'Ouvrir le bulletin pour l’imprimer'}
+          </button>
+          <p className="text-[12.5px] leading-snug text-muted">
+            S’ouvre dans un nouvel onglet : imprimez-le depuis la visionneuse du navigateur. Document : {bulletin.nom}.
+          </p>
+        </div>
+      ) : (
+        <p className="rounded-xl bg-neutral-soft px-3 py-3 text-[13.5px] leading-snug text-ink">
+          Aucun bulletin d’adhésion trouvé. Ajoutez le PDF dans l’onglet Documents de cet entretien et donnez-lui l’étiquette
+          « adhésion » (ou un nom qui contient « adhésion »).
+        </p>
+      )}
+    </div>
+  )
+}
 
 function EtapePatient({
   entete,
