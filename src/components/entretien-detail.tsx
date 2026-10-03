@@ -3,6 +3,8 @@
 import { useState, type KeyboardEvent } from 'react'
 import dynamic from 'next/dynamic'
 import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien } from '@/lib/data/entretiens'
+import type { FicheBpmResume } from '@/lib/data/bpm'
+import { BpmFiches } from '@/components/bpm-fiches'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
 import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
 import { BandeauEdition, CLASSE_FOCUS } from '@/components/entretien-ui'
@@ -48,13 +50,21 @@ export function EntretienDetail({
   type,
   items,
   documents,
+  fiches,
 }: {
   type: TypeEntretien
   items: Record<SectionEntretien, ItemEntretien[]>
   documents: DocumentEntretien[]
+  // Fiches BPM saisies (types « bpm » uniquement) ; vide pour les autres types.
+  fiches: FicheBpmResume[]
 }) {
   const [onglet, setOnglet] = useState<OngletEntretien>('methodologie')
   const [modeEdition, setModeEdition] = useState(false)
+
+  // Type BPM : l'onglet Script devient « Fiches » (liste des fiches patient).
+  // Il n'a ni mode Entretien ni mode Édition : la saisie se fait dans la fiche.
+  const estBpm = type.modele === 'bpm'
+  const surFiches = estBpm && onglet === 'methodologie'
 
   // État du mode Entretien, gardé ici plutôt que dans le panneau Script : ce
   // panneau est démonté quand on consulte Facturation ou Documents en plein
@@ -81,43 +91,47 @@ export function EntretienDetail({
         </p>
       )}
 
-      <div role="group" aria-label="Mode d’affichage" className="flex shrink-0 gap-1 rounded-xl bg-track p-1">
-        <button
-          type="button"
-          aria-pressed={!modeEdition}
-          onClick={() => setModeEdition(false)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
-            !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-          }`}
-        >
-          {LIBELLE_MODE_LECTURE[onglet]}
-        </button>
-        <button
-          type="button"
-          aria-pressed={modeEdition}
-          onClick={() => setModeEdition(true)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
-            modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-          }`}
-        >
-          Édition
-        </button>
-      </div>
+      {!surFiches && (
+        <div role="group" aria-label="Mode d’affichage" className="flex shrink-0 gap-1 rounded-xl bg-track p-1">
+          <button
+            type="button"
+            aria-pressed={!modeEdition}
+            onClick={() => setModeEdition(false)}
+            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
+              !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+            }`}
+          >
+            {LIBELLE_MODE_LECTURE[onglet]}
+          </button>
+          <button
+            type="button"
+            aria-pressed={modeEdition}
+            onClick={() => setModeEdition(true)}
+            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
+              modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+            }`}
+          >
+            Édition
+          </button>
+        </div>
+      )}
 
       <EntretienNavigation
         ongletActif={onglet}
         onChanger={setOnglet}
+        libelleScript={estBpm ? 'Fiches' : 'Script'}
         compteurs={{
-          methodologie: items.methodologie.length,
+          methodologie: estBpm ? fiches.length : items.methodologie.length,
           facturation: items.facturation.length,
           documents: documents.length,
         }}
       />
 
-      {modeEdition && <BandeauEdition onTerminer={() => setModeEdition(false)} />}
+      {modeEdition && !surFiches && <BandeauEdition onTerminer={() => setModeEdition(false)} />}
 
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
-        {onglet === 'methodologie' && (
+        {surFiches && <BpmFiches typeEntretienId={type.id} fiches={fiches} />}
+        {onglet === 'methodologie' && !estBpm && (
           <EntretienMethodologie
             typeEntretienId={type.id}
             nomType={type.nom}
@@ -140,10 +154,12 @@ export function EntretienDetail({
 function EntretienNavigation({
   ongletActif,
   onChanger,
+  libelleScript,
   compteurs,
 }: {
   ongletActif: OngletEntretien
   onChanger: (onglet: OngletEntretien) => void
+  libelleScript: string
   compteurs: Record<OngletEntretien, number>
 }) {
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -164,7 +180,9 @@ function EntretienNavigation({
       // conteneur du layout) pour que rien ne dépasse dans les gouttières.
       className="sticky top-0 z-20 -mx-4 flex h-12 gap-1 bg-bg px-4 sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10"
     >
-      {ONGLETS.map((o, index) => (
+      {ONGLETS.map((o, index) => {
+        const label = o.id === 'methodologie' ? libelleScript : o.label
+        return (
         <button
           key={o.id}
           id={`onglet-${o.id}`}
@@ -172,7 +190,7 @@ function EntretienNavigation({
           type="button"
           aria-selected={ongletActif === o.id}
           aria-controls={`panneau-${o.id}`}
-          aria-label={`${o.label} (${compteurs[o.id]})`}
+          aria-label={`${label} (${compteurs[o.id]})`}
           tabIndex={ongletActif === o.id ? 0 : -1}
           onClick={() => onChanger(o.id)}
           onKeyDown={(e) => onKeyDown(e, index)}
@@ -180,7 +198,7 @@ function EntretienNavigation({
             ongletActif === o.id ? 'bg-primary text-white shadow-card' : 'bg-surface text-muted'
           }`}
         >
-          {o.label}
+          {label}
           <span
             aria-hidden="true"
             className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold tabular-nums ${
@@ -190,7 +208,8 @@ function EntretienNavigation({
             {compteurs[o.id]}
           </span>
         </button>
-      ))}
+        )
+      })}
     </nav>
   )
 }

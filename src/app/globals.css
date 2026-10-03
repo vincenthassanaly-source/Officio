@@ -513,6 +513,100 @@ button,
   }
 }
 
+/* Compte rendu du bilan partagé de médication (voir components/bpm-impression.tsx).
+   À l'écran : cinq feuilles blanches empilées, la feuille « traitements » (8
+   colonnes) défile horizontalement sur mobile plutôt que de se comprimer. À
+   l'impression : une feuille A4 par page, la feuille des traitements en
+   paysage (pages nommées), noir sur blanc comme la fiche papier — les tokens
+   de couleur de l'app ne sont pas conçus pour le papier. */
+.bpm-feuille {
+  width: 100%;
+  max-width: 210mm;
+  margin-inline: auto;
+  overflow-x: auto;
+  padding: 1.25rem;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+.bpm-feuille-paysage {
+  max-width: 297mm;
+}
+
+.bpm-feuille table {
+  min-width: 34rem;
+}
+
+.bpm-feuille-paysage table {
+  min-width: 52rem;
+}
+
+/* Case entourée : la réponse retenue au questionnaire de Girerd (0 ou 1). */
+.bpm-case-choisie {
+  display: inline-block;
+  min-width: 1.75rem;
+  padding-inline: 0.35rem;
+  border: 2px solid currentColor;
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+@media print {
+  @page bpm-portrait {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  @page bpm-paysage {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  .bpm-impression,
+  .bpm-impression * {
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  .bpm-impression th {
+    background: #ececec !important;
+  }
+
+  .bpm-feuille {
+    page: bpm-portrait;
+    break-after: page;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  .bpm-feuille-paysage {
+    page: bpm-paysage;
+  }
+
+  .bpm-feuille:last-child {
+    break-after: auto;
+  }
+
+  .bpm-feuille table {
+    min-width: 0;
+  }
+
+  .bpm-ligne,
+  .bpm-bloc {
+    break-inside: avoid;
+  }
+
+  .bpm-feuille thead {
+    display: table-header-group;
+  }
+}
+
 /* Le correctif ciblé par :has() qui vivait ici (overflow-x-clip appliqué
    seulement aux pages du module Entretiens, via [data-sticky-layout]) est
    devenu inutile : (app)/layout.tsx applique maintenant overflow-x-clip à

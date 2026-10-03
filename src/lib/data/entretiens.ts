@@ -20,6 +20,9 @@ export type TypeEntretien = {
   nom: string
   ordre: number
   actif: boolean
+  // 'bpm' : le script est remplacé par la fiche BPM saisie pas à pas (voir
+  // lib/bpm.ts). NULL pour tous les autres types.
+  modele: 'bpm' | null
   created_at: string
   updated_at: string
 }
@@ -65,7 +68,7 @@ export const getTypesEntretien = cache(async (officineId: string): Promise<TypeE
 
   const { data, error } = await supabase
     .from('types_entretien')
-    .select('id, nom, ordre, actif, created_at, updated_at')
+    .select('id, nom, ordre, actif, modele, created_at, updated_at')
     .eq('officine_id', officineId)
     .order('ordre', { ascending: true })
 
@@ -85,7 +88,7 @@ export const getTypeEntretien = cache(async (id: string): Promise<TypeEntretien 
 
   const { data, error } = await supabase
     .from('types_entretien')
-    .select('id, nom, ordre, actif, created_at, updated_at')
+    .select('id, nom, ordre, actif, modele, created_at, updated_at')
     .eq('id', id)
     .maybeSingle()
 
