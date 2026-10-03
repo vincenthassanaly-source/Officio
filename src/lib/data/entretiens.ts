@@ -24,6 +24,9 @@ export type TypeEntretien = {
   // 'bpm' (lib/bpm.ts, table bpm_fiches) ou 'opioides' (lib/opioides.ts, table
   // entretien_fiches). NULL pour les types à script.
   modele: 'bpm' | 'opioides' | null
+  // Conditions d'éligibilité de l'entretien : un critère par ligne (lib/eligibilite.ts).
+  // NULL = pas d'encadré sur la page du type.
+  eligibilite: string | null
   created_at: string
   updated_at: string
 }
@@ -69,7 +72,7 @@ export const getTypesEntretien = cache(async (officineId: string): Promise<TypeE
 
   const { data, error } = await supabase
     .from('types_entretien')
-    .select('id, nom, ordre, actif, modele, created_at, updated_at')
+    .select('id, nom, ordre, actif, modele, eligibilite, created_at, updated_at')
     .eq('officine_id', officineId)
     .order('ordre', { ascending: true })
 
@@ -89,7 +92,7 @@ export const getTypeEntretien = cache(async (id: string): Promise<TypeEntretien 
 
   const { data, error } = await supabase
     .from('types_entretien')
-    .select('id, nom, ordre, actif, modele, created_at, updated_at')
+    .select('id, nom, ordre, actif, modele, eligibilite, created_at, updated_at')
     .eq('id', id)
     .maybeSingle()
 

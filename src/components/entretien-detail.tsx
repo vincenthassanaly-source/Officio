@@ -6,6 +6,7 @@ import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien 
 import type { FicheBpmResume } from '@/lib/data/bpm'
 import { BpmFiches } from '@/components/bpm-fiches'
 import { OpioidesFiches } from '@/components/opioides-fiches'
+import { EntretienEligibilite } from '@/components/entretien-eligibilite'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
 import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
 import { BandeauEdition, CLASSE_FOCUS } from '@/components/entretien-ui'
@@ -92,6 +93,8 @@ export function EntretienDetail({
           Ce type d’entretien est archivé.
         </p>
       )}
+
+      <EntretienEligibilite typeEntretienId={type.id} texte={type.eligibilite} peutAjouter={aFiches || modeEdition} />
 
       {!surFiches && (
         <div role="group" aria-label="Mode d’affichage" className="flex shrink-0 gap-1 rounded-xl bg-track p-1">
