@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien } from '@/lib/data/entretiens'
 import type { FicheBpmResume } from '@/lib/data/bpm'
 import { BpmFiches } from '@/components/bpm-fiches'
+import { OpioidesFiches } from '@/components/opioides-fiches'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
 import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
 import { BandeauEdition, CLASSE_FOCUS } from '@/components/entretien-ui'
@@ -55,16 +56,17 @@ export function EntretienDetail({
   type: TypeEntretien
   items: Record<SectionEntretien, ItemEntretien[]>
   documents: DocumentEntretien[]
-  // Fiches BPM saisies (types « bpm » uniquement) ; vide pour les autres types.
+  // Fiches saisies (types à fiche : BPM, opioïdes) ; vide pour les autres types.
   fiches: FicheBpmResume[]
 }) {
   const [onglet, setOnglet] = useState<OngletEntretien>('methodologie')
   const [modeEdition, setModeEdition] = useState(false)
 
-  // Type BPM : l'onglet Script devient « Fiches » (liste des fiches patient).
-  // Il n'a ni mode Entretien ni mode Édition : la saisie se fait dans la fiche.
-  const estBpm = type.modele === 'bpm'
-  const surFiches = estBpm && onglet === 'methodologie'
+  // Type à fiche (BPM, opioïdes) : l'onglet Script devient « Fiches » (liste des
+  // fiches patient). Il n'a ni mode Entretien ni mode Édition : la saisie se
+  // fait dans la fiche.
+  const aFiches = type.modele !== null
+  const surFiches = aFiches && onglet === 'methodologie'
 
   // État du mode Entretien, gardé ici plutôt que dans le panneau Script : ce
   // panneau est démonté quand on consulte Facturation ou Documents en plein
@@ -119,9 +121,9 @@ export function EntretienDetail({
       <EntretienNavigation
         ongletActif={onglet}
         onChanger={setOnglet}
-        libelleScript={estBpm ? 'Fiches' : 'Script'}
+        libelleScript={aFiches ? 'Fiches' : 'Script'}
         compteurs={{
-          methodologie: estBpm ? fiches.length : items.methodologie.length,
+          methodologie: aFiches ? fiches.length : items.methodologie.length,
           facturation: items.facturation.length,
           documents: documents.length,
         }}
@@ -130,8 +132,9 @@ export function EntretienDetail({
       {modeEdition && !surFiches && <BandeauEdition onTerminer={() => setModeEdition(false)} />}
 
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
-        {surFiches && <BpmFiches typeEntretienId={type.id} fiches={fiches} />}
-        {onglet === 'methodologie' && !estBpm && (
+        {surFiches && type.modele === 'bpm' && <BpmFiches typeEntretienId={type.id} fiches={fiches} />}
+        {surFiches && type.modele === 'opioides' && <OpioidesFiches typeEntretienId={type.id} fiches={fiches} />}
+        {onglet === 'methodologie' && !aFiches && (
           <EntretienMethodologie
             typeEntretienId={type.id}
             nomType={type.nom}

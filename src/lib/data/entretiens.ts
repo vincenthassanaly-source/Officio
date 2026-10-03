@@ -20,9 +20,10 @@ export type TypeEntretien = {
   nom: string
   ordre: number
   actif: boolean
-  // 'bpm' : le script est remplacé par la fiche BPM saisie pas à pas (voir
-  // lib/bpm.ts). NULL pour tous les autres types.
-  modele: 'bpm' | null
+  // Type à fiche : le script est remplacé par une fiche saisie pas à pas.
+  // 'bpm' (lib/bpm.ts, table bpm_fiches) ou 'opioides' (lib/opioides.ts, table
+  // entretien_fiches). NULL pour les types à script.
+  modele: 'bpm' | 'opioides' | null
   created_at: string
   updated_at: string
 }

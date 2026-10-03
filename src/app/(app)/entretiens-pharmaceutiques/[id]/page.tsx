@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getTypeEntretien, getItemsEntretien, getDocumentsEntretien } from '@/lib/data/entretiens'
 import { getFichesBpm } from '@/lib/data/bpm'
+import { getFichesEntretien } from '@/lib/data/entretien-fiches'
 import { EntretienDetail } from '@/components/entretien-detail'
 import { LienRetour } from '@/components/lien-retour'
 
@@ -16,7 +17,11 @@ export default async function EntretienDetailPage({ params }: { params: Promise<
   const [items, documents, fiches] = await Promise.all([
     getItemsEntretien(id),
     getDocumentsEntretien(id),
-    type.modele === 'bpm' ? getFichesBpm(id) : Promise.resolve([]),
+    type.modele === 'bpm'
+      ? getFichesBpm(id)
+      : type.modele === 'opioides'
+        ? getFichesEntretien(id)
+        : Promise.resolve([]),
   ])
 
   return (
