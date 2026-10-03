@@ -424,7 +424,7 @@ export function BpmSaisie({
 
 // --- Indicateur d'enregistrement ----------------------------------------------
 
-function IndicateurEnregistrement({
+export function IndicateurEnregistrement({
   statut,
   onReessayer,
 }: {
@@ -466,7 +466,7 @@ function Libelle({ htmlFor, children }: { htmlFor: string; children: ReactNode }
   )
 }
 
-function ChampLigne({
+export function ChampLigne({
   label,
   valeur,
   onChanger,
@@ -498,7 +498,7 @@ function ChampLigne({
   )
 }
 
-function ChampTexte({
+export function ChampTexte({
   label,
   valeur,
   onChanger,
@@ -963,7 +963,7 @@ function EtapeFin({
 
 // --- Liste des sections ----------------------------------------------------------------
 
-function ListeSections({
+export function ListeSections({
   progression,
   sectionCourante,
   onChoisir,

@@ -50,8 +50,9 @@ const COMPTEURS: { cle: keyof CompteursEntretien; libelle: string; icone: NomIco
   { cle: 'documents', libelle: 'Documents', icone: 'fichier' },
 ]
 
-// sansScript : un type BPM n'a plus de script (il est remplacé par les fiches
-// saisies pas à pas), son compteur « Script 0 » serait trompeur.
+// sansScript : un type à fiche (BPM, opioïdes) n'a plus de script (il est
+// remplacé par les fiches saisies pas à pas), son compteur « Script 0 »
+// serait trompeur.
 function CompteursType({ compteurs, sansScript }: { compteurs: CompteursEntretien; sansScript: boolean }) {
   return (
     <ul className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1 text-[13px] text-muted">
@@ -137,8 +138,8 @@ function CarteType({
     )
   }
 
-  const estBpm = type.modele === 'bpm'
-  const scriptVide = compteurs.methodologie === 0 && !estBpm
+  const aFiches = type.modele !== null
+  const scriptVide = compteurs.methodologie === 0 && !aFiches
 
   return (
     <div className="rounded-[20px] bg-surface shadow-card">
@@ -148,7 +149,7 @@ function CarteType({
       >
         <div className="min-w-0 flex-1">
           <div className="break-words text-[15px] font-semibold leading-snug text-ink">{type.nom}</div>
-          <CompteursType compteurs={compteurs} sansScript={estBpm} />
+          <CompteursType compteurs={compteurs} sansScript={aFiches} />
           {scriptVide && (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-ink">
               <Icone nom="crayon" taille={13} className="text-accent" />
