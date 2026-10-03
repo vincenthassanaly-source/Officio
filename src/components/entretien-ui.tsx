@@ -32,6 +32,7 @@ export type NomIcone =
   | 'script'
   | 'euro'
   | 'organiser'
+  | 'imprimante'
   | 'question'
   | 'explication'
   | 'alerte'
@@ -124,6 +125,13 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
       <path d="M12 9v4" />
       <path d="M12 17h.01" />
+    </>
+  ),
+  imprimante: (
+    <>
+      <path d="M6 9V2h12v7" />
+      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+      <path d="M6 14h12v8H6z" />
     </>
   ),
   organiser: (

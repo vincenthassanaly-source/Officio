@@ -50,10 +50,12 @@ const COMPTEURS: { cle: keyof CompteursEntretien; libelle: string; icone: NomIco
   { cle: 'documents', libelle: 'Documents', icone: 'fichier' },
 ]
 
-function CompteursType({ compteurs }: { compteurs: CompteursEntretien }) {
+// sansScript : un type BPM n'a plus de script (il est remplacé par les fiches
+// saisies pas à pas), son compteur « Script 0 » serait trompeur.
+function CompteursType({ compteurs, sansScript }: { compteurs: CompteursEntretien; sansScript: boolean }) {
   return (
     <ul className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1 text-[13px] text-muted">
-      {COMPTEURS.map(({ cle, libelle, icone }) => (
+      {COMPTEURS.filter(({ cle }) => !(sansScript && cle === 'methodologie')).map(({ cle, libelle, icone }) => (
         <li key={cle} className="flex items-center gap-1.5">
           <Icone nom={icone} taille={15} />
           <span>{libelle}</span>
@@ -135,7 +137,8 @@ function CarteType({
     )
   }
 
-  const scriptVide = compteurs.methodologie === 0
+  const estBpm = type.modele === 'bpm'
+  const scriptVide = compteurs.methodologie === 0 && !estBpm
 
   return (
     <div className="rounded-[20px] bg-surface shadow-card">
@@ -145,7 +148,7 @@ function CarteType({
       >
         <div className="min-w-0 flex-1">
           <div className="break-words text-[15px] font-semibold leading-snug text-ink">{type.nom}</div>
-          <CompteursType compteurs={compteurs} />
+          <CompteursType compteurs={compteurs} sansScript={estBpm} />
           {scriptVide && (
             <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-ink">
               <Icone nom="crayon" taille={13} className="text-accent" />
@@ -212,6 +215,7 @@ export function EntretiensListe({
           nom,
           ordre: actifs.length,
           actif: true,
+          modele: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
