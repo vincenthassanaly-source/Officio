@@ -370,6 +370,7 @@ export const COLONNES_TRAITEMENTS: { cle: keyof Omit<LigneTraitementBpm, 'id'>; 
 // --- Étapes du pas à pas --------------------------------------------------------
 
 export type EtapeBpm =
+  | { type: 'adhesion' }
   | { type: 'patient' }
   | { type: 'question'; cle: CleRecueil }
   | { type: 'traitements' }
@@ -382,7 +383,10 @@ export type SectionEtapes = { titre: string; etapes: EtapeBpm[] }
 
 // Ordre de la fiche papier. L'étape « fin » n'appartient à aucune section.
 export function construireSections(): SectionEtapes[] {
-  const sections: SectionEtapes[] = [{ titre: 'Patient', etapes: [{ type: 'patient' }] }]
+  const sections: SectionEtapes[] = [
+    { titre: 'Adhésion', etapes: [{ type: 'adhesion' }] },
+    { titre: 'Patient', etapes: [{ type: 'patient' }] },
+  ]
 
   const ajouterRecueil = (titre: SectionRecueil) => {
     sections.push({
@@ -434,6 +438,9 @@ export function cleEtape(etape: EtapeBpm): string {
 // à la liste des sections et au résumé final, jamais à bloquer la saisie.
 export function etapeRenseignee(donnees: DonneesBpm, etape: EtapeBpm): boolean {
   switch (etape.type) {
+    case 'adhesion':
+      // Rien à saisir : l'écran propose d'imprimer le bulletin d'adhésion.
+      return true
     case 'patient':
       return donnees.entete.nom.trim() !== '' || donnees.entete.prenom.trim() !== ''
     case 'question':
@@ -449,6 +456,28 @@ export function etapeRenseignee(donnees: DonneesBpm, etape: EtapeBpm): boolean {
     case 'fin':
       return false
   }
+}
+
+// --- Bulletin d'adhésion --------------------------------------------------------------
+
+export type DocumentAdhesion = { nom: string; cheminStockage: string }
+
+function sansAccentsMinuscules(valeur: string): string {
+  return valeur.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
+// Le bulletin d'adhésion proposé au début d'une fiche est un document de
+// l'onglet Documents du type d'entretien : celui dont l'étiquette (tag) contient
+// « adhésion », à défaut celui dont le nom la contient. Accents et casse sont
+// ignorés. Remplacer le PDF ou étiqueter un autre document suffit donc à changer
+// de bulletin, sans développement. Avec plusieurs candidats, le plus récent.
+export function choisirDocumentAdhesion(
+  documents: { nom: string; tag: string | null; chemin_stockage: string; created_at: string }[]
+): DocumentAdhesion | null {
+  const contientAdhesion = (valeur: string | null) => valeur !== null && sansAccentsMinuscules(valeur).includes('adhesion')
+  const recents = [...documents].sort((a, b) => b.created_at.localeCompare(a.created_at))
+  const choisi = recents.find((d) => contientAdhesion(d.tag)) ?? recents.find((d) => contientAdhesion(d.nom))
+  return choisi ? { nom: choisi.nom, cheminStockage: choisi.chemin_stockage } : null
 }
 
 // --- Création et validation ---------------------------------------------------------
