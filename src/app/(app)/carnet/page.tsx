@@ -2,6 +2,8 @@ import { getOfficineActive } from '@/lib/data/officine-active'
 import { getContacts } from '@/lib/data/contacts'
 import { CarnetAdresses } from '@/components/carnet-adresses'
 
+export const metadata = { title: 'Carnet d\'adresses' }
+
 export default async function CarnetPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

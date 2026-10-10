@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { InscriptionForm } from './inscription-form'
 import { CarteAuthentification, CLASSE_LIEN_AUTH } from '@/components/carte-authentification'
 
+export const metadata = { title: 'Inscription' }
+
 export default async function InscriptionPage({
   searchParams,
 }: {

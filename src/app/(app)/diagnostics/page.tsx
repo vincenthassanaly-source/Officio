@@ -6,6 +6,8 @@ import { LienRetour } from '@/components/lien-retour'
 // Accès restreint au titulaire de l'officine active : même garde-fou que la
 // policy client_errors_select (scripts/migration-client-errors.sql), mais
 // vérifiée ici pour renvoyer un écran cohérent plutôt qu'une liste vide.
+export const metadata = { title: 'Diagnostics' }
+
 export default async function DiagnosticsPage() {
   const officine = await getOfficineActive()
   if (!officine || officine.role !== 'titulaire') redirect('/')

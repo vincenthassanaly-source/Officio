@@ -9,6 +9,8 @@ import { GestionOfficines } from '@/components/gestion-officines'
 import { LienRetour } from '@/components/lien-retour'
 import { signOut } from '@/app/actions/auth'
 
+export const metadata = { title: 'Profil' }
+
 export default async function ProfilPage() {
   const supabase = await createClient()
   const profilP = getCurrentProfil()

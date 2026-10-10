@@ -48,7 +48,7 @@ export function SidebarNav({
         <NotificationsCloche />
       </div>
 
-      <nav className="mt-6 flex flex-col gap-1">
+      <nav aria-label="Navigation principale" className="mt-6 flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {
           const actif = estLienActif(item.href, pathname)
           const Icone = ICONES[item.href]
@@ -56,6 +56,7 @@ export function SidebarNav({
             <Link
               key={item.href}
               href={item.href}
+              aria-current={actif ? 'page' : undefined}
               // Prefetch par défaut, y compris sur /, /liaison et /agenda : ces pages sont
               // dynamiques avec un loading.tsx, donc Next ne préchauffe que le squelette
               // (staleTimes.dynamic à 0) et les données restent chargées à chaque tap.

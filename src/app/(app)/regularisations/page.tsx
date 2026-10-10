@@ -4,6 +4,8 @@ import { Regularisations } from '@/components/regularisations'
 import { LienRetour } from '@/components/lien-retour'
 import { toISODate } from '@/lib/dates'
 
+export const metadata = { title: 'Régularisations' }
+
 export default async function RegularisationsPage({
   searchParams,
 }: {

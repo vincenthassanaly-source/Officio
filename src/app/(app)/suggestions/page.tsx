@@ -5,6 +5,8 @@ import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { Suggestions } from '@/components/suggestions'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Suggestions' }
+
 export default async function SuggestionsPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
   if (!officine || !profil) return null

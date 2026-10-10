@@ -2,6 +2,8 @@ import { getVaccins } from '@/lib/data/vaccins'
 import { VaccinsListe } from '@/components/vaccins-liste'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Vaccins' }
+
 export default async function VaccinsPage() {
   const vaccins = await getVaccins()
 

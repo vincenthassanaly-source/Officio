@@ -3,6 +3,8 @@ import { getCnoPatients } from '@/lib/data/cno'
 import { CnoListe } from '@/components/cno-liste'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Suivi CNO' }
+
 export default async function SuiviCnoPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

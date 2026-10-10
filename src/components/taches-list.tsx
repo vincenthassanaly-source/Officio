@@ -3,6 +3,7 @@
 import {
   useEffect,
   useOptimistic,
+  useRef,
   useState,
   useTransition,
   type TransitionStartFunction,
@@ -282,12 +283,20 @@ export function TachesList({
   // aussi l'accordéon si la cible est archivée (même logique que ci-dessus,
   // mais ici déclenchée par la souscription à l'évènement plutôt qu'au
   // montage, donc sans le rendu en cascade que l'initialisation évite).
+  // L'écouteur n'est posé qu'une fois : sans ce miroir, il lirait la liste du
+  // premier rendu et n'ouvrirait pas l'archive pour une tâche passée à `fait`
+  // après le montage.
+  const tachesRef = useRef(taches)
+  useEffect(() => {
+    tachesRef.current = taches
+  }, [taches])
+
   useEffect(() => {
     function ecouteur(e: Event) {
       const url = (e as CustomEvent<{ url: string }>).detail?.url
       const tacheId = url && new URL(url, window.location.origin).searchParams.get('tache')
       if (!tacheId) return
-      if (taches.find((t) => t.id === tacheId)?.statut === 'fait') setArchiveOuverte(true)
+      if (tachesRef.current.find((t) => t.id === tacheId)?.statut === 'fait') setArchiveOuverte(true)
       defilerVersTache(tacheId)
       setIdSurligne(tacheId)
     }

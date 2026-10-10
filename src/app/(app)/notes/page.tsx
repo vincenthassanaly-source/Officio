@@ -7,6 +7,8 @@ import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { Notes } from '@/components/notes'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Notes' }
+
 export default async function NotesPage({
   searchParams,
 }: {

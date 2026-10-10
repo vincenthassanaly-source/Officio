@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Officio",
+  title: { default: "Officio", template: "%s · Officio" },
   description: "Le compagnon numérique de l'officine",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

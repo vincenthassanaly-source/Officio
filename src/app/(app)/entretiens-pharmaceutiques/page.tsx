@@ -10,6 +10,8 @@ import { LienRetour } from '@/components/lien-retour'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
+export const metadata = { title: 'Entretiens pharmaceutiques' }
+
 export default async function EntretiensPharmaceutiquesPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

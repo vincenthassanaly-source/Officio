@@ -3,6 +3,8 @@ import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { HuilesEssentiellesOnglets } from '@/components/huiles-essentielles-onglets'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Huiles essentielles' }
+
 export default async function HuilesEssentiellesPage() {
   const officine = await getOfficineActive()
   if (!officine) return null
