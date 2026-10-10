@@ -6,6 +6,8 @@ import { ProduitsARecommanderListe } from '@/components/produits-a-recommander-l
 import { LienRetour } from '@/components/lien-retour'
 import { PullToRefresh } from '@/components/PullToRefresh'
 
+export const metadata = { title: 'Ruptures de stock' }
+
 export default async function RupturesStockPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

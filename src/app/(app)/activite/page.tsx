@@ -5,6 +5,8 @@ import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { JournalActivite } from '@/components/journal-activite'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Activité' }
+
 export default async function ActivitePage() {
   const officine = await getOfficineActive()
   if (!officine) return null

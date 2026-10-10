@@ -14,6 +14,8 @@ import { SqueletteCartes, SqueletteChamp, SqueletteOnglets, SquelettePage } from
 // next.config.ts) — les non-lus changent en continu entre membres.
 export const dynamic = 'force-dynamic'
 
+export const metadata = { title: 'Cahier de liaison' }
+
 export default async function LiaisonPage({
   searchParams,
 }: {

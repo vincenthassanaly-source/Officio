@@ -68,6 +68,8 @@ function valeur<T>(nomFonction: string, resultat: PromiseSettledResult<T>, repli
   return repli
 }
 
+export const metadata = { title: 'Accueil' }
+
 export default async function AccueilPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
   if (!officine) return null

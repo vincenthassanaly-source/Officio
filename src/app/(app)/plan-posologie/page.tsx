@@ -3,6 +3,8 @@ import { getPlanPosologieBrouillon } from '@/lib/data/plan-posologie'
 import { PlanPosologie } from '@/components/plan-posologie'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Plan de posologie' }
+
 export default async function PlanPosologiePage() {
   const officine = await getOfficineActive()
   if (!officine) return null

@@ -2,6 +2,8 @@ import { getOfficineActive } from '@/lib/data/officine-active'
 import { getDocuments } from '@/lib/data/documents'
 import { DocumentsList } from '@/components/documents-list'
 
+export const metadata = { title: 'Documents' }
+
 export default async function DocumentsPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

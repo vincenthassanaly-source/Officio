@@ -3,6 +3,8 @@ import { getFournisseurs } from '@/lib/data/fournisseurs'
 import { FournisseursListe } from '@/components/fournisseurs-liste'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Fournisseurs' }
+
 export default async function FournisseursPage() {
   const officine = await getOfficineActive()
   if (!officine) return null

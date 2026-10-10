@@ -7,6 +7,8 @@ import { InviterCard } from '@/components/inviter-card'
 import { MembresOfficine } from '@/components/membres-officine'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Mon équipe' }
+
 export default async function InviterPage() {
   const officineActive = await getOfficineActive()
   if (!officineActive) return null

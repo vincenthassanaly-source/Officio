@@ -3,6 +3,8 @@ import { getChaussures } from '@/lib/data/chaussures'
 import { ChaussuresCatalogue } from '@/components/chaussures-catalogue'
 import { LienRetour } from '@/components/lien-retour'
 
+export const metadata = { title: 'Chaussures' }
+
 export default async function ChaussuresPage() {
   const officine = await getOfficineActive()
   if (!officine) return null
