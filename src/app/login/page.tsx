@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { LoginForm } from './login-form'
 import { CarteAuthentification, CLASSE_LIEN_AUTH } from '@/components/carte-authentification'
 
+export const metadata = { title: 'Connexion' }
+
 export default async function LoginPage({
   searchParams,
 }: {

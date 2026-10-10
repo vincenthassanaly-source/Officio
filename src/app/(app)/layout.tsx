@@ -52,6 +52,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           d'édition des Entretiens, formulaire d'envoi de fil-de-messages.tsx).
           `clip` n'a pas cet effet de bord. Remplace le correctif ciblé par
           :has() qui vivait dans globals.css (voir son historique). */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[70] focus:rounded-xl focus:bg-surface focus:px-4 focus:py-2 focus:text-ink"
+      >
+        Aller au contenu
+      </a>
       <div className="flex w-full flex-1 flex-col overflow-x-clip lg:flex-row lg:overflow-x-visible">
         <IndicateurNavigation />
         <EcouteurSession />
@@ -122,9 +128,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
               transition de page). */}
           <PageViewTransition>
-            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8 print:p-0">
+            <main
+              id="contenu"
+              tabIndex={-1}
+              className="flex flex-1 flex-col px-4 py-4 pb-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom))] outline-none sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8 print:p-0"
+            >
               {children}
-            </div>
+            </main>
           </PageViewTransition>
 
           <BottomNav />

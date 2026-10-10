@@ -27,6 +27,8 @@ function IconFlecheRetour() {
   )
 }
 
+export const metadata = { title: 'Bienvenue' }
+
 export default async function BienvenuePage({
   searchParams,
 }: {

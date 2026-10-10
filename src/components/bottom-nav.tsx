@@ -80,6 +80,7 @@ export function BottomNav() {
   return (
     <>
       <nav
+        aria-label="Navigation principale"
         ref={navRef}
         className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden print:hidden"
       >
@@ -112,6 +113,7 @@ export function BottomNav() {
                 else itemRefs.current.delete(item.href)
               }}
               href={item.href}
+              aria-current={actif ? 'page' : undefined}
               // Signal visuel immédiat au tap (voir IndicateurNavigation dans
               // layout.tsx) : le squelette est préchargé mais les données
               // arrivent du serveur, rien d'autre n'indique que le tap a été pris en
