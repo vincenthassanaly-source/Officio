@@ -54,6 +54,37 @@ export async function creerPromesse(formData: FormData) {
   revalidatePath('/')
 }
 
+// Correction d'une promesse encore en attente (faute de frappe, numéro
+// erroné…) : mêmes champs et mêmes règles que la création. Le filtre sur
+// statut 'actif' laisse l'historique en lecture seule, et fait échouer
+// proprement l'enregistrement si un collègue a traité la promesse entre-temps.
+export async function modifierPromesse(id: string, formData: FormData) {
+  const champs = champsPromesse(formData)
+  const erreurs = validerPromesse(champs)
+  const premiereErreur = Object.values(erreurs)[0]
+  if (premiereErreur) throw new Error(premiereErreur)
+
+  const { officineId, supabase } = await contexte()
+  const { data, error } = await supabase
+    .from('promesses_patients')
+    .update({
+      ...champs,
+      quantite: lireQuantite(champs.quantite) ?? 1,
+      telephone_patient: formaterTelephone(champs.telephone_patient),
+    })
+    .eq('id', id)
+    .eq('officine_id', officineId)
+    .eq('statut', 'actif')
+    .select('id')
+
+  if (error) throw new Error(error.message)
+  if (!data || data.length === 0) {
+    throw new Error('Cette promesse a déjà été traitée ou supprimée : modification impossible.')
+  }
+
+  revalidatePath('/promesses-patients')
+}
+
 // "Traitée" = patient rappelé, médicament mis de côté : la promesse quitte
 // la liste active pour l'historique (pas de suppression — on doit pouvoir
 // retrouver qui a été rappelé et quand).

@@ -5,6 +5,7 @@ import {
   basculerPromesseFacturee,
   creerPromesse,
   marquerPromesseTraitee,
+  modifierPromesse,
   supprimerPromesse,
 } from '@/app/actions/promesses-patients'
 import type { PromessePatient } from '@/lib/data/promesses-patients'
@@ -80,6 +81,14 @@ function IconTelephone({ className }: { className?: string }) {
   )
 }
 
+function IconCrayon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  )
+}
+
 function IconCorbeille({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -107,6 +116,7 @@ type ActionOptimiste =
   | { type: 'ajout'; promesse: PromessePatient }
   | { type: 'retrait'; id: string }
   | { type: 'facture'; id: string }
+  | { type: 'modif'; id: string; champs: ChampsNouvellePromesse }
 
 export function PromessesPatientsEnAttente({ promesses }: { promesses: PromessePatient[] }) {
   const [recherche, setRecherche] = useState('')
@@ -121,6 +131,10 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
     focus: false,
   }))
   const [aSupprimer, setASupprimer] = useState<PromessePatient | null>(null)
+  // Une seule carte en édition à la fois : en ouvrir une autre ferme la
+  // première sans enregistrer.
+  const [idEdition, setIdEdition] = useState<string | null>(null)
+  const [modificationEnCours, startModification] = useTransition()
   // Deux transitions distinctes : la création (qui pilote l'état du bouton
   // « Enregistrer ») ne doit pas afficher « Enregistrement… » parce qu'un
   // collègue vient de taper « Traitée » sur une autre ligne, et inversement.
@@ -132,6 +146,21 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
   const [promessesOptimistes, appliquerOptimiste] = useOptimistic(promesses, (etat, action: ActionOptimiste) => {
     if (action.type === 'ajout') return [...etat, action.promesse]
     if (action.type === 'retrait') return etat.filter((p) => p.id !== action.id)
+    if (action.type === 'modif') {
+      const { champs } = action
+      return etat.map((p) =>
+        p.id === action.id
+          ? {
+              ...p,
+              nom_medicament: champs.nom_medicament.trim(),
+              quantite: lireQuantite(champs.quantite) ?? 1,
+              nom_patient: champs.nom_patient.trim(),
+              telephone_patient: formaterTelephone(champs.telephone_patient),
+              facture: champs.facture,
+            }
+          : p
+      )
+    }
     return etat.map((p) => (p.id === action.id ? { ...p, facture: !p.facture } : p))
   })
 
@@ -177,6 +206,35 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
           toast({
             type: 'erreur',
             message: err instanceof Error ? err.message : "Échec de l'enregistrement de la promesse.",
+          })
+          resoudre(false)
+        }
+      })
+    })
+  }
+
+  function fermerEdition(id: string) {
+    setIdEdition(null)
+    // Le bouton « Modifier » est remonté avec la carte : on lui rend le focus.
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-action-modifier="${id}"]`)?.focus())
+  }
+
+  async function enregistrerModification(p: PromessePatient, champs: ChampsNouvellePromesse): Promise<boolean> {
+    const formData = formDataPromesse(champs)
+
+    return new Promise((resoudre) => {
+      startModification(async () => {
+        appliquerOptimiste({ type: 'modif', id: p.id, champs })
+        try {
+          await modifierPromesse(p.id, formData)
+          vibrer()
+          toast({ type: 'succes', message: `Promesse de ${champs.nom_patient.trim()} modifiée.` })
+          fermerEdition(p.id)
+          resoudre(true)
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la modification de la promesse.',
           })
           resoudre(false)
         }
@@ -339,16 +397,37 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
         // hauteurs différentes (nom long, téléphone absent) laisseraient des
         // trous dans une grille à lignes alignées.
         <ul className="flex flex-col gap-3 lg:block lg:columns-2 lg:gap-3 lg:[&>*]:mb-3 lg:[&>*]:break-inside-avoid">
-          {promessesVisibles.map((p) => (
-            <CartePromesse
-              key={p.id}
-              promesse={p}
-              enSortie={estEnSortie(p.id)}
-              onTraiter={traiter}
-              onBasculerFacture={basculerFacture}
-              onDemanderSuppression={setASupprimer}
-            />
-          ))}
+          {promessesVisibles.map((p) =>
+            p.id === idEdition ? (
+              <li key={p.id}>
+                <FormulairePromesse
+                  medicamentInitial={p.nom_medicament}
+                  edition={{
+                    nom_medicament: p.nom_medicament,
+                    quantite: String(p.quantite),
+                    nom_patient: p.nom_patient,
+                    telephone_patient: p.telephone_patient ?? '',
+                    facture: p.facture,
+                  }}
+                  focusAuMontage
+                  fermable
+                  enCours={modificationEnCours}
+                  onEnregistrer={(champs) => enregistrerModification(p, champs)}
+                  onFermer={() => fermerEdition(p.id)}
+                />
+              </li>
+            ) : (
+              <CartePromesse
+                key={p.id}
+                promesse={p}
+                enSortie={estEnSortie(p.id)}
+                onTraiter={traiter}
+                onBasculerFacture={basculerFacture}
+                onModifier={(promesse) => setIdEdition(promesse.id)}
+                onDemanderSuppression={setASupprimer}
+              />
+            )
+          )}
         </ul>
       )}
 
@@ -374,12 +453,14 @@ function CartePromesse({
   enSortie,
   onTraiter,
   onBasculerFacture,
+  onModifier,
   onDemanderSuppression,
 }: {
   promesse: PromessePatient
   enSortie: boolean
   onTraiter: (p: PromessePatient, bouton: HTMLElement | null) => void
   onBasculerFacture: (p: PromessePatient) => void
+  onModifier: (p: PromessePatient) => void
   onDemanderSuppression: (p: PromessePatient) => void
 }) {
   // Seule une ligne encore temporaire (ajout optimiste en attente du
@@ -451,6 +532,16 @@ function CartePromesse({
           </span>
         </button>
         <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{depuisQuand(p.created_at)}</span>
+        <button
+          type="button"
+          onClick={() => onModifier(p)}
+          disabled={desactive}
+          data-action-modifier={p.id}
+          aria-label={`Modifier la promesse de ${p.nom_patient}`}
+          className={`-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-50 ${CLASSE_FOCUS}`}
+        >
+          <IconCrayon className="h-4 w-4" />
+        </button>
         <button
           type="button"
           onClick={() => onDemanderSuppression(p)}
