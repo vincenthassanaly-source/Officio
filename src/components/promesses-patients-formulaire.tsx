@@ -72,8 +72,12 @@ export function FormulairePromesse({
   onFermer,
   variante = 'carte',
   idTitre,
+  edition,
 }: {
   medicamentInitial: string
+  // Mode édition : valeurs de la promesse à corriger (le formulaire sert
+  // alors à modifier au lieu de créer).
+  edition?: ChampsNouvellePromesse
   focusAuMontage: boolean
   fermable: boolean
   enCours: boolean
@@ -83,12 +87,12 @@ export function FormulairePromesse({
   idTitre?: string
 }) {
   const [champs, setChamps] = useState({
-    nom_medicament: medicamentInitial,
-    quantite: '',
-    nom_patient: '',
-    telephone_patient: '',
+    nom_medicament: edition?.nom_medicament ?? medicamentInitial,
+    quantite: edition?.quantite ?? '',
+    nom_patient: edition?.nom_patient ?? '',
+    telephone_patient: edition?.telephone_patient ?? '',
   })
-  const [facture, setFacture] = useState(false)
+  const [facture, setFacture] = useState(edition?.facture ?? false)
   // Erreurs affichées seulement après une première tentative d'envoi (ou
   // à la sortie du champ téléphone), puis recalculées à chaque frappe pour
   // disparaître dès que le champ est corrigé.
@@ -115,7 +119,9 @@ export function FormulairePromesse({
   // par un geste (pas au chargement de la page) : médicament déjà
   // pré-rempli → on passe directement au nom du patient.
   const champAFocaliser: ChampPromesse | null = focusAuMontage
-    ? medicamentInitial.trim()
+    ? edition
+      ? 'nom_medicament'
+      : medicamentInitial.trim()
       ? 'nom_patient'
       : 'nom_medicament'
     : null
@@ -140,7 +146,7 @@ export function FormulairePromesse({
   return (
     <form
       noValidate
-      aria-label={variante === 'carte' ? 'Nouvelle promesse patient' : undefined}
+      aria-label={variante === 'carte' ? (edition ? 'Modifier la promesse patient' : 'Nouvelle promesse patient') : undefined}
       onSubmit={async (e) => {
         e.preventDefault()
         setTentative(true)
@@ -165,7 +171,7 @@ export function FormulairePromesse({
           id={idTitre}
           className={`font-heading text-ink ${variante === 'carte' ? 'text-[16px] font-semibold' : 'text-lg'}`}
         >
-          Nouvelle promesse
+          {edition ? 'Modifier la promesse' : 'Nouvelle promesse'}
         </h2>
         {fermable && (
           <button
@@ -278,7 +284,7 @@ export function FormulairePromesse({
         disabled={enCours}
         className={`min-h-11 rounded-xl bg-primary px-4 py-3 text-[13.5px] font-semibold text-white hover:bg-primary-dark motion-safe:transition-colors disabled:opacity-50 ${CLASSE_FOCUS}`}
       >
-        {enCours ? 'Enregistrement…' : 'Enregistrer la promesse'}
+        {enCours ? 'Enregistrement…' : edition ? 'Enregistrer les modifications' : 'Enregistrer la promesse'}
       </button>
     </form>
   )
