@@ -11,8 +11,10 @@ import {
   IconActivite,
   IconAgenda,
   IconCarnet,
+  IconCno,
   IconDocuments,
   IconFournisseurs,
+  IconHuiles,
   IconLiaison,
 } from '@/components/nav-icons'
 import { signOut } from '@/app/actions/auth'
@@ -27,6 +29,11 @@ const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
   '/carnet': IconCarnet,
   '/fournisseurs': IconFournisseurs,
 }
+
+const MODULES_SIDEBAR = [
+  { href: '/suivi-cno', label: 'Suivi CNO', Icone: IconCno },
+  { href: '/huiles-essentielles', label: 'Huiles essentielles', Icone: IconHuiles },
+]
 
 export function SidebarNav({
   adhesions,
@@ -71,8 +78,21 @@ export function SidebarNav({
         })}
 
         {/* Hors NAV_ITEMS (donc hors bottom nav mobile / panneau "Plus") :
-            le prompt d'origine ne demandait cette entrée que dans la sidebar
-            desktop — voir RAPPORT pour la décision. */}
+            ces entrées ne sont demandées que dans la sidebar desktop. */}
+        {MODULES_SIDEBAR.map(({ href, label, Icone }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={estLienActif(href, pathname) ? 'page' : undefined}
+            className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+              estLienActif(href, pathname) ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
+            }`}
+          >
+            <Icone className="h-[18px] w-[18px] shrink-0" />
+            {label}
+          </Link>
+        ))}
+
         <Link
           href="/activite"
           prefetch={false}
