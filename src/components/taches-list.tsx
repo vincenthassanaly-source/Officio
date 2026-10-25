@@ -601,26 +601,31 @@ function CarteTache({
         type="button"
         onClick={() => onEditer(tache)}
         disabled={isPending}
-        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
+        className="flex min-h-11 min-w-0 flex-1 items-center text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
       >
-        <div className="min-w-0 flex-1">
+        {/* Titre en pleine largeur (texte complet, jamais coupé) ; badge et
+            assigné passent dessous pour ne pas lui voler de place : un titre
+            long ne se retrouve plus écrasé en colonne d'un mot par ligne. */}
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className={`wrap-anywhere text-sm font-semibold ${tache.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}>
             {tache.titre}
           </div>
-          {tache.assigne && (
-            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted">
-              <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
-              >
-                {tache.assigne.initiales}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
+              {due.label}
+            </span>
+            {tache.assigne && (
+              <span className="flex min-w-0 items-center gap-1.5 text-[12px] text-muted">
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                >
+                  {tache.assigne.initiales}
+                </span>
+                <span className="wrap-anywhere">{tache.assigne.nom_complet}</span>
               </span>
-              {tache.assigne.nom_complet}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
-          {due.label}
-        </span>
       </button>
       <div className="flex shrink-0 items-center gap-1">
         {tache.pouces.length > 0 && (
