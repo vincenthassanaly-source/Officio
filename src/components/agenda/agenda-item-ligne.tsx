@@ -218,25 +218,32 @@ export function ItemLigne({
           <button
             type="button"
             onClick={() => onEditerTache(t)}
-            className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="flex min-h-11 min-w-0 flex-1 items-center text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <div
-              className={`min-w-0 flex-1 wrap-anywhere text-sm font-semibold ${
-                t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
-              }`}
-            >
-              {t.titre}
-            </div>
-            {t.assigne && (
-              <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+            {/* Même disposition que CarteTache (taches-list.tsx) : titre en
+                pleine largeur, badge et assigné dessous, pour qu'un titre long
+                ne soit pas écrasé en colonne d'un mot par ligne. */}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div
+                className={`wrap-anywhere text-sm font-semibold ${
+                  t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
+                }`}
               >
-                {t.assigne.initiales}
-              </span>
-            )}
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
-              {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
-            </span>
+                {t.titre}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
+                  {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
+                </span>
+                {t.assigne && (
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                  >
+                    {t.assigne.initiales}
+                  </span>
+                )}
+              </div>
+            </div>
           </button>
         </div>
       </div>
