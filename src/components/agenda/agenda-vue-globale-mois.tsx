@@ -126,7 +126,7 @@ export function AgendaVueGlobaleMois({
               key={iso}
               onClick={() => setJourSelectionne(iso)}
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
+                !dansMoisAffiche ? 'text-neutral-text' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
               {/* Marqueur « aujourd'hui » : pastille pleine sous le quantième,

@@ -83,7 +83,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={CLASSE_CHAMP_AUTH}
-          placeholder="prenom@pharmacie-romevillage.fr"
+          placeholder="prenom@exemple.fr"
         />
       </div>
 

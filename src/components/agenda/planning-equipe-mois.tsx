@@ -118,7 +118,7 @@ export function PlanningEquipeMois({
               key={iso}
               onClick={() => setJourSelectionne(iso)}
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-1 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
+                !dansMoisAffiche ? 'text-neutral-text' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
               {estAujourdhui && <span aria-hidden="true" className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />}

@@ -57,7 +57,7 @@ function IconRecherche({ className }: { className?: string }) {
 
 function Spinner({ className }: { className?: string }) {
   return (
-    <svg className={`animate-spin ${className ?? ''}`} viewBox="0 0 24 24" fill="none">
+    <svg className={`motion-safe:animate-spin ${className ?? ''}`} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
       <path className="opacity-75" fill="currentColor" d="M21 12a9 9 0 0 0-9-9v3a6 6 0 0 1 6 6h3z" />
     </svg>

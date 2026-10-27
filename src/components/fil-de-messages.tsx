@@ -869,6 +869,7 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
           required={!message.audioUrl}
           defaultValue={message.contenu}
           placeholder="Écrire un message…"
+          aria-label="Contenu du message"
           rows={5}
           className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />

@@ -30,4 +30,4 @@ export const CLASSE_BOUTON_AUTH =
   'mt-2 min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
 
 export const CLASSE_LIEN_AUTH =
-  'rounded font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+  '-my-3.5 inline-flex min-h-11 items-center rounded font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'

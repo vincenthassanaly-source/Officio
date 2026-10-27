@@ -42,8 +42,8 @@ const LIBELLE_MODE_LECTURE: Record<OngletEntretien, string> = {
 function ChargementSection() {
   return (
     <div aria-busy="true" aria-label="Chargement de la section…" className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <div className="h-4 w-32 animate-pulse rounded bg-neutral-soft" />
-      <div className="h-16 animate-pulse rounded-xl bg-neutral-soft" />
+      <div className="h-4 w-32 motion-safe:animate-pulse rounded bg-neutral-soft" />
+      <div className="h-16 motion-safe:animate-pulse rounded-xl bg-neutral-soft" />
     </div>
   )
 }
