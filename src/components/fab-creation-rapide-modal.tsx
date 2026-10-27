@@ -333,6 +333,7 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
         value={contenu}
         onChange={(e) => setContenu(e.target.value)}
         placeholder="Contenu de la note"
+        aria-label="Contenu de la note"
         rows={4}
         className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />

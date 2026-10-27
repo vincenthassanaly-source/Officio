@@ -70,7 +70,7 @@ export function SqueletteGrilleTuiles({ nombre = 8 }: { nombre?: number }) {
 /** Enveloppe commune : occupe la hauteur disponible et porte le pouls. */
 export function SquelettePage({ children }: { children: React.ReactNode }) {
   return (
-    <div role="status" aria-live="polite" className="flex flex-1 animate-pulse flex-col gap-3">
+    <div role="status" aria-live="polite" className="flex flex-1 motion-safe:animate-pulse flex-col gap-3">
       <span className="sr-only">Chargement…</span>
       {children}
     </div>

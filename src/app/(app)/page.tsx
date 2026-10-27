@@ -17,6 +17,7 @@ import { getEquipe, type MembreEquipe } from '@/lib/data/equipe'
 import { getCouleursMembres, type CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { signalerErreurClient } from '@/app/actions/erreurs-client'
 import { getWeekDates, toISODate } from '@/lib/dates'
+import { pluriel } from '@/lib/pluriel'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
 import { RechercheGlobale } from '@/components/recherche-globale'
 import { FabCreationRapide } from '@/components/fab-creation-rapide'
@@ -225,7 +226,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Cahier de liaison</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {messagesOk ? `${nonLus} nouveaux messages` : '—'}
+              {messagesOk ? pluriel(nonLus, 'nouveau message', 'nouveaux messages') : '—'}
             </div>
           </div>
         </Link>
@@ -253,7 +254,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Carnet d&rsquo;adresses</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {contactsOk ? `${contacts.length} contacts` : '—'}
+              {contactsOk ? pluriel(contacts.length, 'contact') : '—'}
             </div>
           </div>
         </Link>
@@ -305,7 +306,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {patientsCnoOk ? `${patientsCno.length} patients suivis` : '—'}
+              {patientsCnoOk ? pluriel(patientsCno.length, 'patient suivi', 'patients suivis') : '—'}
             </div>
           </div>
         </Link>
@@ -331,7 +332,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {suggestionsOk ? `${suggestionsNonTraitees} propositions` : '—'}
+              {suggestionsOk ? pluriel(suggestionsNonTraitees, 'proposition') : '—'}
             </div>
           </div>
         </Link>
@@ -384,7 +385,7 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Notes</div>
-            <div className="mt-0.5 text-[12px] text-muted">{notesOk ? `${notes.length} notes` : '—'}</div>
+            <div className="mt-0.5 text-[12px] text-muted">{notesOk ? pluriel(notes.length, 'note') : '—'}</div>
           </div>
         </Link>
         <Link
@@ -397,7 +398,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Activité</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {journalActiviteOk ? `${activitesAujourdhui} activités récentes` : '—'}
+              {journalActiviteOk ? pluriel(activitesAujourdhui, 'activité récente', 'activités récentes') : '—'}
             </div>
           </div>
         </Link>
@@ -423,7 +424,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Entretiens pharmaceutiques</div>
             <div className="mt-0.5 text-[12px] text-muted">
-              {typesEntretienOk ? `${typesEntretienActifs} types actifs` : '—'}
+              {typesEntretienOk ? pluriel(typesEntretienActifs, 'type actif', 'types actifs') : '—'}
             </div>
           </div>
         </Link>

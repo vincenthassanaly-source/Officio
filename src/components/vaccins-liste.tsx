@@ -277,7 +277,7 @@ function CarteVaccinSquelette() {
 // saut visuel au chargement (voir src/app/(app)/vaccins/loading.tsx).
 export function VaccinsSquelette() {
   return (
-    <div className="flex flex-1 animate-pulse flex-col gap-3">
+    <div className="flex flex-1 motion-safe:animate-pulse flex-col gap-3">
       <div className="mb-1 h-7 w-28 rounded-md bg-neutral-soft" />
       <div className="flex gap-1.5">
         <div className="h-7 w-16 rounded-full bg-neutral-soft" />
