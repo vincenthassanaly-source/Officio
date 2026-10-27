@@ -8,7 +8,7 @@ import { formatDateLongue } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useToast } from '@/components/ui/toast-provider'
-import { CHAMP_CLASS } from '@/components/regularisations-liste'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 import { CATEGORIES } from './agenda-item-ligne'
 
 const TITRE_ENTRETIEN = 'Entretien thérapeutique'

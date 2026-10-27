@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getMessages, type MessageAvecDetails } from '@/lib/data/messages'
@@ -19,6 +18,7 @@ import { signalerErreurClient } from '@/app/actions/erreurs-client'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { pluriel } from '@/lib/pluriel'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
+import { TuileModule } from '@/components/tuile-module'
 import { RechercheGlobale } from '@/components/recherche-globale'
 import { FabCreationRapide } from '@/components/fab-creation-rapide'
 import {
@@ -216,218 +216,114 @@ export default async function AccueilPage() {
       />
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">
-        <Link
+        <TuileModule
           href="/liaison"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
-            <IconLiaison className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Cahier de liaison</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {messagesOk ? pluriel(nonLus, 'nouveau message', 'nouveaux messages') : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconLiaison}
+          couleur="bg-primary-soft text-primary"
+          titre="Cahier de liaison"
+          detail={pluriel(nonLus, 'nouveau message', 'nouveaux messages')}
+          indisponible={!messagesOk}
+        />
+        <TuileModule
           href="/agenda"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
-            <IconAgenda className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Agenda</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {rendezVousOk ? `${rendezVous.length} rendez-vous` : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconAgenda}
+          couleur="bg-green-soft text-green"
+          titre="Agenda"
+          detail={`${rendezVous.length} rendez-vous`}
+          indisponible={!rendezVousOk}
+        />
+        <TuileModule
           href="/carnet"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
-            <IconCarnet className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Carnet d&rsquo;adresses</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {contactsOk ? pluriel(contacts.length, 'contact') : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconCarnet}
+          couleur="bg-primary-soft text-primary"
+          titre="Carnet d’adresses"
+          detail={pluriel(contacts.length, 'contact')}
+          indisponible={!contactsOk}
+        />
+        <TuileModule
           href="/huiles-essentielles"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
-            <IconHuiles className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Huiles essentielles</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {huilesOk ? `${huilesACommander} à commander` : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
-          href="/fournisseurs"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
-            <IconFournisseurs className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Fournisseurs</div>
-            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconHuiles}
+          couleur="bg-purple-soft text-purple"
+          titre="Huiles essentielles"
+          detail={`${huilesACommander} à commander`}
+          indisponible={!huilesOk}
+        />
+        <TuileModule href="/fournisseurs" Icone={IconFournisseurs} couleur="bg-accent-soft text-accent" titre="Fournisseurs" />
+        <TuileModule
           href="/chaussures"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-brun-soft text-brun">
-            <IconChaussures className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Chaussures orthopédiques</div>
-            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconChaussures}
+          couleur="bg-brun-soft text-brun"
+          titre="Chaussures orthopédiques"
+        />
+        <TuileModule
           href="/suivi-cno"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
-            <IconCno className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {patientsCnoOk ? pluriel(patientsCno.length, 'patient suivi', 'patients suivis') : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconCno}
+          couleur="bg-green-soft text-green"
+          titre="Suivi CNO"
+          detail={pluriel(patientsCno.length, 'patient suivi', 'patients suivis')}
+          indisponible={!patientsCnoOk}
+        />
+        <TuileModule
           href="/regularisations"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
-            <IconRegularisation className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Régularisation ordonnances</div>
-            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconRegularisation}
+          couleur="bg-accent-soft text-accent"
+          titre="Régularisation ordonnances"
+        />
+        <TuileModule
           href="/suggestions"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-light">
-            <IconSuggestions className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {suggestionsOk ? pluriel(suggestionsNonTraitees, 'proposition') : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
-          href="/vaccins"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
-            <IconVaccin className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Vaccins</div>
-            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconSuggestions}
+          couleur="bg-primary-soft text-primary-light"
+          titre="Suggestions"
+          detail={pluriel(suggestionsNonTraitees, 'proposition')}
+          indisponible={!suggestionsOk}
+        />
+        <TuileModule href="/vaccins" Icone={IconVaccin} couleur="bg-green-soft text-green" titre="Vaccins" />
+        <TuileModule
           href="/ruptures-stock"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-rec-soft text-rec">
-            <IconRupturesStock className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {rupturesOk ? `${rupturesStock.length + produitsARecommander.length} en cours` : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconRupturesStock}
+          couleur="bg-rec-soft text-rec"
+          titre="Ruptures de stock"
+          detail={`${rupturesStock.length + produitsARecommander.length} en cours`}
+          indisponible={!rupturesOk}
+        />
+        <TuileModule
           href="/promesses-patients"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-teal-soft text-teal">
-            <IconPromesses className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Promesses patients</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {promessesOk ? `${promessesEnAttente} en attente` : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconPromesses}
+          couleur="bg-teal-soft text-teal"
+          titre="Promesses patients"
+          detail={`${promessesEnAttente} en attente`}
+          indisponible={!promessesOk}
+        />
+        <TuileModule
           href="/notes"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-dark">
-            <IconNote className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Notes</div>
-            <div className="mt-0.5 text-[12px] text-muted">{notesOk ? pluriel(notes.length, 'note') : '—'}</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconNote}
+          couleur="bg-primary-soft text-primary-dark"
+          titre="Notes"
+          detail={pluriel(notes.length, 'note')}
+          indisponible={!notesOk}
+        />
+        <TuileModule
           href="/activite"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-neutral-soft text-neutral-text">
-            <IconActivite className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Activité</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {journalActiviteOk ? pluriel(activitesAujourdhui, 'activité récente', 'activités récentes') : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconActivite}
+          couleur="bg-neutral-soft text-neutral-text"
+          titre="Activité"
+          detail={pluriel(activitesAujourdhui, 'activité récente', 'activités récentes')}
+          indisponible={!journalActiviteOk}
+        />
+        <TuileModule
           href="/plan-posologie"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
-            <IconPosologie className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Plan de posologie</div>
-            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
-          </div>
-        </Link>
-        <Link
+          Icone={IconPosologie}
+          couleur="bg-accent-soft text-accent"
+          titre="Plan de posologie"
+        />
+        <TuileModule
           href="/entretiens-pharmaceutiques"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
-            <IconEntretien className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Entretiens pharmaceutiques</div>
-            <div className="mt-0.5 text-[12px] text-muted">
-              {typesEntretienOk ? pluriel(typesEntretienActifs, 'type actif', 'types actifs') : '—'}
-            </div>
-          </div>
-        </Link>
+          Icone={IconEntretien}
+          couleur="bg-purple-soft text-purple"
+          titre="Entretiens pharmaceutiques"
+          detail={pluriel(typesEntretienActifs, 'type actif', 'types actifs')}
+          indisponible={!typesEntretienOk}
+        />
       </div>
 
       <FabCreationRapide equipe={equipe} profilActuelId={profil?.id ?? ''} />

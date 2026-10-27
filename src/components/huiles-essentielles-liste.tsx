@@ -21,6 +21,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { ModaleAjoutDepuisStock } from '@/components/huiles-essentielles-modale-ajout-stock'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const DELAI_APPUI_LONG_MS = 500
 
@@ -44,9 +45,6 @@ const LABELS_STATUT: Record<StatutHuile, string> = {
 const OPTIONS_STATUT: StatutHuile[] = ['en_stock', 'non_tenu_en_stock', 'a_commander', 'en_commande']
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-
-const CHAMP_CLASS =
-  'rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CHAMP_VOLUME_COMMANDE_CLASS =
   'w-16 rounded-lg border border-champ-bord bg-bg px-2 py-1.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-60'

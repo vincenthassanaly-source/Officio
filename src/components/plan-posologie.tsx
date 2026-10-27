@@ -3,11 +3,9 @@
 import { useMemo, useState } from 'react'
 import { reinitialiserPlanPosologie } from '@/app/actions/plan-posologie'
 import type { LigneMedicament } from '@/lib/data/plan-posologie'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-
-const CHAMP_CLASS =
-  'rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CHAMP_MOMENT_CLASS =
   'w-full min-w-0 rounded-lg border border-champ-bord bg-bg px-1.5 py-2.5 text-center text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
