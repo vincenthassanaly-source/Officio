@@ -389,7 +389,7 @@ export function TachesList({
             name="titre"
             required
             placeholder="Titre de la tâche"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <label htmlFor="assigne-nouvelle-tache" className="sr-only">
             Assigner à
@@ -398,7 +398,7 @@ export function TachesList({
             id="assigne-nouvelle-tache"
             name="assigne_id"
             defaultValue=""
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
             <option value="">Non assignée (toute l&rsquo;équipe)</option>
             {equipe.map((m) => (
@@ -412,7 +412,7 @@ export function TachesList({
               type="date"
               name="echeance"
               aria-label="Date d'échéance"
-              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className="min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             />
             {/* Facultative : si renseignée, un rappel push + in-app arrive
                 pile à cette heure (au lieu du rappel générique "Échéance
@@ -423,7 +423,7 @@ export function TachesList({
               type="time"
               name="echeance_heure"
               aria-label="Heure d'échéance"
-              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className="w-28 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">

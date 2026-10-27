@@ -12,7 +12,7 @@ export const CLASSE_FOCUS =
 
 // Champ de saisie : 16 px (sous ce seuil, iOS Safari zoome la page au focus).
 export const CLASSE_CHAMP =
-  'w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-base text-ink placeholder:text-muted focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'w-full rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-base text-ink placeholder:text-muted focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 export const CLASSE_BOUTON_PRIMAIRE = `flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50 ${CLASSE_FOCUS}`
 

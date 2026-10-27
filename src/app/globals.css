@@ -10,6 +10,9 @@
   --color-ink: oklch(21% 0.02 265);
   --color-muted: oklch(52% 0.02 265);
   --color-border: oklch(91% 0.006 260);
+  /* Contour des champs de saisie : 3,4:1 sur bg et 3,6:1 sur surface (WCAG 1.4.11).
+     `border` (1,2:1) reste réservé aux cartes et séparateurs décoratifs. */
+  --color-champ-bord: oklch(62% 0.02 265);
   --color-track: oklch(93% 0.01 265);
   --color-accent: oklch(53% 0.14 70);
   --color-accent-soft: oklch(94% 0.06 80);
@@ -51,6 +54,7 @@
   --color-ink: var(--color-ink);
   --color-muted: var(--color-muted);
   --color-border: var(--color-border);
+  --color-champ-bord: var(--color-champ-bord);
   --color-track: var(--color-track);
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);

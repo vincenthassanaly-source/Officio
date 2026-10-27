@@ -316,7 +316,7 @@ export function PlanningEquipe({
               id="profil-nouveau-creneau"
               name="profil_id"
               defaultValue={equipe[0]?.id}
-              className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             >
               {equipe.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -331,7 +331,7 @@ export function PlanningEquipe({
               id="date-nouveau-creneau"
               name="date"
               defaultValue={toISODate(weekDates[0])}
-              className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             >
               {weekDates.map((d) => (
                 <option key={toISODate(d)} value={toISODate(d)}>
@@ -350,7 +350,7 @@ export function PlanningEquipe({
                 name="recurrence"
                 value={recurrenceForm}
                 onChange={(e) => setRecurrenceForm(e.target.value as RecurrenceCreneau)}
-                className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
               >
                 <option value="aucune">Créneau ponctuel</option>
                 <option value="hebdomadaire">Toutes les semaines</option>
@@ -362,7 +362,7 @@ export function PlanningEquipe({
                   name="recurrence_fin"
                   required
                   aria-label="Jusqu'au"
-                  className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                  className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                 />
               )}
             </div>
@@ -378,7 +378,7 @@ export function PlanningEquipe({
             name="type"
             value={typeForm}
             onChange={(e) => setTypeForm(e.target.value as TypeCreneau)}
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
             <option value="travail">Travail</option>
             <option value="repos">Repos</option>
@@ -393,7 +393,7 @@ export function PlanningEquipe({
                 id="date-fin-nouveau-creneau"
                 type="date"
                 name="date_fin"
-                className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="w-full rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
               />
             </div>
           )}
@@ -404,14 +404,14 @@ export function PlanningEquipe({
                 name="heure_debut"
                 required
                 aria-label="Heure de début"
-                className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
               />
               <input
                 type="time"
                 name="heure_fin"
                 required
                 aria-label="Heure de fin"
-                className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
               />
             </div>
           )}
@@ -422,7 +422,7 @@ export function PlanningEquipe({
             id="note-nouveau-creneau"
             name="note"
             placeholder="Note (ex: motif du congé)"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <button
             type="submit"
@@ -527,7 +527,7 @@ export function PlanningEquipe({
             <div
               key={h}
               aria-hidden="true"
-              className="absolute right-0.5 -translate-y-1/2 text-[8.5px] text-muted"
+              className="absolute right-0.5 -translate-y-1/2 text-[10px] text-muted"
               style={{ top: (h - heureMin) * PX_PAR_HEURE }}
             >
               {h}h
@@ -575,7 +575,11 @@ export function PlanningEquipe({
                 const membre = equipe.find((m) => m.id === c.profil_id)
                 const index = profilsJour.indexOf(c.profil_id)
                 const largeur = 100 / nbColonnes
-                const tailleTexte = nbColonnes >= 4 ? 'text-[7px]' : nbColonnes === 3 ? 'text-[7.5px]' : 'text-[8.5px]'
+                // Plancher à 10 px : quand le jour compte 3 personnes ou plus, la colonne est
+                // trop étroite pour deux initiales à cette taille, on n'affiche que la première
+                // (le nom complet reste dans l'aria-label, le title et le panneau de détail).
+                const tailleTexte = nbColonnes >= 3 ? 'text-[10px]' : 'text-[11px]'
+                const initialesAffichees = nbColonnes >= 3 ? (membre?.initiales ?? '?').charAt(0) : (membre?.initiales ?? '?')
                 const afficherHoraire = hauteur > 26 && nbColonnes <= 2
                 const libelleComplet = `${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)}, voir le détail`
                 return (
@@ -589,7 +593,7 @@ export function PlanningEquipe({
                     className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
                     style={{ top, height: hauteur, left: `calc(${index * largeur}% + 2px)`, width: `calc(${largeur}% - 4px)` }}
                   >
-                    <div className="truncate">{membre?.initiales ?? '?'}</div>
+                    <div className="truncate">{initialesAffichees}</div>
                     {afficherHoraire && (
                       <div className="truncate opacity-90">
                         {formatHeure(c.heure_debut!)}-{formatHeure(c.heure_fin!)}
@@ -658,7 +662,7 @@ export function PlanningEquipe({
                       name="type"
                       value={typeEdition}
                       onChange={(e) => setTypeEdition(e.target.value as TypeCreneau)}
-                      className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                      className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                     >
                       <option value="travail">Travail</option>
                       <option value="repos">Repos</option>
@@ -672,7 +676,7 @@ export function PlanningEquipe({
                           required
                           aria-label="Heure de début"
                           defaultValue={c.heure_debut ?? ''}
-                          className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                          className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                         />
                         <input
                           type="time"
@@ -680,7 +684,7 @@ export function PlanningEquipe({
                           required
                           aria-label="Heure de fin"
                           defaultValue={c.heure_fin ?? ''}
-                          className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                          className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                         />
                       </div>
                     )}
@@ -692,7 +696,7 @@ export function PlanningEquipe({
                       name="note"
                       placeholder="Note (ex: motif du congé)"
                       defaultValue={c.note ?? ''}
-                      className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                      className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
                     />
                     <div className="flex gap-2 pt-1">
                       <button

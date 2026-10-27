@@ -24,7 +24,7 @@ export function CarteAuthentification({ children }: { children: React.ReactNode 
 export const CLASSE_LIBELLE_AUTH = 'text-[12px] font-semibold uppercase tracking-wide text-muted'
 
 export const CLASSE_CHAMP_AUTH =
-  'rounded-xl border border-border bg-bg px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'rounded-xl border border-champ-bord bg-bg px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 export const CLASSE_BOUTON_AUTH =
   'mt-2 min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
