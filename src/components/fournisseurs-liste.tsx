@@ -9,6 +9,7 @@ import {
 import type { Fournisseur, TypeFournisseur } from '@/lib/data/fournisseurs'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const TYPES: { value: TypeFournisseur; label: string; className: string }[] = [
   { value: 'grossiste', label: 'Grossiste', className: 'bg-primary-soft text-primary' },
@@ -16,9 +17,6 @@ const TYPES: { value: TypeFournisseur; label: string; className: string }[] = [
 ]
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-
-const CHAMP_CLASS =
-  'rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 function IconAjouter({ className }: { className?: string }) {
   return (

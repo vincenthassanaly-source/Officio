@@ -191,6 +191,7 @@ Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur bout
 - **Bouton-icône compact (cible tactile invisible) :** quand l'icône visible doit rester petite (ex. fermeture de toast, lien « Retour »), la cible de 44 px est obtenue par un padding compensé par une marge négative égale, jamais en agrandissant l'icône elle-même.
 
 ### Cards / Containers
+- **Tuile de module (accueil) :** composant `TuileModule` (`src/components/tuile-module.tsx`) — pastille d'icône `-soft`, titre, sous-titre chiffré ; `indisponible` affiche « Indisponible » quand le chargement de la donnée a échoué (jamais un tiret muet).
 - **Corner Style :** `rounded-[20px]` (cartes de contenu, sheets/modales), `rounded-2xl` (panneau de notifications).
 - **Background :** `bg-surface` (blanc plein), jamais de dégradé.
 - **Shadow Strategy :** `shadow-card` (voir Elevation & Depth) ; pas de bordure en plus.
@@ -198,6 +199,7 @@ Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur bout
 - **Sticky :** les barres/bandeaux qui doivent rester visibles au défilement (onglets, progression, formulaire d'envoi) utilisent `position: sticky` directement contre le défilement du document — nécessite `overflow-x-clip` (jamais `overflow-x-hidden`) sur tout ancêtre.
 
 ### Inputs / Fields
+- **Source unique :** `CHAMP_CLASS` dans `src/components/ui/champ.ts` (importé par les formulaires ; les variantes la composent, ex. `CLASSE_CHAMP` dans `entretien-ui.tsx`). Ne pas redéfinir la chaîne de classes localement.
 - **Style :** `rounded-xl`, `border border-champ-bord`, fond `bg-bg`, texte `text-[16px]` obligatoire (règle des 16 px, voir Typography), `<label>` ou `aria-label` toujours présent (jamais un placeholder seul en guise de libellé).
 - **Focus :** `outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary` (motif établi dans le module Entretiens, généralisé à tout le périmètre communication/organisation dans le Lot 2 — remplace l'ancien `focus:border-primary` qui réagissait à tout focus, y compris au clic, sans le repli visuel dédié).
 - **Erreur :** pas de bordure rouge dédiée observée dans le code (ni avant ni après le Lot 2) — les erreurs de champ/action restent signalées soit par le toast global (`role="alert"`, voir Toasts), soit par un texte `text-[12px] text-rec` positionné juste sous ou à côté du contrôle concerné (ex. `champ-audio.tsx` : échec d'accès au micro ; `notifications-parametres.tsx` : échec d'activation des notifications sur l'appareil). C'est le motif établi à généraliser pour un prochain lot plutôt qu'un contour rouge inventé ici.

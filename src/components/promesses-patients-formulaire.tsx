@@ -11,11 +11,11 @@ import {
   type ChampPromesse,
   type ErreursPromesse,
 } from '@/lib/promesses-patients'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-const CHAMP_CLASS =
-  'w-full rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink placeholder:text-muted outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted outline-none ${CHAMP_CLASS}`
 
 function IconFermer({ className }: { className?: string }) {
   return (
@@ -139,7 +139,7 @@ export function FormulairePromesse({
       // Pas d'autocomplétion navigateur : ce sont les coordonnées du
       // patient, pas celles du membre de l'équipe qui tient le téléphone.
       autoComplete: 'off',
-      className: CHAMP_CLASS,
+      className: CHAMP_PROMESSE_CLASS,
     }
   }
 
@@ -210,7 +210,7 @@ export function FormulairePromesse({
               maxLength={String(QUANTITE_MAX).length}
               placeholder="1"
               enterKeyHint="next"
-              className={`${CHAMP_CLASS} text-center tabular-nums`}
+              className={`${CHAMP_PROMESSE_CLASS} text-center tabular-nums`}
             />
           </div>
         </div>
@@ -251,7 +251,7 @@ export function FormulairePromesse({
                 modifier('telephone_patient', formaterTelephone(champs.telephone_patient) ?? '')
               }
             }}
-            className={`${CHAMP_CLASS} tabular-nums`}
+            className={`${CHAMP_PROMESSE_CLASS} tabular-nums`}
           />
           <MessageErreur id={`${idChamp('telephone_patient')}-erreur`} erreur={erreurs.telephone_patient} />
         </div>

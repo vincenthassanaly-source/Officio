@@ -27,11 +27,11 @@ import {
   formDataPromesse,
   type ChampsNouvellePromesse,
 } from '@/components/promesses-patients-formulaire'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-const CHAMP_CLASS =
-  'w-full rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink placeholder:text-muted outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted outline-none ${CHAMP_CLASS}`
 
 // Préfixe des identifiants temporaires des promesses ajoutées de façon
 // optimiste : leurs actions restent désactivées tant que le serveur n'a pas
@@ -318,7 +318,7 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="search"
-            className={`${CHAMP_CLASS} bg-surface pl-10 pr-11 shadow-card border-transparent [&::-webkit-search-cancel-button]:appearance-none`}
+            className={`${CHAMP_PROMESSE_CLASS} bg-surface pl-10 pr-11 shadow-card border-transparent [&::-webkit-search-cancel-button]:appearance-none`}
           />
           {recherche && (
             <button

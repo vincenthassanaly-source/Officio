@@ -1,14 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MODULES_SECONDAIRES, deriveDirectionNav } from '@/lib/nav-items'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { demarrerNavigation } from '@/lib/navigation-en-cours'
-
-const SELECTEUR_FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Panneau remontant du bas listant les modules secondaires (accessibles
@@ -22,46 +20,8 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
   const pathname = usePathname()
   const signalerNavigation = useFermerAvecRetour(ouvert, onFermer)
   const panneauRef = useRef<HTMLDivElement>(null)
-  const declencheurRef = useRef<HTMLElement | null>(null)
 
-  useEffect(() => {
-    if (ouvert) {
-      declencheurRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      panneauRef.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
-    } else {
-      declencheurRef.current?.focus()
-      declencheurRef.current = null
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    const overflowOrigine = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = overflowOrigine
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !panneauRef.current) return
-      const cibles = Array.from(panneauRef.current.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE))
-      if (cibles.length === 0) return
-      const premier = cibles[0]
-      const dernier = cibles[cibles.length - 1]
-      if (e.shiftKey && document.activeElement === premier) {
-        e.preventDefault()
-        dernier.focus()
-      } else if (!e.shiftKey && document.activeElement === dernier) {
-        e.preventDefault()
-        premier.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [ouvert])
+  usePiegeFocus(ouvert, panneauRef)
 
   if (!ouvert) return null
 
