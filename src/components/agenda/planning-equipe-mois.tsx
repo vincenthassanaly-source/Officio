@@ -137,10 +137,10 @@ export function PlanningEquipeMois({
                     )
                   })}
                   {/* Compromis documenté (grille dense, voir le rapport) :
-                      indicateur "+n" à 8 px dans une cellule de ~45 px — la
+                      indicateur "+n" à 10 px dans une cellule de ~45 px — la
                       liste complète reste à taille normale dans le panneau de
                       détail ouvert au tap. */}
-                  {reste > 0 && <span className="text-[8px] font-semibold tabular-nums text-muted">+{reste}</span>}
+                  {reste > 0 && <span className="text-[10px] font-semibold tabular-nums text-muted">+{reste}</span>}
                 </span>
               )}
             </button>

@@ -58,7 +58,7 @@ function ReconnexionCompte({
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
         aria-label={`Email du compte ${compte.nomComplet}`}
-        className="min-h-11 rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+        className="min-h-11 rounded-lg border border-champ-bord bg-bg px-2.5 py-1.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
       <input
         type="password"
@@ -68,7 +68,7 @@ function ReconnexionCompte({
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Mot de passe"
         aria-label={`Mot de passe du compte ${compte.nomComplet}`}
-        className="min-h-11 rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+        className="min-h-11 rounded-lg border border-champ-bord bg-bg px-2.5 py-1.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
       {erreur && (
         <p role="alert" className="text-[12px] font-medium text-rec">

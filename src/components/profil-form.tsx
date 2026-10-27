@@ -34,7 +34,7 @@ export function ProfilForm({
           name="nom_complet"
           defaultValue={nomComplet}
           required
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
       </div>
 
@@ -48,7 +48,7 @@ export function ProfilForm({
           defaultValue={initiales}
           maxLength={3}
           aria-describedby="initiales-aide"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] uppercase text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] uppercase text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <p id="initiales-aide" className="text-[12px] text-muted">
           Recalculées automatiquement si laissé vide.

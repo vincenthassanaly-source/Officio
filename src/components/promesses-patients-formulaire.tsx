@@ -15,7 +15,7 @@ import {
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 const CHAMP_CLASS =
-  'w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink placeholder:text-muted outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'w-full rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink placeholder:text-muted outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 function IconFermer({ className }: { className?: string }) {
   return (

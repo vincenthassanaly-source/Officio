@@ -351,7 +351,7 @@ export function EntretienDocuments({
             id="filtre-tag-documents"
             value={filtreTag}
             onChange={(e) => setFiltreTag(e.target.value)}
-            className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 text-base text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 text-base text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
             <option value="">Tous ({total})</option>
             {tagsDistincts.map((tag) => (

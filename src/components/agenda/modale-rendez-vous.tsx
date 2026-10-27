@@ -16,7 +16,7 @@ const TITRE_ENTRETIEN = 'Entretien thérapeutique'
 // Variante de CHAMP_CLASS sur fond surface, lisible sur le bloc teal-soft
 // des champs patient.
 const CHAMP_PATIENT_CLASS =
-  'min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'min-w-0 flex-1 rounded-xl border border-champ-bord bg-surface px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 // Durées proposées (minutes). Une durée existante hors liste (saisie avant
 // ce formulaire, ou via SQL) est ajoutée à la volée plutôt que perdue.

@@ -135,12 +135,12 @@ export function AgendaVueGlobaleMois({
               {estAujourdhui && <span aria-hidden="true" className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />}
               <span>{d.getDate()}</span>
               {/* Compromis documenté (grille dense, voir le rapport) : pastille
-                  de compte à 9 px dans une cellule de ~45 px — un texte à 12 px
+                  de compte à 10 px dans une cellule de ~45 px — un texte à 12 px
                   ne tiendrait plus dans le cercle. Le nombre exact reste lisible
                   dans le panneau de détail ouvert au tap (taille normale). */}
               {items.length > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold tabular-nums ${
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold tabular-nums ${
                     estAujourdhui ? 'bg-primary text-white' : 'bg-accent-soft text-accent'
                   }`}
                 >
