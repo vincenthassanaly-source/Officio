@@ -37,91 +37,90 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
         </button>
       </div>
 
-      {onglet === 'creer' ? (
-        <form action={actionCreer} aria-busy={pendingCreer} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bienvenue-nom-officine" className={CLASSE_LIBELLE_AUTH}>
-              Nom de la pharmacie
-            </label>
-            <input
-              id="bienvenue-nom-officine"
-              name="nom_officine"
-              autoComplete="organization"
-              required
-              placeholder="Pharmacie du Centre"
-              className={CLASSE_CHAMP_AUTH}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bienvenue-nom-complet-creer" className={CLASSE_LIBELLE_AUTH}>
-              Ton nom complet
-            </label>
-            <input
-              id="bienvenue-nom-complet-creer"
-              name="nom_complet"
-              autoComplete="name"
-              required
-              placeholder="Prénom Nom"
-              className={CLASSE_CHAMP_AUTH}
-            />
-          </div>
-          <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
-          {etatCreer?.error && (
-            <p id="bienvenue-erreur-creer" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={pendingCreer}
-            className={CLASSE_BOUTON_AUTH}
-          >
-            {pendingCreer ? 'Création…' : 'Créer mon officine'}
-          </button>
-        </form>
-      ) : (
-        <form action={actionRejoindre} aria-busy={pendingRejoindre} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bienvenue-code" className={CLASSE_LIBELLE_AUTH}>
-              Code d&rsquo;invitation
-            </label>
-            <input
-              id="bienvenue-code"
-              name="code"
-              autoComplete="off"
-              autoCapitalize="characters"
-              spellCheck={false}
-              aria-invalid={etatRejoindre?.error ? true : undefined}
-              aria-describedby={etatRejoindre?.error ? 'bienvenue-erreur-rejoindre' : undefined}
-              required
-              defaultValue={inviteInitial}
-              placeholder="ABC123EF"
-              className={`${CLASSE_CHAMP_AUTH} uppercase`}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bienvenue-nom-complet-rejoindre" className={CLASSE_LIBELLE_AUTH}>
-              Ton nom complet
-            </label>
-            <input
-              id="bienvenue-nom-complet-rejoindre"
-              name="nom_complet"
-              autoComplete="name"
-              required
-              placeholder="Prénom Nom"
-              className={CLASSE_CHAMP_AUTH}
-            />
-          </div>
-          {etatRejoindre?.error && (
-            <p id="bienvenue-erreur-rejoindre" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={pendingRejoindre}
-            className={CLASSE_BOUTON_AUTH}
-          >
-            {pendingRejoindre ? 'Connexion…' : 'Rejoindre cette officine'}
-          </button>
-        </form>
-      )}
+      {/* Les deux formulaires restent montés (l'inactif est masqué) pour
+          conserver la saisie en cours quand on change d'onglet. */}
+      <form action={actionCreer} aria-busy={pendingCreer} hidden={onglet !== 'creer'} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="bienvenue-nom-officine" className={CLASSE_LIBELLE_AUTH}>
+            Nom de la pharmacie
+          </label>
+          <input
+            id="bienvenue-nom-officine"
+            name="nom_officine"
+            autoComplete="organization"
+            required
+            placeholder="Pharmacie du Centre"
+            className={CLASSE_CHAMP_AUTH}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="bienvenue-nom-complet-creer" className={CLASSE_LIBELLE_AUTH}>
+            Ton nom complet
+          </label>
+          <input
+            id="bienvenue-nom-complet-creer"
+            name="nom_complet"
+            autoComplete="name"
+            required
+            placeholder="Prénom Nom"
+            className={CLASSE_CHAMP_AUTH}
+          />
+        </div>
+        <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
+        {etatCreer?.error && (
+          <p id="bienvenue-erreur-creer" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
+        )}
+        <button
+          type="submit"
+          disabled={pendingCreer}
+          className={CLASSE_BOUTON_AUTH}
+        >
+          {pendingCreer ? 'Création…' : 'Créer mon officine'}
+        </button>
+      </form>
+      <form action={actionRejoindre} aria-busy={pendingRejoindre} hidden={onglet !== 'rejoindre'} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="bienvenue-code" className={CLASSE_LIBELLE_AUTH}>
+            Code d&rsquo;invitation
+          </label>
+          <input
+            id="bienvenue-code"
+            name="code"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            aria-invalid={etatRejoindre?.error ? true : undefined}
+            aria-describedby={etatRejoindre?.error ? 'bienvenue-erreur-rejoindre' : undefined}
+            required
+            defaultValue={inviteInitial}
+            placeholder="ABC123EF"
+            className={`${CLASSE_CHAMP_AUTH} uppercase`}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="bienvenue-nom-complet-rejoindre" className={CLASSE_LIBELLE_AUTH}>
+            Ton nom complet
+          </label>
+          <input
+            id="bienvenue-nom-complet-rejoindre"
+            name="nom_complet"
+            autoComplete="name"
+            required
+            placeholder="Prénom Nom"
+            className={CLASSE_CHAMP_AUTH}
+          />
+        </div>
+        {etatRejoindre?.error && (
+          <p id="bienvenue-erreur-rejoindre" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>
+        )}
+        <button
+          type="submit"
+          disabled={pendingRejoindre}
+          className={CLASSE_BOUTON_AUTH}
+        >
+          {pendingRejoindre ? 'Connexion…' : 'Rejoindre cette officine'}
+        </button>
+      </form>
     </div>
   )
 }
