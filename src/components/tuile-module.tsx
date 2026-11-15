@@ -18,7 +18,7 @@ export function TuileModule({ href, Icone, couleur, titre, detail, indisponible 
   return (
     <Link
       href={href}
-      className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3.5 shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3.5 shadow-card hover:bg-primary-soft/40 active:bg-primary-soft motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.985] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       <div
         className={`flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] ${couleur}`}

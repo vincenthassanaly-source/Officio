@@ -76,7 +76,7 @@ export function OpioidesImpression({ donnees }: { donnees: DonneesOpioides }) {
       <section aria-label="Fiche entretien accompagnement opioïdes" className="bpm-feuille">
         <header className="mb-3 print:mb-2">
           <h2 className="text-[16px] font-bold uppercase text-ink">Fiche entretien accompagnement « Opioïdes »</h2>
-          <p className="text-[11.5px] text-ink">D’après la fiche pharmacien de l’Assurance Maladie.</p>
+          <p className="text-[12px] text-ink print:text-[11.5px]">D’après la fiche pharmacien de l’Assurance Maladie.</p>
         </header>
 
         <table className="w-full border-collapse">
@@ -98,7 +98,7 @@ export function OpioidesImpression({ donnees }: { donnees: DonneesOpioides }) {
         <Bloc titre="Règles de bon usage transmises à la délivrance">
           <ul className="flex flex-col">
             {REGLES_BON_USAGE.map((regle, i) => (
-              <li key={regle} className="bpm-ligne flex items-start gap-2 border-b border-ink py-1 text-[11.5px] leading-snug text-ink">
+              <li key={regle} className="bpm-ligne flex items-start gap-2 border-b border-ink py-1 text-[12px] leading-snug text-ink print:text-[11.5px]">
                 <CaseAbordee abordee={donnees.bon_usage[i]} />
                 <span>
                   {regle}
@@ -107,7 +107,7 @@ export function OpioidesImpression({ donnees }: { donnees: DonneesOpioides }) {
               </li>
             ))}
           </ul>
-          <p className="mt-1 text-[11.5px] text-ink">
+          <p className="mt-1 text-[12px] text-ink print:text-[11.5px]">
             {abordees} règle{abordees > 1 ? 's' : ''} abordée{abordees > 1 ? 's' : ''} sur {REGLES_BON_USAGE.length}.
           </p>
         </Bloc>
@@ -116,13 +116,13 @@ export function OpioidesImpression({ donnees }: { donnees: DonneesOpioides }) {
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th scope="col" className={`${CELLULE} text-left text-[11.5px] font-semibold text-ink`}>
+                <th scope="col" className={`${CELLULE} text-left text-[12px] font-semibold text-ink print:text-[11.5px]`}>
                   <span className="sr-only">Question</span>
                 </th>
-                <th scope="col" className={`${CELLULE} w-16 text-center text-[11.5px] font-bold text-ink`}>
+                <th scope="col" className={`${CELLULE} w-16 text-center text-[12px] font-bold text-ink print:text-[11.5px]`}>
                   Oui
                 </th>
-                <th scope="col" className={`${CELLULE} w-16 text-center text-[11.5px] font-bold text-ink`}>
+                <th scope="col" className={`${CELLULE} w-16 text-center text-[12px] font-bold text-ink print:text-[11.5px]`}>
                   Non
                 </th>
               </tr>
@@ -130,7 +130,7 @@ export function OpioidesImpression({ donnees }: { donnees: DonneesOpioides }) {
             <tbody>
               {QUESTIONS_POMI.map((question, i) => (
                 <tr key={question} className="bpm-ligne">
-                  <td className={`${CELLULE} text-[11.5px] leading-snug text-ink`}>
+                  <td className={`${CELLULE} text-[12px] leading-snug text-ink print:text-[11.5px]`}>
                     {i + 1}. {question}
                   </td>
                   <td className={`${CELLULE} text-center text-[12.5px] text-ink`}>

@@ -84,9 +84,12 @@ export function EntretienPasAPas({
   // la phase à chaque changement d'écran (lecteur d'écran et clavier).
   useEffect(() => {
     const precedent = document.body.style.overflow
+    // Le focus revient au bouton « Démarrer / Reprendre » à la fermeture.
+    const declencheur = document.activeElement instanceof HTMLElement ? document.activeElement : null
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = precedent
+      if (declencheur?.isConnected) declencheur.focus()
     }
   }, [])
 
@@ -179,7 +182,7 @@ export function EntretienPasAPas({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-3 sm:px-8">
+      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-[13px] font-semibold text-muted">{nomType}</p>
           <button
@@ -306,7 +309,7 @@ export function EntretienPasAPas({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-border bg-surface px-4 py-3 sm:px-8">
+      <footer className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
           {!ecranFin && nbNonCochesPhase > 0 && (
             <p className="text-[13px] text-muted">

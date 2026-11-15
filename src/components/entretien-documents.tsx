@@ -235,6 +235,14 @@ export function EntretienDocuments({
     return [...vus].sort((a, b) => a.localeCompare(b, 'fr'))
   }, [documentsOptimistes])
 
+  const comptesParTag = useMemo(() => {
+    const comptes = new Map<string, number>()
+    for (const d of documentsOptimistes) {
+      if (d.tag) comptes.set(d.tag, (comptes.get(d.tag) ?? 0) + 1)
+    }
+    return comptes
+  }, [documentsOptimistes])
+
   const documentsAffiches = useMemo(
     () => (filtreTag ? documentsOptimistes.filter((d) => d.tag === filtreTag) : documentsOptimistes),
     [documentsOptimistes, filtreTag]
@@ -257,11 +265,14 @@ export function EntretienDocuments({
 
   async function ouvrirDocument(id: string, chemin: string) {
     setOuvertureEnCours(id)
-    const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocumentEntretien(chemin))
-    if (!resultat.succes) {
-      toast({ type: 'erreur', message: resultat.message })
+    try {
+      const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocumentEntretien(chemin))
+      if (!resultat.succes) {
+        toast({ type: 'erreur', message: resultat.message })
+      }
+    } finally {
+      setOuvertureEnCours(null)
     }
-    setOuvertureEnCours(null)
   }
 
   function supprimer(id: string) {
@@ -356,7 +367,7 @@ export function EntretienDocuments({
             <option value="">Tous ({total})</option>
             {tagsDistincts.map((tag) => (
               <option key={tag} value={tag}>
-                {tag} ({documentsOptimistes.filter((d) => d.tag === tag).length})
+                {tag} ({comptesParTag.get(tag) ?? 0})
               </option>
             ))}
           </select>
