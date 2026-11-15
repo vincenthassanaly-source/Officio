@@ -162,7 +162,7 @@ export function AgendaVueGlobale({
       <div className="flex flex-1 flex-col gap-4">
         {weekDates.map((d) => {
           const iso = toISODate(d)
-          const estAujourdhui = iso === toISODate(new Date())
+          const estAujourdhui = iso === aujourdhuiIso
           const itemsJour = itemsParJour.get(iso) ?? []
           return (
             <div

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 
 const SEUIL_DECLENCHEMENT_PX = 70
@@ -25,8 +25,28 @@ function trouverConteneurScrollable(el: HTMLElement | null): HTMLElement | Eleme
  * contain` (voir globals.css) pour désactiver le pull-to-refresh natif du
  * navigateur et éviter le conflit visuel avec cet indicateur custom.
  */
-function reductionMouvementDemandee(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+// MediaQueryList créée une seule fois (au lieu d'un matchMedia() à chaque
+// rendu, donc à chaque pixel tiré) et suivie via useSyncExternalStore : la
+// préférence reste réactive si l'utilisateur la change en cours de session.
+let requeteReductionMouvement: MediaQueryList | null = null
+
+function obtenirRequeteReductionMouvement(): MediaQueryList {
+  requeteReductionMouvement ??= window.matchMedia('(prefers-reduced-motion: reduce)')
+  return requeteReductionMouvement
+}
+
+function sabonnerReductionMouvement(notifier: () => void) {
+  const requete = obtenirRequeteReductionMouvement()
+  requete.addEventListener('change', notifier)
+  return () => requete.removeEventListener('change', notifier)
+}
+
+function lireReductionMouvement(): boolean {
+  return obtenirRequeteReductionMouvement().matches
+}
+
+function lireReductionMouvementServeur(): boolean {
+  return false
 }
 
 export function PullToRefresh({
@@ -43,6 +63,11 @@ export function PullToRefresh({
   const [distanceTiree, setDistanceTiree] = useState(0)
   const [tirageActif, setTirageActif] = useState(false)
   const [rafraichissement, setRafraichissement] = useState(false)
+  const reductionMouvement = useSyncExternalStore(
+    sabonnerReductionMouvement,
+    lireReductionMouvement,
+    lireReductionMouvementServeur
+  )
 
   const gererDebutTouche = useCallback(
     (e: React.TouchEvent) => {
@@ -111,7 +136,7 @@ export function PullToRefresh({
         className="flex shrink-0 items-center justify-center overflow-hidden"
         style={{
           height: distanceTiree,
-          transition: tirageActif || reductionMouvementDemandee() ? 'none' : 'height 200ms ease-out',
+          transition: tirageActif || reductionMouvement ? 'none' : 'height 200ms ease-out',
         }}
         aria-hidden="true"
       >

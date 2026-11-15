@@ -265,6 +265,8 @@ export function PlanningEquipe({
     })
   }, [creneaux, weekDates])
 
+  const aujourdhuiIsoGrille = toISODate(new Date())
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
@@ -437,7 +439,7 @@ export function PlanningEquipe({
       <div className="grid grid-cols-[28px_repeat(7,1fr)] gap-x-1">
         <div />
         {weekDates.map((d) => {
-          const estAujourdhui = toISODate(d) === toISODate(new Date())
+          const estAujourdhui = toISODate(d) === aujourdhuiIsoGrille
           return (
             <div key={toISODate(d)} className="text-center">
               <div className={`text-[12px] font-semibold uppercase ${estAujourdhui ? 'text-primary' : 'text-muted'}`}>
