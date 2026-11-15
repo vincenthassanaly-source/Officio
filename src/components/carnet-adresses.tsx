@@ -6,6 +6,7 @@ import type { CategorieContact, Contact } from '@/lib/data/contacts'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { CHAMP_CLASS } from '@/components/ui/champ'
+import { formaterTelephone } from '@/lib/promesses-patients'
 
 const CATEGORIES: { value: CategorieContact; label: string; className: string }[] = [
   { value: 'medecin', label: 'Médecins', className: 'bg-primary-soft text-primary' },
@@ -264,6 +265,11 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                     {labelCategorie(c.categorie)}
                   </span>
                 </div>
+                {c.telephone && (
+                  <div className="chiffres-tabulaires mt-1 wrap-anywhere text-[12.5px] text-muted">
+                    {formaterTelephone(c.telephone) ?? c.telephone}
+                  </div>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {c.telephone && (
