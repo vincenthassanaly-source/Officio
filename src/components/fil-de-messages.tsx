@@ -77,12 +77,44 @@ function IconOptions({ className }: { className?: string }) {
 // plutôt que factorisée, pour ne pas coupler les deux fichiers sur un
 // détail d'implémentation (même convention que IconAppareilPhoto entre
 // champ-photo.tsx et champ-photos.tsx).
-function IconPouce({ className }: { className?: string }) {
+function IconPouce({ className, 'aria-hidden': ariaHidden }: { className?: string; 'aria-hidden'?: 'true' }) {
   return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} aria-hidden={ariaHidden} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M7 10v12" />
       <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
     </svg>
+  )
+}
+
+const MAX_AVATARS_PILE = 4
+
+function PileAvatars({
+  personnes,
+  couleurs,
+  titre,
+}: {
+  personnes: { profil_id: string; initiales: string }[]
+  couleurs: Map<string, CouleurAvatar>
+  titre: string
+}) {
+  const visibles = personnes.slice(0, MAX_AVATARS_PILE)
+  const reste = personnes.length - visibles.length
+  return (
+    <div className="flex items-center" role="img" aria-label={titre} title={titre}>
+      {visibles.map((l, i) => {
+        const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
+        return (
+          <div
+            key={l.profil_id}
+            className={`-ml-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+            style={{ zIndex: visibles.length - i }}
+          >
+            {l.initiales}
+          </div>
+        )
+      })}
+      {reste > 0 && <span className="ml-1 text-[12px] font-semibold text-muted">+{reste}</span>}
+    </div>
   )
 }
 
@@ -319,6 +351,7 @@ export function FilDeMessages({
             <button
               type="button"
               onClick={() => setFiltreCategorie(FILTRE_TOUTES)}
+              aria-pressed={filtreCategorie === FILTRE_TOUTES}
               className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
@@ -336,6 +369,7 @@ export function FilDeMessages({
                 type="button"
                 key={c.value}
                 onClick={() => setFiltreCategorie(c.value)}
+                aria-pressed={filtreCategorie === c.value}
                 className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <span
@@ -466,11 +500,12 @@ export function FilDeMessages({
               key={c.value}
               type="button"
               onClick={() => setCategorie(c.value)}
+              aria-pressed={categorie === c.value}
               className="-my-3.5 flex min-h-11 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
                 className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
-                  categorie === c.value ? c.className : 'bg-bg text-muted'
+                  categorie === c.value ? c.className : 'bg-neutral-soft text-muted'
                 }`}
               >
                 {c.label}
@@ -717,35 +752,20 @@ function MessageItem({
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           {m.lecteurs.length > 0 && (
-            <div className="flex" role="img" aria-label={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`} title={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`}>
-              {m.lecteurs.map((l, i) => {
-                const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
-                return (
-                  <div
-                    key={l.profil_id}
-                    className={`-ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
-                    style={{ zIndex: m.lecteurs.length - i }}
-                  >
-                    {l.initiales}
-                  </div>
-                )
-              })}
-            </div>
+            <PileAvatars
+              personnes={m.lecteurs}
+              couleurs={couleurs}
+              titre={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`}
+            />
           )}
           {m.pouces.length > 0 && (
-            <div className="flex" role="img" aria-label={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`} title={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`}>
-              {m.pouces.map((p, i) => {
-                const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
-                return (
-                  <div
-                    key={p.profil_id}
-                    className={`-ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
-                    style={{ zIndex: m.pouces.length - i }}
-                  >
-                    {p.initiales}
-                  </div>
-                )
-              })}
+            <div className="flex items-center gap-1">
+              <IconPouce className="h-3.5 w-3.5 text-muted" aria-hidden="true" />
+              <PileAvatars
+                personnes={m.pouces}
+                couleurs={couleurs}
+                titre={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`}
+              />
             </div>
           )}
         </div>

@@ -196,7 +196,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
+      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-3">
         {visibles.length === 0 && (
           <p className="py-10 text-center text-sm text-muted lg:col-span-2">
             {contacts.length === 0
@@ -265,7 +265,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                   </span>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="flex shrink-0 items-center gap-2">
                 {c.telephone && (
                   <a
                     href={`tel:${c.telephone}`}

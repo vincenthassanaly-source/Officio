@@ -144,7 +144,7 @@ export function AccueilDashboard({
                   >
                     <span
                       className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
-                        t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+                        t.statut === 'fait' ? 'border-primary bg-primary' : 'border-champ-bord'
                       }`}
                     >
                       {t.statut === 'fait' && (

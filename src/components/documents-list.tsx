@@ -61,6 +61,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
   const [filtre, setFiltre] = useState<'tous' | CategorieDocument>('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [ouvertureId, setOuvertureId] = useState<string | null>(null)
   const toast = useToast()
 
   const visibles = useMemo(
@@ -68,10 +69,16 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
     [documents, filtre]
   )
 
-  async function ouvrirDocument(chemin: string) {
-    const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocument(chemin))
-    if (!resultat.succes) {
-      toast({ type: 'erreur', message: resultat.message })
+  async function ouvrirDocument(id: string, chemin: string) {
+    if (ouvertureId) return
+    setOuvertureId(id)
+    try {
+      const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocument(chemin))
+      if (!resultat.succes) {
+        toast({ type: 'erreur', message: resultat.message })
+      }
+    } finally {
+      setOuvertureId(null)
     }
   }
 
@@ -173,7 +180,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
+      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-3">
         {visibles.length === 0 && (
           <p className="py-10 text-center text-sm text-muted lg:col-span-2">Aucun document pour l&rsquo;instant.</p>
         )}
@@ -181,8 +188,9 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           <button
             type="button"
             key={d.id}
-            onClick={() => ouvrirDocument(d.chemin_stockage)}
-            className={`flex min-h-11 items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5 text-left ${CLASSE_FOCUS}`}
+            onClick={() => ouvrirDocument(d.id, d.chemin_stockage)}
+            aria-busy={ouvertureId === d.id}
+            className={`flex min-h-11 items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5 text-left ${ouvertureId === d.id ? 'opacity-60' : ''} ${CLASSE_FOCUS}`}
           >
             <div
               aria-hidden="true"
@@ -194,6 +202,11 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{d.nom}</div>
+              {ouvertureId === d.id && (
+                <div role="status" className="text-[12px] font-semibold text-primary">
+                  Ouverture…
+                </div>
+              )}
               <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
                 <span
                   className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${classNameCategorie(d.categorie)}`}

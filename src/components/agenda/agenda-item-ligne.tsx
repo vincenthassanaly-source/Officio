@@ -179,7 +179,7 @@ export function ItemLigne({
                 type="button"
                 onClick={() => onSupprimerRdv(r.id)}
                 className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                aria-label="Supprimer"
+                aria-label={`Supprimer le rendez-vous ${patient ?? r.titre}`}
               >
                 <IconFermer className="h-4 w-4" />
               </button>
@@ -209,7 +209,7 @@ export function ItemLigne({
           >
             <div
               className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
-                t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+                t.statut === 'fait' ? 'border-primary bg-primary' : 'border-champ-bord'
               }`}
             >
               {t.statut === 'fait' && <IconCoche className="h-3 w-3 text-white" />}

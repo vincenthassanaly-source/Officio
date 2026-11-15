@@ -334,7 +334,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
+      <div className="flex flex-1 flex-col gap-2 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-2.5">
         {visibles.length === 0 && (
           <p className="py-10 text-center text-sm text-muted lg:col-span-2">
             Aucune huile ne correspond.

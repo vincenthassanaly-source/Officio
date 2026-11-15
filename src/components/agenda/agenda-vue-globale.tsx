@@ -131,7 +131,7 @@ export function AgendaVueGlobale({
       {/* data-swipe-ignore : exclut ce strip du swipe de semaine détecté par
           Agenda (agenda.tsx) — déjà scrollable au doigt horizontalement,
           un swipe démarré ici ne doit pas changer de semaine. */}
-      <div className="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
+      <div className="grid grid-cols-7 gap-1 pb-1" data-swipe-ignore>
         {weekDates.map((d) => {
           const iso = toISODate(d)
           const actif = iso === dateSelectionnee
@@ -141,7 +141,7 @@ export function AgendaVueGlobale({
               type="button"
               key={iso}
               onClick={() => selectionnerJour(iso)}
-              className={`flex min-h-11 w-11 shrink-0 flex-col items-center justify-center rounded-2xl border py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+              className={`flex min-h-11 min-w-0 flex-col items-center justify-center rounded-2xl border py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-ink'
               }`}
             >
