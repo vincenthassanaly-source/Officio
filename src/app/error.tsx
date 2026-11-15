@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 import { IllustrationErreur } from '@/components/illustrations'
 import { signalerErreurClient } from '@/app/actions/erreurs-client'
 
@@ -15,6 +14,13 @@ export default function ErreurRacine({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const titreRef = useRef<HTMLHeadingElement>(null)
+
+  // Déplace le focus sur le titre pour annoncer l'erreur aux lecteurs d'écran.
+  useEffect(() => {
+    titreRef.current?.focus()
+  }, [])
+
   useEffect(() => {
     // Jamais de détail technique affiché à l'utilisateur — uniquement en
     // console, et seulement en développement.
@@ -39,7 +45,7 @@ export default function ErreurRacine({
     <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-bg px-6 text-center">
       <IllustrationErreur />
       <div className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl text-ink">Une erreur est survenue</h1>
+        <h1 ref={titreRef} tabIndex={-1} className="font-heading text-2xl text-ink outline-none">Une erreur est survenue</h1>
         <p className="max-w-xs text-[13.5px] leading-relaxed text-muted">
           Réessaie dans quelques instants. Si ça persiste, reviens à l&rsquo;accueil.
         </p>
@@ -52,12 +58,14 @@ export default function ErreurRacine({
         >
           Réessayer
         </button>
-        <Link
+        {/* Rechargement complet voulu : repart d'un état sain après une erreur. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           href="/"
           className="min-h-11 rounded-xl border border-border px-6 py-3 text-[14px] font-semibold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Accueil
-        </Link>
+        </a>
       </div>
     </main>
   )

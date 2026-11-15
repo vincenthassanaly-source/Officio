@@ -20,7 +20,7 @@ export default async function LoginPage({
       {modeAjout && (
         <p className="mb-5 text-[13px] text-muted">
           Ta session actuelle reste ouverte. Ce compte sera simplement mémorisé sur cet
-          ordinateur pour que tu puisses basculer dessus depuis le menu du bas.
+          appareil pour que tu puisses basculer dessus depuis le menu de ton profil.
         </p>
       )}
       <LoginForm modeAjout={modeAjout} />

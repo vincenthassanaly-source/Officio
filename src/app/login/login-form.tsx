@@ -60,12 +60,12 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
       ajouterOuMettreAJourCompte(resultat)
       setEmail('')
       setResultatAjout({
-        succes: `Compte de ${resultat.nomComplet.split(' ')[0]} ajouté sur cet ordinateur. Ouvre le menu du bas pour basculer dessus.`,
+        succes: `Compte de ${resultat.nomComplet.split(' ')[0]} ajouté sur cet appareil. Ouvre le menu de ton profil pour basculer dessus.`,
       })
     })
   }
 
-  const pending = modeAjout ? pendingAjout : pendingConnexion
+  const pending = modeAjout ? pendingAjout : pendingConnexion || !!succesConnexion
   const erreur = modeAjout ? resultatAjout?.erreur : state && 'error' in state ? state.error : undefined
 
   return (
@@ -115,6 +115,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className={CLASSE_BOUTON_AUTH}
       >
         {pending ? (modeAjout ? 'Ajout…' : 'Connexion…') : modeAjout ? 'Ajouter ce compte' : 'Se connecter'}

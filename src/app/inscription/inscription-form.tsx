@@ -1,11 +1,12 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { inscription } from '@/app/actions/inscription'
 import { CLASSE_BOUTON_AUTH, CLASSE_CHAMP_AUTH, CLASSE_LIBELLE_AUTH } from '@/components/carte-authentification'
 
 export function InscriptionForm({ invite }: { invite?: string }) {
   const [state, action, pending] = useActionState(inscription, undefined)
+  const [email, setEmail] = useState('')
 
   return (
     <form action={action} aria-busy={pending} className="flex flex-col gap-4">
@@ -25,6 +26,8 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           spellCheck={false}
           aria-invalid={state?.error ? true : undefined}
           aria-describedby={state?.error ? 'inscription-erreur' : undefined}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className={CLASSE_CHAMP_AUTH}
         />
       </div>

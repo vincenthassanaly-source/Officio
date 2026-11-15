@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { IllustrationPageIntrouvable } from '@/components/illustrations'
 
+export const metadata = { title: 'Page introuvable' }
+
 export default function NotFound() {
   return (
     <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-bg px-6 text-center">
