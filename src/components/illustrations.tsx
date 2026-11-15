@@ -56,7 +56,7 @@ function IconAlerte({ className }: { className?: string }) {
 }
 
 // Croix de pharmacie + loupe en médaillon : évoque une recherche restée sans
-// résultat, cohérent avec l'identité de l'app (voir icon-master.png).
+// résultat, cohérent avec l'identité de l'app.
 export function IllustrationPageIntrouvable() {
   return (
     <div className="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
