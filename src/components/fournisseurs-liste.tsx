@@ -10,6 +10,7 @@ import type { Fournisseur, TypeFournisseur } from '@/lib/data/fournisseurs'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { CHAMP_CLASS } from '@/components/ui/champ'
+import { formaterTelephone } from '@/lib/promesses-patients'
 
 const TYPES: { value: TypeFournisseur; label: string; className: string }[] = [
   { value: 'grossiste', label: 'Grossiste', className: 'bg-primary-soft text-primary' },
@@ -296,6 +297,11 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[12px] font-bold ${classNameType(f.type)}`}>
                     {labelType(f.type)}
                   </span>
+                  {f.telephone && (
+                    <div className="chiffres-tabulaires mt-1 wrap-anywhere text-[12.5px] text-muted">
+                      {formaterTelephone(f.telephone) ?? f.telephone}
+                    </div>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {f.telephone && (
