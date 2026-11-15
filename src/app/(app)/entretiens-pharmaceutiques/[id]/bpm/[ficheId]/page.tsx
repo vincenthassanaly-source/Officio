@@ -7,6 +7,8 @@ import { BpmSaisie } from '@/components/bpm-saisie'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
+export const metadata = { title: 'Fiche BPM' }
+
 // Saisie pas à pas d'une fiche BPM. La saisie est un plein écran : la page ne
 // rend rien d'autre (pas de titre ni de lien de retour sous le plein écran).
 export default async function BpmSaisiePage({ params }: { params: Promise<{ id: string; ficheId: string }> }) {

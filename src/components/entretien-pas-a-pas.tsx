@@ -19,6 +19,7 @@ import {
   type GroupeScript,
 } from '@/components/entretien-script-etat'
 import { useToast } from '@/components/ui/toast-provider'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 const SELECTEUR_FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -61,6 +62,10 @@ export function EntretienPasAPas({
   const [enregistre, setEnregistre] = useState(false)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
+
+  // Retour système : quitte le pas à pas (sans quitter la page ni perdre les
+  // cases cochées). Gère aussi Échap.
+  useFermerAvecRetour(true, onQuitter)
 
   const idTitre = useId()
   const idNom = useId()
@@ -116,12 +121,6 @@ export function EntretienPasAPas({
   }
 
   function surKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onQuitter()
-      return
-    }
-
     if (e.key === 'Tab') {
       // Piège à focus : Tab et Maj+Tab restent dans le plein écran.
       const focusables = Array.from(conteneurRef.current?.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE) ?? [])
@@ -182,7 +181,8 @@ export function EntretienPasAPas({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+      <header className="shrink-0 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-[13px] font-semibold text-muted">{nomType}</p>
           <button
@@ -207,6 +207,7 @@ export function EntretienPasAPas({
               />
             ))}
           </div>
+        </div>
         </div>
       </header>
 

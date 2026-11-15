@@ -8,6 +8,12 @@ import { LienRetour } from '@/components/lien-retour'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const type = await getTypeEntretien(id)
+  return { title: type?.nom ?? 'Entretien pharmaceutique' }
+}
+
 export default async function EntretienDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 

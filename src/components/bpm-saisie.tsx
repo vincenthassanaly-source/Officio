@@ -41,6 +41,8 @@ import {
 } from '@/lib/bpm'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { useEcranAllume } from '@/lib/use-ecran-allume'
 import {
   CLASSE_BOUTON_PRIMAIRE,
   CLASSE_BOUTON_SECONDAIRE,
@@ -127,6 +129,11 @@ export function BpmSaisie({
   )
   const [statut, setStatut] = useState<StatutEnregistrement>('enregistre')
   const [sectionsOuvertes, setSectionsOuvertes] = useState(false)
+  // Sortie en cours (enregistrement puis navigation) : désactive les boutons de sortie.
+  const [sortie, setSortie] = useState<'quitter' | 'imprimer' | null>(null)
+
+  // Écran gardé allumé : la fiche est lue face au patient.
+  useEcranAllume(true)
 
   const idTitre = useId()
   const conteneurRef = useRef<HTMLDivElement>(null)
@@ -223,23 +230,27 @@ export function BpmSaisie({
     void sauvegarder()
   }
 
+  // Retour système / Échap : quitte la fiche (la feuille « Sections » gère le
+  // sien et se ferme d'abord). Ignoré tant qu'une autre feuille est ouverte.
+  const signalerNavigation = useFermerAvecRetour(true, () => {
+    if (document.querySelectorAll('[aria-modal="true"]').length > 1) return
+    void quitter()
+  })
+
   async function quitter(destination?: string) {
+    if (sortie) return
+    setSortie(destination ? 'imprimer' : 'quitter')
     const ok = await sauvegarder()
     if (!ok) {
+      setSortie(null)
       toast({ type: 'erreur', message: 'La fiche n’a pas pu être enregistrée. Réessayez avant de quitter.' })
       return
     }
+    signalerNavigation()
     router.push(destination ?? `/entretiens-pharmaceutiques/${typeEntretienId}`)
   }
 
   function surKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      if (sectionsOuvertes) setSectionsOuvertes(false)
-      else void quitter()
-      return
-    }
-
     if (e.key === 'Tab') {
       const focusables = Array.from(conteneurRef.current?.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE) ?? [])
       if (focusables.length === 0) return
@@ -287,11 +298,12 @@ export function BpmSaisie({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+      <header inert={sectionsOuvertes} className="shrink-0 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-ink">{nomPatient}</p>
-            <p className="truncate text-[12px] text-muted" title={nomType}>
+            <p className="truncate text-[13px] font-semibold text-ink" title={nomType}>{nomPatient}</p>
+            <p className="truncate text-[12px] text-muted">
               {estFin ? 'Fin de la fiche' : SECTIONS[sectionIndex].titre}
             </p>
           </div>
@@ -300,9 +312,10 @@ export function BpmSaisie({
             <button
               type="button"
               onClick={() => void quitter()}
-              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+              disabled={sortie !== null}
+              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
             >
-              Quitter
+              {sortie === 'quitter' ? 'Enregistrement…' : 'Quitter'}
             </button>
           </div>
         </div>
@@ -327,13 +340,14 @@ export function BpmSaisie({
             ))}
           </div>
         </div>
+        </div>
       </header>
 
-      <p role="status" aria-live="polite" className="sr-only">
+      <p inert={sectionsOuvertes} role="status" aria-live="polite" className="sr-only">
         {estFin ? 'Fin de la fiche.' : `Étape ${index + 1} sur ${ETAPES.length - 1} : ${titreEtape(etape)}`}
       </p>
 
-      <div data-defilement className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
+      <div data-defilement inert={sectionsOuvertes} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
           <h2
             id={idTitre}
@@ -392,6 +406,8 @@ export function BpmSaisie({
               donnees={donnees}
               progression={progression}
               typeEntretienId={typeEntretienId}
+              ouvertureEnCours={sortie !== null}
+              imprimerEnCours={sortie === 'imprimer'}
               onImprimer={() => void quitter(`/entretiens-pharmaceutiques/${typeEntretienId}/bpm/${ficheId}/imprimer`)}
               onAller={(i) => aller(INDEX_PREMIERE_ETAPE_SECTION[i])}
             />
@@ -399,7 +415,7 @@ export function BpmSaisie({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
+      <footer inert={sectionsOuvertes} className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl gap-2">
           <button
             type="button"
@@ -410,8 +426,13 @@ export function BpmSaisie({
             Précédent
           </button>
           {estFin ? (
-            <button type="button" onClick={() => void quitter()} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}>
-              Fermer
+            <button
+              type="button"
+              onClick={() => void quitter()}
+              disabled={sortie !== null}
+              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}
+            >
+              {sortie === 'quitter' ? 'Enregistrement…' : 'Fermer'}
             </button>
           ) : (
             <button type="button" onClick={() => aller(index + 1)} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}>
@@ -447,28 +468,30 @@ export function IndicateurEnregistrement({
   statut: StatutEnregistrement
   onReessayer: () => void
 }) {
-  if (statut === 'erreur') {
-    return (
-      <button
-        type="button"
-        onClick={onReessayer}
-        className={`flex min-h-11 items-center rounded-xl bg-rec-soft px-3 text-[12.5px] font-bold text-rec ${CLASSE_FOCUS}`}
-      >
-        Non enregistré · Réessayer
-      </button>
-    )
-  }
+  // Conteneur live stable : l'échec est annoncé même quand le texte est
+  // remplacé par le bouton. « Enregistrement… » (état intermédiaire) n'est pas
+  // annoncé, d'où aria-hidden.
   return (
-    <p role="status" className="flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
-      {statut === 'enregistre' ? (
-        <>
+    <div role={statut === 'erreur' ? 'alert' : 'status'} className="flex items-center">
+      {statut === 'erreur' ? (
+        <button
+          type="button"
+          onClick={onReessayer}
+          className={`flex min-h-11 items-center rounded-xl bg-rec-soft px-3 text-[12.5px] font-bold text-rec ${CLASSE_FOCUS}`}
+        >
+          Non enregistré · Réessayer
+        </button>
+      ) : statut === 'enregistre' ? (
+        <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-muted">
           <Icone nom="coche" taille={14} className="text-green" />
           Enregistré
-        </>
+        </p>
       ) : (
-        'Enregistrement…'
+        <p aria-hidden="true" className="text-[12.5px] font-semibold text-muted">
+          Enregistrement…
+        </p>
       )}
-    </p>
+    </div>
   )
 }
 
@@ -779,7 +802,11 @@ function CarteTraitement({
   onSupprimer: () => void
 }) {
   const idProduit = useId()
-  const aDesDetails = Boolean(ligne.probleme_prise || ligne.probleme_observance || ligne.effets || ligne.origine)
+  // Ouvert une seule fois au montage si des détails existent déjà ; ensuite le
+  // DOM gère l'état (vider le dernier champ ne doit pas refermer le bloc).
+  const [detailsOuvertsAuMontage] = useState(() =>
+    Boolean(ligne.probleme_prise || ligne.probleme_observance || ligne.effets || ligne.origine)
+  )
 
   return (
     <div className="flex flex-col gap-3">
@@ -811,7 +838,7 @@ function CarteTraitement({
       </div>
       <ChampLigne label="Fréquence / posologie" valeur={ligne.posologie} onChanger={(v) => onChanger('posologie', v)} />
 
-      <details open={aDesDetails} className="group rounded-xl bg-bg">
+      <details open={detailsOuvertsAuMontage} className="group rounded-xl bg-bg">
         <summary
           className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 text-[13.5px] font-semibold text-ink [&::-webkit-details-marker]:hidden ${CLASSE_FOCUS}`}
         >
@@ -956,12 +983,16 @@ function EtapeFin({
   donnees,
   progression,
   typeEntretienId,
+  ouvertureEnCours,
+  imprimerEnCours,
   onImprimer,
   onAller,
 }: {
   donnees: DonneesBpm
   progression: { titre: string; renseignees: number; total: number }[]
   typeEntretienId: string
+  ouvertureEnCours: boolean
+  imprimerEnCours: boolean
   onImprimer: () => void
   onAller: (indexSection: number) => void
 }) {
@@ -991,9 +1022,14 @@ function EtapeFin({
 
   return (
     <div className="flex flex-col gap-4">
-      <button type="button" onClick={onImprimer} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}>
+      <button
+        type="button"
+        onClick={onImprimer}
+        disabled={ouvertureEnCours}
+        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+      >
         <Icone nom="imprimante" taille={18} />
-        Voir et imprimer le compte rendu
+        {imprimerEnCours ? 'Ouverture…' : 'Voir et imprimer le compte rendu'}
       </button>
 
       {incompletes.length > 0 ? (
@@ -1028,7 +1064,7 @@ function EtapeFin({
       <div className="flex flex-col gap-2 rounded-2xl bg-surface p-3.5 shadow-card">
         <h3 className="text-[15px] font-bold text-ink">Journal des entretiens</h3>
         <p className="text-[13px] leading-relaxed text-muted">
-          Ajoute une ligne (patient, date, type d’entretien) au journal. Le contenu de la fiche n’y est pas copié.
+          Ajoutez une ligne (patient, date, type d’entretien) au journal. Le contenu de la fiche n’y est pas copié.
         </p>
         <button
           type="button"
@@ -1072,18 +1108,22 @@ export function ListeSections({
       if (declencheur?.isConnected) declencheur.focus()
     }
   }, [])
-
+  // Retour système / Échap : ferme la feuille d'abord, sans quitter la fiche.
+  useFermerAvecRetour(true, onFermer)
   return (
     // Backdrop : le <div> englobant porte la fermeture, le panneau l'arrête
     // (variante « sheet avec conteneur englobant » de DESIGN.md).
-    <div className="fixed inset-0 z-10 flex items-end bg-ink/40 sm:items-center sm:justify-center" onClick={onFermer}>
+    <div
+      className="overlay-entree fixed inset-0 z-10 flex items-end bg-ink/40 sm:items-center sm:justify-center"
+      onClick={onFermer}
+    >
       <div
         ref={panneauRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={idTitre}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85dvh] w-full flex-col rounded-t-[20px] bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-lg sm:max-w-md sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col rounded-t-[20px] bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-lg sm:max-w-md sm:rounded-[20px]"
       >
         <div className="mb-2 flex items-center justify-between gap-3">
           <h3 id={idTitre} className="font-heading text-lg font-semibold text-ink">
