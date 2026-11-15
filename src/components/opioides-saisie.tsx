@@ -202,7 +202,7 @@ export function OpioidesSaisie({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-3 sm:px-8">
+      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-ink">{nomPatient}</p>
@@ -300,7 +300,7 @@ export function OpioidesSaisie({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-border bg-surface px-4 py-3 sm:px-8">
+      <footer className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl gap-2">
           <button
             type="button"
@@ -436,7 +436,7 @@ function EtapeBonUsage({ coches, onBasculer }: { coches: boolean[]; onBasculer: 
                 type="checkbox"
                 checked={coches[i]}
                 onChange={() => onBasculer(i)}
-                className="mt-0.5 size-5 shrink-0 accent-primary"
+                className={`mt-0.5 size-5 shrink-0 accent-primary ${CLASSE_FOCUS}`}
               />
               <span>{regle}</span>
             </label>
@@ -494,7 +494,7 @@ function ResultatPomiCarte({ pomi }: { pomi: ReponsePomi[] }) {
 
   if (risque) {
     return (
-      <div className="flex flex-col gap-0.5 rounded-2xl bg-rec-soft px-4 py-3 text-rec">
+      <div role="status" className="flex flex-col gap-0.5 rounded-2xl bg-rec-soft px-4 py-3 text-rec">
         <p className="font-heading text-[28px] font-bold leading-none tabular-nums">
           {score} / {QUESTIONS_POMI.length}
         </p>
@@ -506,7 +506,7 @@ function ResultatPomiCarte({ pomi }: { pomi: ReponsePomi[] }) {
 
   if (!complet) {
     return (
-      <p className="rounded-xl bg-neutral-soft px-3 py-3 text-[13.5px] text-ink">
+      <p role="status" className="rounded-xl bg-neutral-soft px-3 py-3 text-[13.5px] text-ink">
         {repondues} réponse{repondues > 1 ? 's' : ''} sur {QUESTIONS_POMI.length}. Score actuel : {score}. Un score de{' '}
         {SEUIL_POMI} ou plus suggère un risque actuel de mésusage.
       </p>
@@ -514,7 +514,7 @@ function ResultatPomiCarte({ pomi }: { pomi: ReponsePomi[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-0.5 rounded-2xl bg-green-soft px-4 py-3 text-green">
+    <div role="status" className="flex flex-col gap-0.5 rounded-2xl bg-green-soft px-4 py-3 text-green">
       <p className="font-heading text-[28px] font-bold leading-none tabular-nums">
         {score} / {QUESTIONS_POMI.length}
       </p>

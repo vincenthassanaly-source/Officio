@@ -74,7 +74,7 @@ function Feuille({
 function CaseEntete({ libelle, valeur, className = '' }: { libelle: string; valeur: string; className?: string }) {
   return (
     <td className={`${CELLULE} ${className}`}>
-      <span className="text-[11px] uppercase text-ink">{libelle}</span>
+      <span className="text-[12px] uppercase text-ink print:text-[11px]">{libelle}</span>
       <span className={`block min-h-5 text-[13px] font-semibold text-ink ${TEXTE}`}>{valeur}</span>
     </td>
   )
@@ -86,7 +86,7 @@ function ligneQuestion(q: QuestionRecueil, reponse: string) {
       <td className={`${CELLULE} w-[44%] text-[12.5px] leading-snug text-ink print:text-[11.5px]`}>
         <span className="font-semibold">{q.intitule}</span>
         {q.pistes.map((p) => (
-          <span key={p} className="block text-[11.5px] print:text-[10.5px]">
+          <span key={p} className="block text-[12px] print:text-[10.5px]">
             {p}
           </span>
         ))}
@@ -146,7 +146,7 @@ function FeuilleRecueil1({ donnees }: { donnees: DonneesBpm }) {
           </tr>
           <tr>
             <td colSpan={2} className={CELLULE}>
-              <span className="text-[11px] uppercase text-ink">Adresse</span>
+              <span className="text-[12px] uppercase text-ink print:text-[11px]">Adresse</span>
               <span className={`block min-h-5 text-[13px] font-semibold text-ink ${TEXTE}`}>{e.adresse}</span>
             </td>
           </tr>
@@ -177,9 +177,9 @@ function FeuilleTraitements({ donnees }: { donnees: DonneesBpm }) {
         <thead>
           <tr>
             {COLONNES_TRAITEMENTS.map((c) => (
-              <th key={c.cle} scope="col" className={`${CELLULE} text-center text-[11.5px] font-semibold uppercase text-ink`}>
+              <th key={c.cle} scope="col" className={`${CELLULE} text-center text-[12px] font-semibold uppercase text-ink print:text-[11.5px]`}>
                 {c.intitule}
-                {c.precision && <span className="block text-[10.5px] font-normal normal-case">{c.precision}</span>}
+                {c.precision && <span className="block text-[12px] font-normal normal-case print:text-[10.5px]">{c.precision}</span>}
               </th>
             ))}
           </tr>
@@ -342,7 +342,7 @@ function FeuilleAnalyse({ donnees }: { donnees: DonneesBpm }) {
           </tr>
           <tr>
             <td colSpan={2} className={CELLULE}>
-              <span className="text-[11px] uppercase text-ink">Adresse</span>
+              <span className="text-[12px] uppercase text-ink print:text-[11px]">Adresse</span>
               <span className={`block min-h-5 text-[13px] font-semibold text-ink ${TEXTE}`}>{e.adresse}</span>
             </td>
           </tr>
@@ -354,7 +354,7 @@ function FeuilleAnalyse({ donnees }: { donnees: DonneesBpm }) {
           <section key={c.cle} className="bpm-bloc">
             <h3 className="text-[13px] font-bold text-ink">{c.intitule}</h3>
             {c.pistes.map((p) => (
-              <p key={p} className="text-[11.5px] text-ink">
+              <p key={p} className="text-[12px] text-ink print:text-[11.5px]">
                 {p}
               </p>
             ))}

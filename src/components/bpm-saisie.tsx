@@ -287,7 +287,7 @@ export function BpmSaisie({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-3 sm:px-8">
+      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-ink">{nomPatient}</p>
@@ -399,7 +399,7 @@ export function BpmSaisie({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-border bg-surface px-4 py-3 sm:px-8">
+      <footer className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl gap-2">
           <button
             type="button"
@@ -813,7 +813,7 @@ function CarteTraitement({
 
       <details open={aDesDetails} className="group rounded-xl bg-bg">
         <summary
-          className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 text-[13.5px] font-semibold text-ink ${CLASSE_FOCUS}`}
+          className={`flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-3 text-[13.5px] font-semibold text-ink [&::-webkit-details-marker]:hidden ${CLASSE_FOCUS}`}
         >
           Problèmes, effets indésirables, origine
           <Icone nom="chevron-bas" taille={16} className="text-muted motion-safe:transition-transform group-open:rotate-180" />
@@ -913,7 +913,7 @@ function ResultatGirerdCarte({ reponses }: { reponses: ReponseGirerd[] }) {
     niveau === 'bonne' ? 'bg-green-soft text-green' : niveau === 'faible' ? 'bg-accent-soft text-accent' : 'bg-rec-soft text-rec'
 
   return (
-    <div className={`flex flex-col gap-0.5 rounded-2xl px-4 py-3 ${teinte}`}>
+    <div role="status" className={`flex flex-col gap-0.5 rounded-2xl px-4 py-3 ${teinte}`}>
       <p className="font-heading text-[28px] font-bold leading-none tabular-nums">{score} / 6</p>
       <p className="text-[14px] font-bold">{libelleNiveau(niveau).replace(/^./, (c) => c.toUpperCase())}</p>
       <p className="text-[12.5px] text-ink">6 : bonne observance · 4 ou 5 : faible · 3 ou moins : non observance</p>
@@ -1058,16 +1058,32 @@ export function ListeSections({
   onFermer: () => void
 }) {
   const idTitre = useId()
+  const panneauRef = useRef<HTMLDivElement>(null)
+
+  // Le focus entre dans la feuille (section courante, sinon premier bouton) et
+  // revient à son déclencheur à la fermeture.
+  useEffect(() => {
+    const declencheur = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const cible =
+      panneauRef.current?.querySelector<HTMLElement>('[aria-current="step"]') ??
+      panneauRef.current?.querySelector<HTMLElement>('button')
+    cible?.focus()
+    return () => {
+      if (declencheur?.isConnected) declencheur.focus()
+    }
+  }, [])
+
   return (
     // Backdrop : le <div> englobant porte la fermeture, le panneau l'arrête
     // (variante « sheet avec conteneur englobant » de DESIGN.md).
     <div className="fixed inset-0 z-10 flex items-end bg-ink/40 sm:items-center sm:justify-center" onClick={onFermer}>
       <div
+        ref={panneauRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={idTitre}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85dvh] w-full flex-col rounded-t-[20px] bg-surface p-4 shadow-lg sm:max-w-md sm:rounded-[20px]"
+        className="flex max-h-[85dvh] w-full flex-col rounded-t-[20px] bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-lg sm:max-w-md sm:rounded-[20px]"
       >
         <div className="mb-2 flex items-center justify-between gap-3">
           <h3 id={idTitre} className="font-heading text-lg font-semibold text-ink">

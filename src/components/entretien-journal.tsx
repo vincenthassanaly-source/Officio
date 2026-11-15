@@ -13,7 +13,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { usePiegeFocus } from '@/lib/use-piege-focus'
-import { CLASSE_BOUTON_PRIMAIRE, CLASSE_CHAMP, CLASSE_FOCUS, Icone } from '@/components/entretien-ui'
+import { CLASSE_BOUTON_PRIMAIRE, CLASSE_BOUTON_SECONDAIRE, CLASSE_CHAMP, CLASSE_FOCUS, Icone } from '@/components/entretien-ui'
 
 // Remplace le glyphe « × » du bouton de fermeture — même dessin que dans
 // notes.tsx / modale-edition-tache.tsx, dupliqué plutôt que factorisé (même
@@ -145,7 +145,7 @@ export function EntretienJournal({
             <button
               type="button"
               onClick={() => setFormOuvert(false)}
-              className="flex min-h-11 flex-1 items-center justify-center rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-ink disabled:opacity-50"
+              className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}
             >
               Annuler
             </button>
@@ -217,8 +217,8 @@ function CarteEntreeJournal({
 
   return (
     <li
-      className={`select-none rounded-[20px] bg-surface p-3.5 shadow-card transition duration-300 ${
-        enMaintien ? 'scale-[0.98] opacity-80' : ''
+      className={`select-none rounded-[20px] bg-surface p-3.5 shadow-card motion-safe:transition motion-safe:duration-300 ${
+        enMaintien ? 'opacity-80 motion-safe:scale-[0.98]' : ''
       }`}
       onTouchStart={demarrerAppuiLong}
       onTouchMove={annulerAppuiLong}
@@ -391,7 +391,7 @@ function ModaleEditionEntreeJournal({
             type="button"
             disabled={isPending}
             onClick={() => setConfirmationOuverte(true)}
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border px-4 text-sm font-semibold text-rec disabled:opacity-50"
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border px-4 text-sm font-semibold text-rec disabled:opacity-50 ${CLASSE_FOCUS}`}
           >
             <Icone nom="corbeille" taille={16} />
             Supprimer
