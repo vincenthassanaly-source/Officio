@@ -16,7 +16,7 @@ export default async function InscriptionPage({
       <h1 className={`font-heading text-2xl text-ink ${invite ? 'mb-1' : 'mb-5'}`}>Créer un compte</h1>
       {invite && (
         <p className="mb-5 text-[13px] text-muted">
-          Tu rejoindras une officine avec le code <strong className="font-mono text-ink">{invite}</strong> une
+          Tu rejoindras une officine avec le code <strong className="break-all font-mono text-ink">{invite.slice(0, 24).toUpperCase()}</strong> une
           fois ton compte créé.
         </p>
       )}

@@ -6,6 +6,9 @@ import { CLASSE_BOUTON_AUTH, CLASSE_CHAMP_AUTH, CLASSE_LIBELLE_AUTH } from '@/co
 
 export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
   const [onglet, setOnglet] = useState<'creer' | 'rejoindre'>(inviteInitial ? 'rejoindre' : 'creer')
+  const [nomOfficine, setNomOfficine] = useState('')
+  const [nomCompletCreer, setNomCompletCreer] = useState('')
+  const [nomCompletRejoindre, setNomCompletRejoindre] = useState('')
   const [etatCreer, actionCreer, pendingCreer] = useActionState(creerOfficineAction, undefined)
   const [etatRejoindre, actionRejoindre, pendingRejoindre] = useActionState(
     rejoindreOfficineAction,
@@ -23,7 +26,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             onglet === 'creer' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-ink'
           }`}
         >
-          Créer mon officine
+          Créer
         </button>
         <button
           type="button"
@@ -33,7 +36,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             onglet === 'rejoindre' ? 'bg-surface text-primary shadow-sm' : 'text-muted hover:text-ink'
           }`}
         >
-          Rejoindre une officine
+          Rejoindre
         </button>
       </div>
 
@@ -49,6 +52,8 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             name="nom_officine"
             autoComplete="organization"
             required
+            value={nomOfficine}
+            onChange={(e) => setNomOfficine(e.target.value)}
             placeholder="Pharmacie du Centre"
             className={CLASSE_CHAMP_AUTH}
           />
@@ -62,6 +67,8 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             name="nom_complet"
             autoComplete="name"
             required
+            value={nomCompletCreer}
+            onChange={(e) => setNomCompletCreer(e.target.value)}
             placeholder="Prénom Nom"
             className={CLASSE_CHAMP_AUTH}
           />
@@ -106,6 +113,8 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             name="nom_complet"
             autoComplete="name"
             required
+            value={nomCompletRejoindre}
+            onChange={(e) => setNomCompletRejoindre(e.target.value)}
             placeholder="Prénom Nom"
             className={CLASSE_CHAMP_AUTH}
           />
