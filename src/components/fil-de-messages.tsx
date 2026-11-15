@@ -100,7 +100,7 @@ function PileAvatars({
   const visibles = personnes.slice(0, MAX_AVATARS_PILE)
   const reste = personnes.length - visibles.length
   return (
-    <div className="flex items-center" title={titre}>
+    <div className="flex items-center" role="img" aria-label={titre} title={titre}>
       {visibles.map((l, i) => {
         const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
         return (
