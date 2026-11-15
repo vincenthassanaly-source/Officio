@@ -1,35 +1,17 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { chargerPageJournal } from '@/app/actions/journal-activite'
 import type { EntreeJournal, ModuleJournal, PageJournalActivite } from '@/lib/data/journal-activite'
 import type { MembreEquipe } from '@/lib/data/equipe'
-import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
+import { formatDateRelative } from '@/lib/dates'
+import { regrouperParJour } from '@/lib/journal-regroupement'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { useToast } from '@/components/ui/toast-provider'
 
 const MEMBRE_TOUS = 'tous'
-
-type GroupeJour = { cle: string; label: string; entrees: EntreeJournal[] }
-
-// Regroupe une liste déjà triée created_at desc par jour civil, en
-// réutilisant formatSeparateurJour (Aujourd'hui / Hier / date) pour
-// l'étiquette de chaque groupe.
-function regrouperParJour(entrees: EntreeJournal[]): GroupeJour[] {
-  const groupes: GroupeJour[] = []
-  for (const entree of entrees) {
-    const cle = new Date(entree.created_at).toDateString()
-    const dernier = groupes[groupes.length - 1]
-    if (dernier && dernier.cle === cle) {
-      dernier.entrees.push(entree)
-    } else {
-      groupes.push({ cle, label: formatSeparateurJour(entree.created_at), entrees: [entree] })
-    }
-  }
-  return groupes
-}
 
 export function JournalActivite({
   pageInitiale,
@@ -111,11 +93,24 @@ export function JournalActivite({
     })
   }
 
+  // Ramène la pastille active dans la vue de la rangée défilante.
+  const rangeeRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const rangee = rangeeRef.current
+    const actif = rangee?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    if (!rangee || !actif) return
+    const cible = actif.offsetLeft - (rangee.clientWidth - actif.offsetWidth) / 2
+    rangee.scrollTo({ left: Math.max(0, cible), behavior: 'smooth' })
+  }, [modulesSelectionnes])
+
   const groupes = useMemo(() => regrouperParJour(entrees), [entrees])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex flex-wrap gap-1.5">
+      <div
+        ref={rangeeRef}
+        className="flex snap-x gap-1.5 overflow-x-auto pr-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
+      >
         {modules.map((m) => {
           const actif = modulesSelectionnes.has(m.value)
           return (
@@ -124,7 +119,7 @@ export function JournalActivite({
               key={m.value}
               onClick={() => toggleModule(m.value)}
               aria-pressed={actif}
-              className={`min-h-11 shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+              className={`flex min-h-11 shrink-0 snap-start items-center rounded-full border px-3 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
               }`}
             >
