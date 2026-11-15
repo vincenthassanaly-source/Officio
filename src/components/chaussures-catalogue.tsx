@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
@@ -361,6 +361,82 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
   )
 }
 
+type OngletGenre = { value: GenreFiltre; label: string; compte: number }
+
+// Rangée de filtres de genre : tient sur une ligne tant que possible, sinon défile
+// horizontalement (filet pour 5+ onglets) avec un fondu sur le bord qui cache du contenu.
+function OngletsGenre({
+  tabs,
+  actif,
+  onChoisir,
+}: {
+  tabs: OngletGenre[]
+  actif: GenreFiltre
+  onChoisir: (genre: GenreFiltre) => void
+}) {
+  const rangeeRef = useRef<HTMLDivElement>(null)
+  const [fondu, setFondu] = useState({ gauche: false, droite: false })
+
+  useEffect(() => {
+    const rangee = rangeeRef.current
+    if (!rangee) return
+    const maj = () => {
+      const gauche = rangee.scrollLeft > 2
+      const droite = rangee.scrollLeft + rangee.clientWidth < rangee.scrollWidth - 2
+      setFondu((prev) => (prev.gauche === gauche && prev.droite === droite ? prev : { gauche, droite }))
+    }
+    maj()
+    rangee.addEventListener('scroll', maj, { passive: true })
+    const observeur = new ResizeObserver(maj)
+    observeur.observe(rangee)
+    return () => {
+      rangee.removeEventListener('scroll', maj)
+      observeur.disconnect()
+    }
+  }, [tabs.length])
+
+  useEffect(() => {
+    rangeeRef.current
+      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [actif])
+
+  const masque = `linear-gradient(to right, ${fondu.gauche ? 'transparent, #000 24px' : '#000, #000'}, ${
+    fondu.droite ? '#000 calc(100% - 24px), transparent' : '#000, #000'
+  })`
+
+  return (
+    <div
+      ref={rangeeRef}
+      role="group"
+      aria-label="Filtrer par genre"
+      className="flex snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={fondu.gauche || fondu.droite ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
+    >
+      {tabs.map((g) => (
+        <button
+          type="button"
+          key={g.value}
+          onClick={() => onChoisir(g.value)}
+          aria-pressed={actif === g.value}
+          className={`flex min-h-11 shrink-0 snap-start items-center justify-center gap-1 rounded-full border px-2 text-xs font-semibold transition-colors ${
+            actif === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+          } ${CLASSE_FOCUS}`}
+        >
+          {g.label}
+          <span
+            className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
+              actif === g.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+            }`}
+          >
+            {g.compte}
+          </span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
   const [vue, setVue] = useState<'catalogue' | 'scanner'>('catalogue')
   const [genre, setGenre] = useState<GenreFiltre>(GENRE_TOUS)
@@ -430,28 +506,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
       )}
 
       {vue === 'catalogue' && tabsGenre.length > 0 && (
-        <div className="flex gap-1.5">
-          {tabsGenre.map((g) => (
-            <button
-              type="button"
-              key={g.value}
-              onClick={() => setGenre(g.value)}
-              aria-pressed={genreActif === g.value}
-              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors ${
-                genreActif === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-              } ${CLASSE_FOCUS}`}
-            >
-              {g.label}
-              <span
-                className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
-                  genreActif === g.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
-                }`}
-              >
-                {g.compte}
-              </span>
-            </button>
-          ))}
-        </div>
+        <OngletsGenre tabs={tabsGenre} actif={genreActif} onChoisir={setGenre} />
       )}
 
       {vue === 'catalogue' && chaussures.length === 0 && (
