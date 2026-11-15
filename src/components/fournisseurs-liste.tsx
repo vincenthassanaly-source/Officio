@@ -231,7 +231,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
+      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-3">
         {visibles.length === 0 && (
           <p className="py-10 text-center text-sm text-muted lg:col-span-2">
             {fournisseurs.length === 0
@@ -292,12 +292,12 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
             <div key={f.id} className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold text-ink">{f.nom}</div>
+                  <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{f.nom}</div>
                   <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[12px] font-bold ${classNameType(f.type)}`}>
                     {labelType(f.type)}
                   </span>
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="flex shrink-0 items-center gap-2">
                   {f.telephone && (
                     <a
                       href={`tel:${f.telephone}`}
@@ -347,20 +347,27 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
               </div>
 
               {f.telephone_commandes && (
-                <div className="text-[12px] text-muted">
-                  Commandes : <span className="font-semibold text-ink">{f.telephone_commandes}</span>
+                <div className="flex flex-wrap items-center gap-x-1 text-[12px] text-muted">
+                  Commandes :
+                  <a
+                    href={`tel:${f.telephone_commandes}`}
+                    aria-label={`Appeler le service commandes de ${f.nom}`}
+                    className={`flex min-h-11 items-center rounded-lg font-semibold text-primary ${CLASSE_FOCUS}`}
+                  >
+                    {f.telephone_commandes}
+                  </a>
                 </div>
               )}
 
-              {(f.montant_minimum_commande || f.remises) && (
+              {((f.montant_minimum_commande ?? 0) > 0 || f.remises) && (
                 <div className="flex flex-wrap gap-1.5">
-                  {f.montant_minimum_commande != null && (
+                  {(f.montant_minimum_commande ?? 0) > 0 && (
                     <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold tabular-nums text-accent">
-                      Min. {formatEuro(f.montant_minimum_commande)}
+                      Min. {formatEuro(f.montant_minimum_commande!)}
                     </span>
                   )}
                   {f.remises && (
-                    <span className="truncate rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-semibold text-muted">
+                    <span className="wrap-anywhere rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-semibold text-muted">
                       {f.remises}
                     </span>
                   )}

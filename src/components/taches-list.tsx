@@ -591,7 +591,7 @@ function CarteTache({
       >
         <div
           className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
-            tache.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+            tache.statut === 'fait' ? 'border-primary bg-primary' : 'border-champ-bord'
           }`}
         >
           {tache.statut === 'fait' && <IconCoche className="h-3 w-3 text-white" />}

@@ -24,7 +24,7 @@ export function ProfilForm({
   }, [state, toast])
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form action={action} className="flex flex-col gap-4 lg:max-w-md">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="nom_complet" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
           Nom complet
@@ -52,7 +52,7 @@ export function ProfilForm({
           autoCapitalize="characters"
           spellCheck={false}
           aria-describedby="initiales-aide"
-          className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] uppercase text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] uppercase lg:max-w-[8rem] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <p id="initiales-aide" className="text-[12px] text-muted">
           Recalculées automatiquement si laissé vide.
@@ -74,7 +74,7 @@ export function ProfilForm({
         type="submit"
         disabled={pending}
         aria-busy={pending}
-        className="min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-primary py-3 lg:self-start lg:px-8 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         {pending ? 'Enregistrement…' : 'Enregistrer'}
       </button>

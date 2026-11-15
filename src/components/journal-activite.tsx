@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { chargerPageJournal } from '@/app/actions/journal-activite'
 import type { EntreeJournal, ModuleJournal, PageJournalActivite } from '@/lib/data/journal-activite'
@@ -8,6 +8,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { useToast } from '@/components/ui/toast-provider'
 
 const MEMBRE_TOUS = 'tous'
 
@@ -48,21 +49,32 @@ export function JournalActivite({
   const [membreSelectionne, setMembreSelectionne] = useState(MEMBRE_TOUS)
   const [isPending, startTransition] = useTransition()
   const [rechargementFiltres, setRechargementFiltres] = useState(false)
+  const toast = useToast()
+  // Compteur de requête : une réponse qui n'est plus la dernière lancée est ignorée.
+  const requeteRef = useRef(0)
 
   // `rechargementFiltres` distingue un changement de filtre (la liste
   // affichée devient périmée, il faut le montrer) d'un « Charger plus » (la
   // liste reste valide, seul le bouton attend). Sans ça, le même isPending
   // aurait grisé toute la liste dans les deux cas.
   function recharger(modulesActifs: Set<ModuleJournal>, membreActif: string) {
+    const requete = ++requeteRef.current
     setRechargementFiltres(true)
     startTransition(async () => {
-      const page = await chargerPageJournal({
-        module: modulesActifs.size > 0 ? Array.from(modulesActifs) : undefined,
-        profilId: membreActif !== MEMBRE_TOUS ? membreActif : undefined,
-      })
-      setEntrees(page.entrees)
-      setCurseurSuivant(page.curseurSuivant)
-      setRechargementFiltres(false)
+      try {
+        const page = await chargerPageJournal({
+          module: modulesActifs.size > 0 ? Array.from(modulesActifs) : undefined,
+          profilId: membreActif !== MEMBRE_TOUS ? membreActif : undefined,
+        })
+        if (requete !== requeteRef.current) return
+        setEntrees(page.entrees)
+        setCurseurSuivant(page.curseurSuivant)
+        setRechargementFiltres(false)
+      } catch {
+        if (requete !== requeteRef.current) return
+        setRechargementFiltres(false)
+        toast({ type: 'erreur', message: "Impossible de charger l'activité. Réessaie." })
+      }
     })
   }
 
@@ -81,14 +93,21 @@ export function JournalActivite({
 
   function chargerPlus() {
     if (!curseurSuivant) return
+    const requete = ++requeteRef.current
     startTransition(async () => {
-      const page = await chargerPageJournal({
-        module: modulesSelectionnes.size > 0 ? Array.from(modulesSelectionnes) : undefined,
-        profilId: membreSelectionne !== MEMBRE_TOUS ? membreSelectionne : undefined,
-        curseurAvant: curseurSuivant,
-      })
-      setEntrees((prev) => [...prev, ...page.entrees])
-      setCurseurSuivant(page.curseurSuivant)
+      try {
+        const page = await chargerPageJournal({
+          module: modulesSelectionnes.size > 0 ? Array.from(modulesSelectionnes) : undefined,
+          profilId: membreSelectionne !== MEMBRE_TOUS ? membreSelectionne : undefined,
+          curseurAvant: curseurSuivant,
+        })
+        if (requete !== requeteRef.current) return
+        setEntrees((prev) => [...prev, ...page.entrees])
+        setCurseurSuivant(page.curseurSuivant)
+      } catch {
+        if (requete !== requeteRef.current) return
+        toast({ type: 'erreur', message: "Impossible de charger l'activité. Réessaie." })
+      }
     })
   }
 

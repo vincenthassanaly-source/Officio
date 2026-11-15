@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FilDeMessages } from './fil-de-messages'
 import { TachesList } from './taches-list'
@@ -29,6 +29,16 @@ export function CahierDeLiaison({
   const [onglet, setOnglet] = useState<'fil' | 'taches'>(() =>
     searchParams.get('onglet') === 'taches' ? 'taches' : 'fil'
   )
+  const ongletFilRef = useRef<HTMLButtonElement>(null)
+  const ongletTachesRef = useRef<HTMLButtonElement>(null)
+  // Flèches gauche/droite : déplacent sélection et focus (DESIGN.md → Onglets).
+  function surTouche(e: React.KeyboardEvent<HTMLButtonElement>) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    e.preventDefault()
+    const suivant = onglet === 'fil' ? 'taches' : 'fil'
+    setOnglet(suivant)
+    ;(suivant === 'fil' ? ongletFilRef : ongletTachesRef).current?.focus()
+  }
   const tachesEnAttente = taches.filter((t) => t.statut === 'a_faire').length
   // Même calcul que le tableau de bord de l'accueil (voir (app)/page.tsx,
   // messagesNonLusTous) : un message est non lu tant que le profil actuel
@@ -38,13 +48,19 @@ export function CahierDeLiaison({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mb-4 flex shrink-0 gap-1 rounded-xl bg-track p-1">
+      <div role="tablist" aria-label="Cahier de liaison" className="mb-4 flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
+          ref={ongletFilRef}
           type="button"
+          role="tab"
+          id="onglet-liaison-fil"
+          aria-selected={onglet === 'fil'}
+          aria-controls="panneau-liaison"
+          tabIndex={onglet === 'fil' ? 0 : -1}
+          onKeyDown={surTouche}
           onClick={() => setOnglet('fil')}
-          aria-pressed={onglet === 'fil'}
-          className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-            onglet === 'fil' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+          className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold motion-safe:transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+            onglet === 'fil' ? 'bg-surface text-primary shadow-sm' : 'text-ink'
           }`}
         >
           Fil de l&rsquo;équipe
@@ -55,11 +71,17 @@ export function CahierDeLiaison({
           )}
         </button>
         <button
+          ref={ongletTachesRef}
           type="button"
+          role="tab"
+          id="onglet-liaison-taches"
+          aria-selected={onglet === 'taches'}
+          aria-controls="panneau-liaison"
+          tabIndex={onglet === 'taches' ? 0 : -1}
+          onKeyDown={surTouche}
           onClick={() => setOnglet('taches')}
-          aria-pressed={onglet === 'taches'}
-          className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-            onglet === 'taches' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+          className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold motion-safe:transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+            onglet === 'taches' ? 'bg-surface text-primary shadow-sm' : 'text-ink'
           }`}
         >
           Tâches
@@ -71,6 +93,12 @@ export function CahierDeLiaison({
         </button>
       </div>
 
+      <div
+        role="tabpanel"
+        id="panneau-liaison"
+        aria-labelledby={onglet === 'fil' ? 'onglet-liaison-fil' : 'onglet-liaison-taches'}
+        className="flex flex-1 flex-col"
+      >
       {onglet === 'fil' ? (
         <FilDeMessages
           messages={messages}
@@ -81,6 +109,7 @@ export function CahierDeLiaison({
       ) : (
         <TachesList taches={taches} equipe={equipe} profilActuelId={profilActuelId} couleurs={couleurs} />
       )}
+      </div>
     </div>
   )
 }
