@@ -212,7 +212,36 @@ export function PlanPosologie({
         {lignesRenseignees.length === 0 ? (
           <p className="text-[13px] text-muted">Ajoutez un médicament pour générer l&apos;aperçu du plan.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Mobile (écran uniquement) : une carte par médicament, sans colonne coupée. */}
+          <ul className="flex flex-col gap-2.5 sm:hidden print:hidden">
+            {lignesRenseignees.map((ligne) => (
+              <li key={ligne.id} className="rounded-xl border border-border p-3">
+                <p className="text-[14px] font-semibold text-ink">{ligne.nom.trim()}</p>
+                <dl className="mt-2 grid grid-cols-4 gap-1.5 text-center">
+                  {MOMENTS.map(([champ, libelle]) => (
+                    <div key={champ} className="min-w-0">
+                      <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">{libelle}</dt>
+                      <dd className="mt-0.5 break-words text-[13px] text-ink">{ligne[champ].trim() || '—'}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <dl className="mt-2.5 flex flex-col gap-1.5 border-t border-border pt-2.5 text-[13px]">
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">Instructions</dt>
+                    <dd className="text-ink">{ligne.instructions.trim() || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">Durée</dt>
+                    <dd className="text-ink">{ligne.duree.trim() || '—'}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+
+          {/* Tableau : à partir de sm et à l'impression (feuille remise au patient, inchangée). */}
+          <div className="hidden overflow-x-auto sm:block print:block">
             <table className="w-full border-collapse text-[12.5px] print:text-[12px]">
               <thead>
                 <tr>
@@ -240,6 +269,7 @@ export function PlanPosologie({
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         <p className="mt-4 border-t border-border pt-3 text-center text-[12px] text-muted">{nomOfficine}</p>
