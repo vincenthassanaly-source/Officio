@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { ajouterRegularisation, marquerAFaire, marquerFacture } from '@/app/actions/regularisations'
 import { ChampsFormulaire, CLASSE_FOCUS } from '@/components/regularisations-liste'
 import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateLongue, formatJourCourt, formatMoisAnnee, getMonthGridDates, toISODate } from '@/lib/dates'
+import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
 
 function IconChevronGauche({ className }: { className?: string }) {
@@ -49,6 +50,16 @@ export function RegularisationsCalendrier({
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
   const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
+  const panneauRef = useRef<HTMLDivElement>(null)
+
+  // Le panneau du jour s'ouvre sous la grille : sans ce défilement il peut
+  // apparaître hors écran (sous la barre de navigation en mobile).
+  useEffect(() => {
+    if (!jourSelectionne) return
+    const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    panneauRef.current?.scrollIntoView({ block: 'nearest', behavior: reduit ? 'auto' : 'smooth' })
+  }, [jourSelectionne])
 
   // Bascule facturé/à faire en optimiste — strictement le même reducer que
   // changerStatutOptimiste dans regularisations-liste.tsx. Cette vue
@@ -88,15 +99,18 @@ export function RegularisationsCalendrier({
         </button>
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-[13px] font-semibold text-ink">{formatMoisAnnee(moisAffiche)}</span>
-          {!estMoisActuel && (
-            <button
-              type="button"
-              onClick={onAujourdhui}
-              className={`flex min-h-11 items-center px-2 text-[12px] font-semibold text-primary ${CLASSE_FOCUS}`}
-            >
-              Aujourd&rsquo;hui
-            </button>
-          )}
+          {/* Toujours rendu (invisible sur le mois en cours) : réserve la
+              hauteur du bouton pour que la grille ne saute pas au changement
+              de mois. `invisible` retire aussi le bouton du focus clavier. */}
+          <button
+            type="button"
+            onClick={onAujourdhui}
+            className={`flex min-h-11 items-center px-2 text-[12px] font-semibold text-primary ${CLASSE_FOCUS} ${
+              estMoisActuel ? 'invisible' : ''
+            }`}
+          >
+            Aujourd&rsquo;hui
+          </button>
         </div>
         <button
           type="button"
@@ -108,7 +122,7 @@ export function RegularisationsCalendrier({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div className="mx-auto grid w-full max-w-md grid-cols-7 gap-1 text-center lg:max-w-xl">
         {grille.slice(0, 7).map((d) => (
           <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
@@ -116,7 +130,7 @@ export function RegularisationsCalendrier({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="mx-auto grid w-full max-w-md grid-cols-7 gap-1 lg:max-w-xl">
         {grille.map((d) => {
           const iso = toISODate(d)
           const dansMoisAffiche = d.getMonth() === moisAffiche.getMonth()
@@ -138,9 +152,11 @@ export function RegularisationsCalendrier({
                 setJourSelectionne(iso)
                 setFormOuvert(false)
               }}
+              aria-pressed={estSelectionne}
+              aria-current={estAujourdhui ? 'date' : undefined}
               aria-label={`${formatDateLongue(iso)}${compteAFaire > 0 ? `, ${compteAFaire} régularisation${compteAFaire > 1 ? 's' : ''} à faire` : ''}`}
               className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${CLASSE_FOCUS} ${
-                !dansMoisAffiche ? 'text-muted/40' : 'text-ink'
+                !dansMoisAffiche ? 'text-muted/70' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
               {/* Marqueur « aujourd'hui » net : pastille pleine sous le
@@ -166,7 +182,10 @@ export function RegularisationsCalendrier({
       </div>
 
       {jourSelectionne && (
-        <div className="mt-2 flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
+        <div
+          ref={panneauRef}
+          className="mt-2 flex scroll-mb-24 flex-col gap-2 rounded-[20px] bg-surface p-3.5 shadow-card"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
             <button
@@ -189,10 +208,10 @@ export function RegularisationsCalendrier({
               return (
                 <div key={r.id} className="flex items-center gap-3 rounded-xl border border-border p-2.5">
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] font-semibold text-ink">
+                    <div className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">
                       {r.patient_prenom} {r.patient_nom}
                     </div>
-                    {r.note && <div className="truncate text-[12px] text-muted">{r.note}</div>}
+                    {r.note && <div className="line-clamp-2 wrap-anywhere text-[12px] text-muted">{r.note}</div>}
                   </div>
                   {/* Optimiste : plus de `disabled`, le libellé du bouton
                       bascule dès le clic. */}
@@ -203,7 +222,15 @@ export function RegularisationsCalendrier({
                         vibrer()
                         const nouveauStatut: StatutRegularisation = facture ? 'a_faire' : 'facture'
                         changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
-                        await (facture ? marquerAFaire(r.id) : marquerFacture(r.id))
+                        try {
+                          await (facture ? marquerAFaire(r.id) : marquerFacture(r.id))
+                        } catch (err) {
+                          toast({
+                            type: 'erreur',
+                            message:
+                              err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
+                          })
+                        }
                       })
                     }
                     className={`min-h-11 shrink-0 rounded-lg px-2.5 text-[12px] font-semibold ${CLASSE_FOCUS} ${
@@ -221,8 +248,16 @@ export function RegularisationsCalendrier({
             <form
               action={(formData) => {
                 startTransition(async () => {
-                  await ajouterRegularisation(formData)
-                  setFormOuvert(false)
+                  try {
+                    await ajouterRegularisation(formData)
+                    setFormOuvert(false)
+                    toast({ type: 'succes', message: 'Régularisation ajoutée.' })
+                  } catch (err) {
+                    toast({
+                      type: 'erreur',
+                      message: err instanceof Error ? err.message : "Échec de l'ajout de la régularisation.",
+                    })
+                  }
                 })
               }}
               className="flex flex-col gap-2 rounded-xl border border-primary p-3"

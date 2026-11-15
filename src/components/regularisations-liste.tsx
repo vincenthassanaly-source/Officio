@@ -13,6 +13,7 @@ import { formatDateCourte, toISODate } from '@/lib/dates'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { normaliser } from '@/lib/normaliser'
 import { IconRegularisation } from '@/components/nav-icons'
 import { CHAMP_CLASS } from '@/components/ui/champ'
 
@@ -49,28 +50,39 @@ export function ChampsFormulaire({
   dateRegularisationParDefaut?: string
 }) {
   const idBase = regularisation?.id ?? 'nouveau'
+  const idPrenom = `${idBase}-prenom`
+  const idNom = `${idBase}-nom`
+  const idNote = `${idBase}-note`
   const idDateOrdonnance = `${idBase}-date-ordonnance`
   const idDateRegularisation = `${idBase}-date-regularisation`
 
   return (
     <>
       <div className="flex gap-2">
-        <input
-          name="patient_prenom"
-          defaultValue={regularisation?.patient_prenom}
-          required
-          placeholder="Prénom"
-          aria-label="Prénom du patient"
-          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
-        />
-        <input
-          name="patient_nom"
-          defaultValue={regularisation?.patient_nom}
-          required
-          placeholder="Nom"
-          aria-label="Nom du patient"
-          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
-        />
+        <div className="min-w-0 flex-1">
+          <label htmlFor={idPrenom} className="mb-1 block text-[12px] font-semibold text-muted">
+            Prénom
+          </label>
+          <input
+            id={idPrenom}
+            name="patient_prenom"
+            defaultValue={regularisation?.patient_prenom}
+            required
+            className={`w-full min-w-0 ${CHAMP_CLASS}`}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <label htmlFor={idNom} className="mb-1 block text-[12px] font-semibold text-muted">
+            Nom
+          </label>
+          <input
+            id={idNom}
+            name="patient_nom"
+            defaultValue={regularisation?.patient_nom}
+            required
+            className={`w-full min-w-0 ${CHAMP_CLASS}`}
+          />
+        </div>
       </div>
       <div className="flex gap-2">
         <div className="min-w-0 flex-1">
@@ -99,14 +111,18 @@ export function ChampsFormulaire({
           />
         </div>
       </div>
-      <textarea
-        name="note"
-        defaultValue={regularisation?.note ?? ''}
-        placeholder="Note (optionnel)"
-        aria-label="Note"
-        rows={2}
-        className={`resize-none ${CHAMP_CLASS}`}
-      />
+      <div>
+        <label htmlFor={idNote} className="mb-1 block text-[12px] font-semibold text-muted">
+          Note (optionnel)
+        </label>
+        <textarea
+          id={idNote}
+          name="note"
+          defaultValue={regularisation?.note ?? ''}
+          rows={2}
+          className={`w-full resize-none ${CHAMP_CLASS}`}
+        />
+      </div>
     </>
   )
 }
@@ -154,7 +170,7 @@ function CarteRegularisation({
     return (
       <form
         action={onEnregistrer}
-        className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3.5"
+        className="flex flex-col gap-2 rounded-[20px] border border-primary bg-surface p-3.5 shadow-card"
       >
         <ChampsFormulaire regularisation={r} />
         <div className="flex gap-2">
@@ -188,17 +204,17 @@ function CarteRegularisation({
 
   return (
     <div
-      className={`rounded-2xl border p-3.5 ${
+      className={`rounded-[20px] border p-3.5 ${
         facture
-          ? 'border-border bg-surface opacity-60'
+          ? 'border-border bg-bg'
           : enRetard
-            ? 'border-rec bg-rec-soft'
-            : 'border-border bg-surface'
+            ? 'border-rec bg-rec-soft shadow-card'
+            : 'border-transparent bg-surface shadow-card'
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="truncate text-[13.5px] font-semibold text-ink">
+          <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {r.patient_prenom} {r.patient_nom}
           </div>
           <div className="mt-0.5 text-[12px] text-muted">
@@ -209,7 +225,11 @@ function CarteRegularisation({
           <div className={`font-heading text-[14px] ${enRetard ? 'text-rec' : 'text-ink'}`}>
             {formatDateCourte(r.date_regularisation)}
           </div>
-          {facture && <span className="text-[12px] font-bold text-muted">Facturé</span>}
+          {facture && (
+            <span className="mt-0.5 inline-block rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-bold text-muted">
+              Facturé
+            </span>
+          )}
           {!facture && enRetard && <span className="text-[12px] font-bold text-rec">En retard</span>}
         </div>
       </div>
@@ -234,7 +254,7 @@ function CarteRegularisation({
           className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-soft text-muted">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
@@ -251,6 +271,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nomComplet: string } | null>(null)
   const [archiveOuverte, setArchiveOuverte] = useState(false)
+  const [idEnCours, setIdEnCours] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
   const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
@@ -262,12 +283,10 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const aujourdhui = toISODate(new Date())
 
   const visibles = useMemo(() => {
-    const rechercheNormalisee = recherche.trim().toLowerCase()
+    const rechercheNormalisee = normaliser(recherche.trim())
     if (!rechercheNormalisee) return regularisationsOptimistes
-    return regularisationsOptimistes.filter(
-      (r) =>
-        r.patient_nom.toLowerCase().includes(rechercheNormalisee) ||
-        r.patient_prenom.toLowerCase().includes(rechercheNormalisee)
+    return regularisationsOptimistes.filter((r) =>
+      normaliser(`${r.patient_prenom} ${r.patient_nom}`).includes(rechercheNormalisee)
     )
   }, [regularisationsOptimistes, recherche])
 
@@ -294,13 +313,14 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         r={r}
         enRetard={enRetardFlag}
         enEdition={enEdition === r.id}
-        isPending={isPending}
+        isPending={isPending && idEnCours === r.id}
         onModifier={() => {
           setEnEdition(r.id)
           setFormOuvert(false)
         }}
         onAnnulerEdition={() => setEnEdition(null)}
         onEnregistrer={(formData) => {
+          setIdEnCours(r.id)
           startTransition(async () => {
             try {
               await modifierRegularisation(r.id, formData)
@@ -317,6 +337,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
         onBasculerFacture={() => {
           const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
+          setIdEnCours(r.id)
           startTransition(async () => {
             vibrer()
             changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
@@ -430,19 +451,22 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
             type="button"
             onClick={() => setArchiveOuverte((o) => !o)}
             aria-expanded={archiveOuverte}
+            aria-controls="regularisations-archivees"
             className={`flex min-h-11 items-center justify-between gap-2 text-left ${CLASSE_FOCUS}`}
           >
             <span className="text-[13.5px] font-semibold tabular-nums text-ink">
               Régularisations archivées ({archivees.length})
             </span>
             <IconChevron
-              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+              className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
               }`}
             />
           </button>
           <div
-            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+            id="regularisations-archivees"
+            inert={!archiveOuverte}
+            className={`grid motion-safe:transition-[grid-template-rows] duration-200 ease-out ${
               archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             }`}
           >
