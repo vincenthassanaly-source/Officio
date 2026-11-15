@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterProduitARecommander, supprimerProduitARecommander } from '@/app/actions/produits-a-recommander'
 import type { ProduitARecommander } from '@/lib/data/produits-a-recommander'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { useRetraitDiffere } from '@/lib/use-retrait-differe'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
 
@@ -46,6 +47,13 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
     etat.filter((p) => p.id !== id)
   )
   const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+  const { idsMasques, differer } = useRetraitDiffere({
+    supprimer: supprimerProduitARecommander,
+    retirerOptimiste,
+    demarrerTransition: startTransition,
+    messageErreur: 'Échec de la suppression du produit.',
+  })
+  const visibles = produitsOptimistes.filter((p) => !idsMasques.has(p.id))
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -82,13 +90,13 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
         </button>
       </form>
 
-      {produitsOptimistes.length === 0 && (
+      {visibles.length === 0 && (
         <EtatVide message="Aucun produit à recommander pour l’instant." />
       )}
 
-      {produitsOptimistes.length > 0 && (
+      {visibles.length > 0 && (
         <div className="flex flex-col gap-2">
-          {produitsOptimistes.map((p) => (
+          {visibles.map((p) => (
             <label
               key={p.id}
               className={`flex items-center gap-3 rounded-2xl bg-surface shadow-card p-3.5 ${
@@ -98,20 +106,8 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
               <input
                 type="checkbox"
                 onChange={() => {
-                  retirerApresAnimation(p.id, () =>
-                    startTransition(async () => {
-                      vibrer()
-                      retirerOptimiste(p.id)
-                      try {
-                        await supprimerProduitARecommander(p.id)
-                      } catch (err) {
-                        toast({
-                          type: 'erreur',
-                          message: err instanceof Error ? err.message : 'Échec de la suppression du produit.',
-                        })
-                      }
-                    })
-                  )
+                  vibrer()
+                  retirerApresAnimation(p.id, () => differer(p.id, p.nom_produit))
                 }}
                 aria-label={`${p.nom_produit} recommandé/reçu`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
