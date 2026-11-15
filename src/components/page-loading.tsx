@@ -4,8 +4,8 @@
 // Composant serveur : aucun `use client` ici, un fallback de Suspense n'a
 // aucun état ni interaction et n'a pas à embarquer de JS client. C'est aussi
 // la raison pour laquelle ces primitives vivent dans ce fichier plutôt que
-// dans les composants de liste correspondants — VaccinsSquelette est encore
-// exporté depuis vaccins-liste.tsx ('use client'), qui reste le seul cas.
+// dans les composants de liste correspondants (y compris VaccinsSquelette,
+// ci-dessous : loading.tsx ne doit pas charger le JS de la liste).
 //
 // Les dimensions reprennent celles des vrais composants (hauteurs de cartes,
 // arrondis, gouttières) : c'est tout l'intérêt d'un squelette de forme, il
@@ -90,5 +90,50 @@ export function PageLoading() {
       <div className="h-24 rounded-2xl bg-neutral-soft" />
       <SqueletteCartes nombre={3} />
     </SquelettePage>
+  )
+}
+
+function CarteVaccinSquelette() {
+  return (
+    <div className="flex flex-col rounded-[20px] bg-surface p-3.5 shadow-card">
+      <div className="flex items-center justify-between gap-2">
+        <div className="h-4 w-2/3 rounded-md bg-neutral-soft" />
+        <div className="h-4 w-16 shrink-0 rounded-full bg-neutral-soft" />
+      </div>
+      <div className="mt-2.5 flex gap-1.5">
+        <div className="h-[19px] w-20 rounded-full bg-neutral-soft" />
+        <div className="h-[19px] w-24 rounded-full bg-neutral-soft" />
+        <div className="h-[19px] w-14 rounded-full bg-neutral-soft" />
+      </div>
+    </div>
+  )
+}
+
+// Skeleton dédié à /vaccins : reprend la forme réelle de la page (lien
+// retour, titre text-2xl, pastilles de 44 px, champ, cartes repliées) pour
+// éviter le saut visuel au chargement (voir src/app/(app)/vaccins/loading.tsx).
+export function VaccinsSquelette() {
+  return (
+    <div role="status" aria-live="polite" className="flex flex-1 motion-safe:animate-pulse flex-col">
+      <span className="sr-only">Chargement…</span>
+      {/* Faux lien retour : mêmes dimensions que LienRetour. */}
+      <div className="-ml-3 -mt-3 flex min-h-11 items-center px-3">
+        <div className="h-4 w-16 rounded-md bg-neutral-soft" />
+      </div>
+      <div className="mb-4 h-8 w-28 rounded-md bg-neutral-soft" />
+      <div className="flex flex-1 flex-col gap-3">
+        <div className="flex gap-1.5">
+          <div className="h-11 w-20 rounded-full bg-neutral-soft" />
+          <div className="h-11 w-28 rounded-full bg-neutral-soft" />
+          <div className="h-11 w-32 rounded-full bg-neutral-soft" />
+        </div>
+        <div className="h-11 rounded-xl bg-neutral-soft" />
+        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <CarteVaccinSquelette key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

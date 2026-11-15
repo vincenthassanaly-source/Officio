@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import type { StatutVaccin, Vaccin } from '@/lib/data/vaccins'
 import { formatDateCourte } from '@/lib/dates'
 import { IconVaccin } from '@/components/nav-icons'
+import { normaliser } from '@/lib/normaliser'
 
 const BADGES_STATUT: Record<StatutVaccin, { label: string; className: string }> = {
   obligatoire: { label: 'Obligatoire', className: 'bg-primary-soft text-primary' },
@@ -17,13 +18,6 @@ const FILTRES: { value: FiltreStatut; label: string }[] = [
   { value: 'obligatoire', label: 'Obligatoire' },
   { value: 'recommandé', label: 'Recommandé' },
 ]
-
-function normaliser(texte: string): string {
-  return texte
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-}
 
 // Repère la sous-chaîne correspondant à `rechercheNormalisee` dans `texte` en
 // comparant sur la version normalisée (accents/casse ignorés, cf.
@@ -178,14 +172,16 @@ function LigneInfo({
 
 function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalisee: string }) {
   const [ouvert, setOuvert] = useState(false)
+  const idDetails = useId()
   const badge = BADGES_STATUT[v.statut]
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
+    <div className="flex flex-col rounded-[20px] bg-surface shadow-card p-3.5">
       <button
         type="button"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
+        aria-controls={idDetails}
         className={`-m-1 flex min-h-11 items-center justify-between gap-2 rounded-xl p-1 text-left ${CLASSE_FOCUS}`}
       >
         <div className="min-w-0 flex-1 text-balance text-[14.5px] font-semibold text-ink">
@@ -200,7 +196,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
       </button>
 
       {v.valences.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
           {v.valences.map((valence) => (
             <span
               key={valence}
@@ -213,9 +209,12 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
       )}
 
       <div
+        id={idDetails}
+        inert={!ouvert}
         className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-out ${ouvert ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
       >
         <div className="overflow-hidden">
+         <div className="mt-2.5">
           <div className="flex flex-col divide-y divide-border pt-2.5">
             <LigneInfo
               icone={<IconCalendrier className="h-3.5 w-3.5" />}
@@ -250,57 +249,29 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
           <div className="mt-2.5 text-[12px] text-muted">
             {v.source} · MAJ {formatDateCourte(v.date_maj)}
           </div>
+         </div>
         </div>
       </div>
     </div>
   )
 }
 
-function CarteVaccinSquelette() {
-  return (
-    <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="h-4 w-2/3 rounded-md bg-neutral-soft" />
-        <div className="h-4 w-16 shrink-0 rounded-full bg-neutral-soft" />
-      </div>
-      <div className="flex gap-1.5">
-        <div className="h-[19px] w-20 rounded-full bg-neutral-soft" />
-        <div className="h-[19px] w-24 rounded-full bg-neutral-soft" />
-        <div className="h-[19px] w-14 rounded-full bg-neutral-soft" />
-      </div>
-    </div>
-  )
-}
-
-// Skeleton dédié à /vaccins : reprend la forme réelle des cartes repliées
-// (mêmes dimensions/arrondi) plutôt que des blocs génériques, pour éviter le
-// saut visuel au chargement (voir src/app/(app)/vaccins/loading.tsx).
-export function VaccinsSquelette() {
-  return (
-    <div className="flex flex-1 motion-safe:animate-pulse flex-col gap-3">
-      <div className="mb-1 h-7 w-28 rounded-md bg-neutral-soft" />
-      <div className="flex gap-1.5">
-        <div className="h-7 w-16 rounded-full bg-neutral-soft" />
-        <div className="h-7 w-24 rounded-full bg-neutral-soft" />
-        <div className="h-7 w-28 rounded-full bg-neutral-soft" />
-      </div>
-      <div className="h-10 rounded-xl bg-neutral-soft" />
-      <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:gap-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <CarteVaccinSquelette key={i} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function EtatVide({ message }: { message: string }) {
+function EtatVide({ message, onEffacer }: { message: string; onEffacer?: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
         <IconVaccin className="h-6 w-6" />
       </div>
       <p className="max-w-[220px] text-sm text-muted">{message}</p>
+      {onEffacer && (
+        <button
+          type="button"
+          onClick={onEffacer}
+          className={`min-h-11 rounded-xl border border-border px-4 text-[13px] font-semibold text-primary ${CLASSE_FOCUS}`}
+        >
+          Effacer les filtres
+        </button>
+      )}
     </div>
   )
 }
@@ -362,7 +333,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
         <input
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
-          placeholder="Rechercher par nom commercial ou indication (ex. hépatite B)…"
+          placeholder="Nom du vaccin ou maladie…"
           aria-label="Rechercher un vaccin par nom commercial ou indication"
           className={`w-full rounded-xl border border-champ-bord bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
         />
@@ -383,7 +354,21 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
       {vaccins.length === 0 && <EtatVide message="Aucun vaccin référencé pour le moment." />}
 
       {vaccins.length > 0 && visibles.length === 0 && (
-        <EtatVide message="Aucun vaccin ne correspond à cette recherche." />
+        <EtatVide
+          message="Aucun vaccin ne correspond à cette recherche."
+          onEffacer={() => {
+            setRecherche('')
+            setFiltreStatut('tous')
+          }}
+        />
+      )}
+
+      {vaccins.length > 0 && (
+        <p role="status" className="sr-only">
+          {visibles.length === 0
+            ? 'Aucun vaccin'
+            : `${visibles.length} vaccin${visibles.length > 1 ? 's' : ''} affiché${visibles.length > 1 ? 's' : ''}`}
+        </p>
       )}
 
       <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
