@@ -194,8 +194,8 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           >
             <div
               aria-hidden="true"
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[12px] font-bold text-white ${
-                estImage(d.type_fichier) ? 'bg-primary' : 'bg-rec'
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[12px] font-bold ${
+                estImage(d.type_fichier) ? 'bg-teal-soft text-teal' : 'bg-primary-soft text-primary'
               }`}
             >
               {estImage(d.type_fichier) ? 'IMG' : 'PDF'}
