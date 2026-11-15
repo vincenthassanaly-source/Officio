@@ -27,7 +27,7 @@ export const CLASSE_CHAMP_AUTH =
   'rounded-xl border border-champ-bord bg-bg px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 export const CLASSE_BOUTON_AUTH =
-  'mt-2 min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
+  'mt-2 min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60 motion-safe:transition-colors motion-safe:active:scale-[0.99]'
 
 export const CLASSE_LIEN_AUTH =
   '-my-3.5 inline-flex min-h-11 items-center rounded font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'

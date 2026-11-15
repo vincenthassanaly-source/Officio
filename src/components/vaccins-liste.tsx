@@ -194,7 +194,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
         <div className="flex shrink-0 items-center gap-1.5">
           <span className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${badge.className}`}>{badge.label}</span>
           <IconChevron
-            className={`h-4 w-4 text-muted transition-transform duration-200 ${ouvert ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-muted transition-transform motion-safe:duration-200 ${ouvert ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
@@ -213,7 +213,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
       )}
 
       <div
-        className={`grid transition-[grid-template-rows] duration-200 ease-out ${ouvert ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+        className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-out ${ouvert ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
       >
         <div className="overflow-hidden">
           <div className="flex flex-col divide-y divide-border pt-2.5">

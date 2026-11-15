@@ -28,7 +28,7 @@ export default async function DiagnosticsPage() {
             <article key={e.id} className="rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="flex items-start justify-between gap-2">
                 <span className="min-w-0 wrap-anywhere text-[13px] font-semibold text-ink">{e.message}</span>
-                <span className="shrink-0 text-[12px] text-muted">
+                <span className="chiffres-tabulaires shrink-0 text-[12px] text-muted">
                   {new Date(e.createdAt).toLocaleString('fr-FR', {
                     day: '2-digit',
                     month: '2-digit',

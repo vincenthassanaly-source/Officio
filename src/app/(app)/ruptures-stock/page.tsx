@@ -25,7 +25,7 @@ export default async function RupturesStockPage() {
       <div className="mb-2 flex items-center gap-2">
         <h2 className="text-sm font-semibold text-ink">Ruptures</h2>
         {ruptures.length > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold text-white">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold tabular-nums text-white">
             {ruptures.length}
           </span>
         )}
@@ -35,7 +35,7 @@ export default async function RupturesStockPage() {
       <div className="mb-2 mt-6 flex items-center gap-2">
         <h2 className="text-sm font-semibold text-ink">À recommander</h2>
         {produitsARecommander.length > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold text-white">
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold tabular-nums text-white">
             {produitsARecommander.length}
           </span>
         )}

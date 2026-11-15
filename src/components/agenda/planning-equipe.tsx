@@ -527,7 +527,7 @@ export function PlanningEquipe({
             <div
               key={h}
               aria-hidden="true"
-              className="absolute right-0.5 -translate-y-1/2 text-[10px] text-muted"
+              className="absolute right-0.5 -translate-y-1/2 text-[11px] chiffres-tabulaires text-muted"
               style={{ top: (h - heureMin) * PX_PAR_HEURE }}
             >
               {h}h

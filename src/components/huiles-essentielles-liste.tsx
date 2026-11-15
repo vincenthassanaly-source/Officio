@@ -252,7 +252,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             type="button"
             onClick={() => setFiltreDisponibilite('en_stock')}
             aria-pressed={filtreDisponibilite === 'en_stock'}
-            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold motion-safe:transition-colors ${
               filtreDisponibilite === 'en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
             } ${CLASSE_FOCUS}`}
           >
@@ -262,7 +262,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             type="button"
             onClick={() => setFiltreDisponibilite('non_tenu_en_stock')}
             aria-pressed={filtreDisponibilite === 'non_tenu_en_stock'}
-            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold motion-safe:transition-colors ${
               filtreDisponibilite === 'non_tenu_en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
             } ${CLASSE_FOCUS}`}
           >
@@ -468,7 +468,7 @@ function CarteHuile({
   return (
     <div
       ref={carteRef}
-      className={`relative flex select-none flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3 transition-[transform,opacity] duration-200 ${
+      className={`relative flex select-none flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3 motion-safe:transition-[transform,opacity] motion-safe:duration-200 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
       }`}
       onTouchStart={demarrerAppuiLong}

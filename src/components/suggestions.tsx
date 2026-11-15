@@ -27,7 +27,7 @@ function formatDate(iso: string) {
 // propre à l'accordéon, dupliquée plutôt que partagée entre composants.
 function IconChevron({ className }: { className?: string }) {
   return (
-    <svg
+    <svg aria-hidden="true"
       className={className}
       viewBox="0 0 24 24"
       fill="none"
@@ -44,7 +44,7 @@ function IconChevron({ className }: { className?: string }) {
 // Remplace le glyphe « × » du bouton de suppression.
 function IconFermer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
@@ -263,7 +263,7 @@ function CarteSuggestion({
 
   return (
     <div
-      className={`rounded-[20px] bg-surface shadow-card p-4 ${suggestion.fait ? 'opacity-60' : ''} ${
+      className={`rounded-[20px] bg-surface shadow-card p-4 ${
         enSortie ? 'item-sortie' : 'item-entree'
       }`}
     >

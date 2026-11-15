@@ -38,7 +38,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
       </div>
 
       {onglet === 'creer' ? (
-        <form action={actionCreer} className="flex flex-col gap-3">
+        <form action={actionCreer} aria-busy={pendingCreer} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="bienvenue-nom-officine" className={CLASSE_LIBELLE_AUTH}>
               Nom de la pharmacie
@@ -67,7 +67,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
           </div>
           <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
           {etatCreer?.error && (
-            <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
+            <p id="bienvenue-erreur-creer" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
           )}
           <button
             type="submit"
@@ -78,7 +78,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
           </button>
         </form>
       ) : (
-        <form action={actionRejoindre} className="flex flex-col gap-3">
+        <form action={actionRejoindre} aria-busy={pendingRejoindre} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="bienvenue-code" className={CLASSE_LIBELLE_AUTH}>
               Code d&rsquo;invitation
@@ -88,6 +88,9 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               name="code"
               autoComplete="off"
               autoCapitalize="characters"
+              spellCheck={false}
+              aria-invalid={etatRejoindre?.error ? true : undefined}
+              aria-describedby={etatRejoindre?.error ? 'bienvenue-erreur-rejoindre' : undefined}
               required
               defaultValue={inviteInitial}
               placeholder="ABC123EF"
@@ -108,7 +111,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
             />
           </div>
           {etatRejoindre?.error && (
-            <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>
+            <p id="bienvenue-erreur-rejoindre" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>
           )}
           <button
             type="submit"

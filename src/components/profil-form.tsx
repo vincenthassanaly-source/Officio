@@ -32,6 +32,7 @@ export function ProfilForm({
         <input
           id="nom_complet"
           name="nom_complet"
+          autoComplete="name"
           defaultValue={nomComplet}
           required
           className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
@@ -47,6 +48,9 @@ export function ProfilForm({
           name="initiales"
           defaultValue={initiales}
           maxLength={3}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
           aria-describedby="initiales-aide"
           className="rounded-xl border border-champ-bord bg-surface px-4 py-3 text-[16px] uppercase text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
@@ -69,6 +73,7 @@ export function ProfilForm({
       <button
         type="submit"
         disabled={pending}
+        aria-busy={pending}
         className="min-h-11 rounded-xl bg-primary py-3 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         {pending ? 'Enregistrement…' : 'Enregistrer'}

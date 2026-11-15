@@ -96,10 +96,53 @@ html {
   overscroll-behavior-y: contain;
 }
 
-a,
-button,
-[role='button'] {
-  transition: transform 100ms ease-out, opacity 100ms ease-out;
+/* Dans @layer base (et non en dehors de toute couche) : une règle hors couche
+   l'emporte sur TOUTES les utilitaires Tailwind, ce qui écrasait en silence
+   `transition-colors` & co. sur les liens/boutons. Ici, une utilitaire
+   `transition-*` posée sur l'élément reprend la main comme attendu. Les
+   couleurs sont incluses pour que hover/active ne « claquent » pas. */
+@layer base {
+  a,
+  button,
+  [role='button'] {
+    transition:
+      transform 100ms ease-out,
+      opacity 100ms ease-out,
+      color 150ms ease-out,
+      background-color 150ms ease-out,
+      border-color 150ms ease-out;
+    /* Supprime le délai de 300 ms / zoom au double-tap sur mobile. */
+    touch-action: manipulation;
+  }
+
+  /* Filet de focus clavier pour tout élément interactif qui n'aurait pas
+     son propre anneau (les utilitaires `focus-visible:outline-*` des
+     composants restent prioritaires). */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Surfaces navigateur thémées sur la palette. */
+  ::selection {
+    background: var(--color-primary-soft);
+    color: var(--color-ink);
+  }
+  :root {
+    accent-color: var(--color-primary);
+    scrollbar-color: var(--color-champ-bord) transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+/* Chiffres tabulaires (compteurs, heures, quantités alignées en colonne). */
+.chiffres-tabulaires {
+  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: no-preference) {
