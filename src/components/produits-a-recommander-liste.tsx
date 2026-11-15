@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterProduitARecommander, supprimerProduitARecommander } from '@/app/actions/produits-a-recommander'
 import type { ProduitARecommander } from '@/lib/data/produits-a-recommander'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
 
 // Icône propre à ce module (pas de tuile de nav dédiée à distinguer de
@@ -40,6 +41,7 @@ function EtatVide({ message }: { message: string }) {
 export function ProduitsARecommanderListe({ produits }: { produits: ProduitARecommander[] }) {
   const [nomProduit, setNomProduit] = useState('')
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
   const [produitsOptimistes, retirerOptimiste] = useOptimistic(produits, (etat, id: string) =>
     etat.filter((p) => p.id !== id)
   )
@@ -50,8 +52,15 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
       <form
         action={(formData) => {
           startTransition(async () => {
-            await ajouterProduitARecommander(formData)
-            setNomProduit('')
+            try {
+              await ajouterProduitARecommander(formData)
+              setNomProduit('')
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de l'ajout du produit.",
+              })
+            }
           })
         }}
         className="flex items-center gap-2"
@@ -60,7 +69,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
           name="nom_produit"
           value={nomProduit}
           onChange={(e) => setNomProduit(e.target.value)}
-          placeholder="Nom du produit à recommander…"
+          placeholder="Produit à recommander…"
           aria-label="Nom du produit à recommander"
           className="flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
@@ -96,7 +105,10 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
                       try {
                         await supprimerProduitARecommander(p.id)
                       } catch (err) {
-                        console.error('[produits-a-recommander] Échec de la suppression :', err)
+                        toast({
+                          type: 'erreur',
+                          message: err instanceof Error ? err.message : 'Échec de la suppression du produit.',
+                        })
                       }
                     })
                   )
@@ -104,7 +116,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
                 aria-label={`${p.nom_produit} recommandé/reçu`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-ink">{p.nom_produit}</span>
+              <span className="line-clamp-2 min-w-0 flex-1 break-words text-[13.5px] font-medium text-ink">{p.nom_produit}</span>
             </label>
           ))}
         </div>
