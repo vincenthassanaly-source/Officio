@@ -61,7 +61,21 @@ export function typeItemDepuisValeur(valeur: string): TypeItemEntretien {
 // lisible) — y compris pour l'alerte, dont le fond teinté serait sinon sous
 // 4,5:1 avec du texte `muted` (4,3:1) ; son badge reste. La bordure
 // transparente garde les lignes strictement alignées.
-export function classesLigneItem(type: TypeItemEntretien, coche: boolean): string {
+//
+// Variante « pas-a-pas » (écran tenu à bout de bras face au patient) : chaque
+// ligne est une vraie carte (`bg-surface` + `shadow-card`, ou `bg-rec-soft`
+// pour l'alerte) et l'état coché est franc : fond `green-soft`, bordure
+// `green` (≥ 3:1) et texte `ink` (≥ 14:1), jamais `muted`.
+export function classesLigneItem(
+  type: TypeItemEntretien,
+  coche: boolean,
+  variante: 'liste' | 'pas-a-pas' = 'liste',
+): string {
+  if (variante === 'pas-a-pas') {
+    if (coche) return 'border-2 border-green bg-green-soft'
+    if (type === 'alerte') return 'border-2 border-rec bg-rec-soft shadow-card'
+    return 'border-2 border-transparent bg-surface shadow-card'
+  }
   if (type === 'alerte' && !coche) return 'border-2 border-rec bg-rec-soft'
   return 'border-2 border-transparent bg-bg'
 }

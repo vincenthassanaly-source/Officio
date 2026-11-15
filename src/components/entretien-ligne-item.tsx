@@ -10,13 +10,24 @@ import { BadgeTypeItem, EnteteAlerte, classesLigneItem, libelleActionItem } from
 // description. Question et explication : badge compact devant le texte ;
 // alerte : en-tête à part, plus marqué. Partagée par la vue liste et le
 // mode pas à pas.
-export function LigneItem({ item, coche, onBasculer }: { item: ItemEntretien; coche: boolean; onBasculer: () => void }) {
+export function LigneItem({
+  item,
+  coche,
+  onBasculer,
+  variante = 'liste',
+}: {
+  item: ItemEntretien
+  coche: boolean
+  onBasculer: () => void
+  variante?: 'liste' | 'pas-a-pas'
+}) {
   const id = useId()
   const type = item.type_item
+  const grand = variante === 'pas-a-pas'
 
   return (
     <label
-      className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl p-2.5 motion-safe:transition-colors motion-safe:active:bg-neutral-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${classesLigneItem(type, coche)}`}
+      className={`flex cursor-pointer items-start rounded-xl ${grand ? 'min-h-14 gap-3.5 p-3.5' : 'min-h-12 gap-3 p-2.5'} motion-safe:transition-colors ${grand ? 'motion-safe:active:scale-[0.99]' : 'motion-safe:active:bg-neutral-soft'} has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${classesLigneItem(type, coche, variante)}`}
     >
       <input
         type="checkbox"
@@ -24,7 +35,7 @@ export function LigneItem({ item, coche, onBasculer }: { item: ItemEntretien; co
         onChange={onBasculer}
         aria-labelledby={`${id}-action ${id}-texte`}
         aria-describedby={type ? `${id}-type` : undefined}
-        className="mt-0.5 size-6 shrink-0 cursor-pointer accent-primary"
+        className={`shrink-0 cursor-pointer ${grand ? 'mt-0 size-8 accent-green' : 'mt-0.5 size-6 accent-primary'}`}
       />
       <span className="flex min-w-0 flex-1 flex-col gap-1.5">
         {type === 'alerte' && (
@@ -43,7 +54,7 @@ export function LigneItem({ item, coche, onBasculer }: { item: ItemEntretien; co
           )}
           <span
             id={`${id}-texte`}
-            className={`whitespace-pre-wrap break-words text-[15px] leading-normal ${coche ? 'text-muted' : 'text-ink'}`}
+            className={`whitespace-pre-wrap break-words ${grand ? 'text-[17px] leading-snug' : 'text-[15px] leading-normal'} ${coche && !grand ? 'text-muted' : 'text-ink'}`}
           >
             {item.contenu}
           </span>
