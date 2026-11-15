@@ -45,7 +45,7 @@ const DELAI_APPUI_LONG_MS = 500
 // bas) — remplace le glyphe Unicode « ↑ » du bouton d'envoi.
 function IconEnvoyer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 19V5M5 12l7-7 7 7" />
     </svg>
   )
@@ -54,7 +54,7 @@ function IconEnvoyer({ className }: { className?: string }) {
 // Remplace le glyphe « × » du bouton de fermeture de ModaleEditionMessage.
 function IconFermer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
@@ -64,7 +64,7 @@ function IconFermer({ className }: { className?: string }) {
 // trois points, motif standard pour révéler des actions secondaires.
 function IconOptions({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
       <circle cx="12" cy="5" r="1.75" />
       <circle cx="12" cy="12" r="1.75" />
       <circle cx="12" cy="19" r="1.75" />
@@ -79,7 +79,7 @@ function IconOptions({ className }: { className?: string }) {
 // champ-photo.tsx et champ-photos.tsx).
 function IconPouce({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M7 10v12" />
       <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
     </svg>
@@ -528,7 +528,7 @@ export function FilDeMessages({
 // notifications-cloche.tsx, pour rester cohérent avec le reste de l'app.
 function IconStylo({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 20h9" />
       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
     </svg>
@@ -537,7 +537,7 @@ function IconStylo({ className }: { className?: string }) {
 
 function IconCorbeille({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18" />
       <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
       <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -717,7 +717,7 @@ function MessageItem({
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2.5">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           {m.lecteurs.length > 0 && (
-            <div className="flex" title={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`}>
+            <div className="flex" role="img" aria-label={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`} title={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`}>
               {m.lecteurs.map((l, i) => {
                 const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
                 return (
@@ -733,7 +733,7 @@ function MessageItem({
             </div>
           )}
           {m.pouces.length > 0 && (
-            <div className="flex" title={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`}>
+            <div className="flex" role="img" aria-label={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`} title={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`}>
               {m.pouces.map((p, i) => {
                 const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
                 return (

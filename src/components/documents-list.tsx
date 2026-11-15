@@ -159,7 +159,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           <button
             type="submit"
             disabled={isPending}
-            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             {isPending ? 'Envoi…' : 'Ajouter'}
           </button>
@@ -195,11 +195,11 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
                 </span>
                 <span>{estImage(d.type_fichier) ? 'Image' : 'PDF'}</span>
                 <span>·</span>
-                <span>{formatTaille(d.taille_octets)}</span>
+                <span className="chiffres-tabulaires">{formatTaille(d.taille_octets)}</span>
                 <span>·</span>
                 <span>{d.ajoute_par?.nom_complet ?? 'Ancien collègue'}</span>
                 <span>·</span>
-                <span>{formatDate(d.created_at)}</span>
+                <span className="chiffres-tabulaires">{formatDate(d.created_at)}</span>
               </div>
             </div>
           </button>

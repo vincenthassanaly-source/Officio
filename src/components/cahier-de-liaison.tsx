@@ -42,6 +42,7 @@ export function CahierDeLiaison({
         <button
           type="button"
           onClick={() => setOnglet('fil')}
+          aria-pressed={onglet === 'fil'}
           className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'fil' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
@@ -56,6 +57,7 @@ export function CahierDeLiaison({
         <button
           type="button"
           onClick={() => setOnglet('taches')}
+          aria-pressed={onglet === 'taches'}
           className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'taches' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}

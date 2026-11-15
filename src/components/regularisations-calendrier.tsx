@@ -155,7 +155,7 @@ export function RegularisationsCalendrier({
               </span>
               {compteAFaire > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold tabular-nums ${classeBadge}`}
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-bold tabular-nums ${classeBadge}`}
                 >
                   {compteAFaire}
                 </span>

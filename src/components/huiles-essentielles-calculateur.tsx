@@ -332,7 +332,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
             type="button"
             onClick={() => setMode('melange')}
             aria-pressed={mode === 'melange'}
-            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${CLASSE_FOCUS} ${
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold motion-safe:transition-colors ${CLASSE_FOCUS} ${
               mode === 'melange' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
             }`}
           >
@@ -342,7 +342,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
             type="button"
             onClick={() => setMode('flacons_separes')}
             aria-pressed={mode === 'flacons_separes'}
-            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${CLASSE_FOCUS} ${
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold motion-safe:transition-colors ${CLASSE_FOCUS} ${
               mode === 'flacons_separes' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
             }`}
           >

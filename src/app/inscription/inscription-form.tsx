@@ -8,7 +8,7 @@ export function InscriptionForm({ invite }: { invite?: string }) {
   const [state, action, pending] = useActionState(inscription, undefined)
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form action={action} aria-busy={pending} className="flex flex-col gap-4">
       {invite && <input type="hidden" name="invite" value={invite} />}
 
       <div className="flex flex-col gap-1.5">
@@ -21,6 +21,10 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           type="email"
           required
           autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          aria-invalid={state?.error ? true : undefined}
+          aria-describedby={state?.error ? 'inscription-erreur' : undefined}
           className={CLASSE_CHAMP_AUTH}
         />
       </div>
@@ -45,7 +49,7 @@ export function InscriptionForm({ invite }: { invite?: string }) {
       </div>
 
       {state?.error && (
-        <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{state.error}</p>
+        <p id="inscription-erreur" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{state.error}</p>
       )}
 
       <button

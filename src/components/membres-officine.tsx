@@ -12,11 +12,11 @@ export function MembresOfficine({
   couleurs: Map<string, CouleurAvatar>
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2">
       {membres.map((m) => {
         const c = couleurs.get(m.id) ?? COULEUR_PAR_DEFAUT
         return (
-          <div key={m.id} className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
+          <li key={m.id} className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
             <div
               aria-hidden="true"
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${c.fond} ${c.texte}`}
@@ -27,9 +27,9 @@ export function MembresOfficine({
               {m.nom_complet}
               {m.id === profilActuelId && <span className="font-normal text-muted"> (toi)</span>}
             </div>
-          </div>
+          </li>
         )
       })}
-    </div>
+    </ul>
   )
 }

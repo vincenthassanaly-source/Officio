@@ -69,7 +69,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
   const erreur = modeAjout ? resultatAjout?.erreur : state && 'error' in state ? state.error : undefined
 
   return (
-    <form action={modeAjout ? soumettreAjout : action} className="flex flex-col gap-4">
+    <form action={modeAjout ? soumettreAjout : action} aria-busy={pending} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className={CLASSE_LIBELLE_AUTH}>
           Email
@@ -80,6 +80,10 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="email"
           required
           autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur ? 'login-erreur' : undefined}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className={CLASSE_CHAMP_AUTH}
@@ -97,11 +101,13 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="password"
           required
           autoComplete="current-password"
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur ? 'login-erreur' : undefined}
           className={CLASSE_CHAMP_AUTH}
         />
       </div>
 
-      {erreur && <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
+      {erreur && <p id="login-erreur" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
       {modeAjout && resultatAjout?.succes && (
         <p role="status" className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{resultatAjout.succes}</p>
       )}

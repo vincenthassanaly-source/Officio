@@ -54,7 +54,7 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
 
       <div className="rounded-[20px] bg-surface shadow-card p-4">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">Code d&rsquo;invitation</p>
-        <p className="mt-1 break-all font-mono text-2xl tracking-widest text-ink">{code}</p>
+        <p className="mt-1 select-all break-all font-mono text-2xl tracking-widest text-ink">{code}</p>
       </div>
 
       <button
@@ -90,7 +90,7 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
         type="button"
         disabled={isPending}
         onClick={() => setConfirmationOuverte(true)}
-        className="min-h-11 rounded-xl px-3 text-[12.5px] font-semibold text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+        className="min-h-11 rounded-xl px-3 py-2 text-center text-[12.5px] font-semibold text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         {isPending ? 'Régénération…' : 'Régénérer le code (l’ancien lien cessera de fonctionner)'}
       </button>

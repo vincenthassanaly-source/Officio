@@ -67,7 +67,7 @@ export function PromessesPatientsOnglets({
             tabIndex={onglet === o.value ? 0 : -1}
             onClick={() => setOnglet(o.value)}
             onKeyDown={(e) => surKeyDown(e, index)}
-            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold transition ${
+            className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold motion-safe:transition-colors ${
               onglet === o.value ? 'bg-surface text-primary shadow-sm' : 'text-muted'
             } ${CLASSE_FOCUS}`}
           >

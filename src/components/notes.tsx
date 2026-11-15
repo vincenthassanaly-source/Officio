@@ -22,7 +22,7 @@ import { LightboxImage } from '@/components/lightbox-image'
 // Remplace le glyphe « × » du bouton de suppression.
 function IconFermer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
@@ -34,7 +34,7 @@ function IconFermer({ className }: { className?: string }) {
 // fil-de-messages.tsx (IconOptions), dupliqué plutôt que factorisé.
 function IconOptions({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <svg aria-hidden="true" className={className} viewBox="0 0 24 24" fill="currentColor">
       <circle cx="12" cy="5" r="1.75" />
       <circle cx="12" cy="12" r="1.75" />
       <circle cx="12" cy="19" r="1.75" />

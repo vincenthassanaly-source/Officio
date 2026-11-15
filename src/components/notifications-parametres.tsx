@@ -107,7 +107,7 @@ export function NotificationsParametres({
                 ? 'Désactiver sur cet appareil'
                 : 'Activer sur cet appareil'}
           </button>
-          {erreur && <p className="text-[12px] font-medium text-rec">{erreur}</p>}
+          {erreur && <p role="alert" className="text-[12px] font-medium text-rec">{erreur}</p>}
         </div>
       )}
 
@@ -119,7 +119,7 @@ export function NotificationsParametres({
             <div key={cat.value} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
                 <div className="text-[13.5px] font-semibold text-ink">{cat.label}</div>
-                <div className="mt-0.5 text-[12px] leading-snug text-muted">{cat.description}</div>
+                <div id={`notif-desc-${cat.value}`} className="mt-0.5 text-[12px] leading-snug text-muted">{cat.description}</div>
               </div>
               {/* Cible 44 px via padding invisible + marge négative (même
                   principe que LienRetour) : la piste visible du switch reste
@@ -129,12 +129,13 @@ export function NotificationsParametres({
                 role="switch"
                 aria-checked={active}
                 aria-label={cat.label}
+                aria-describedby={`notif-desc-${cat.value}`}
                 onClick={() => togglePreference(cat.value, active)}
                 className="-my-2.5 flex h-11 w-11 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <span
                   className={`relative h-6 w-11 rounded-full motion-safe:transition-colors ${
-                    active ? 'bg-primary' : 'bg-neutral-soft'
+                    active ? 'bg-primary' : 'bg-neutral-soft ring-1 ring-inset ring-neutral-text'
                   }`}
                 >
                   <span
