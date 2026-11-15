@@ -123,17 +123,16 @@ export function BottomNav() {
               // des onglets (voir deriveDirectionNav) : absent si l'onglet
               // ciblé est déjà actif, retombe alors sur le fondu par défaut.
               transitionTypes={direction ? [direction] : undefined}
-              className={`relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4 ${
+              className={`relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4 ${
                 actif ? 'text-primary' : 'text-muted'
               }`}
             >
               <Icone className="h-5 w-5 shrink-0" />
-              {/* `truncate` en filet de sécurité seulement : à 320 px avec les
-                  5 libellés actuels, `flex-1` suffit à tout faire tenir sans
-                  jamais couper. Ne s'active que si la police système est
-                  agrandie (accessibilité Android) au point de dépasser la
-                  largeur de l'onglet. */}
-              <span className="w-full truncate text-center">{item.label}</span>
+              {/* px-0.5 + tracking-tight : à 375 px, « Documents » (le plus long
+                  libellé) était coupé en « Docume… » avec px-1. `truncate`
+                  reste en filet de sécurité (police système agrandie ou
+                  écran plus étroit). */}
+              <span className="w-full truncate text-center tracking-tight">{item.label}</span>
             </Link>
           )
         })}
@@ -143,7 +142,9 @@ export function BottomNav() {
             else itemRefs.current.delete(CLE_PLUS)
           }}
           type="button"
-          aria-label="Autres modules"
+          aria-label="Plus, autres modules"
+          aria-haspopup="dialog"
+          aria-expanded={panelOuvert}
           onClick={() => setPanelOuvert(true)}
           className={`relative z-10 flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4 ${
             plusActif ? 'text-primary' : 'text-muted'

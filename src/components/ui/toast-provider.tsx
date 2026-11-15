@@ -33,10 +33,12 @@ const DUREE_PAR_TYPE: Record<TypeToast, number> = {
 const DUREE_ANIMATION_SORTIE = 180
 
 const STYLE_PAR_TYPE: Record<TypeToast, string> = {
-  succes: 'border-green/20 bg-green-soft text-green',
-  erreur: 'border-rec/20 bg-rec-soft text-rec',
-  info: 'border-primary/20 bg-primary-soft text-primary',
+  succes: 'bg-green-soft text-green',
+  erreur: 'bg-rec-soft text-rec',
+  info: 'bg-primary-soft text-primary',
 }
+
+const MAX_TOASTS = 3
 
 let prochainId = 0
 
@@ -56,14 +58,39 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }, DUREE_ANIMATION_SORTIE)
   }, [])
 
-  const toast = useCallback(
-    ({ type, message }: ParametresToast) => {
-      const id = prochainId++
-      setToasts((t) => [...t, { id, type, message, enSortie: false }])
+  const armer = useCallback(
+    (id: number, type: TypeToast) => {
       const minuteur = setTimeout(() => retirer(id), DUREE_PAR_TYPE[type])
       minuteursAutoFermeture.current.set(id, minuteur)
     },
     [retirer]
+  )
+
+  const toast = useCallback(
+    ({ type, message }: ParametresToast) => {
+      const id = prochainId++
+      // Plafond à MAX_TOASTS : les plus anciens sont retirés en premier.
+      setToasts((t) => [...t, { id, type, message, enSortie: false }].slice(-MAX_TOASTS))
+      armer(id, type)
+    },
+    [armer]
+  )
+
+  // Pause du minuteur tant que le toast est survolé ou a le focus (le temps
+  // de le lire), relancé à la fin avec la durée complète.
+  const suspendre = useCallback((id: number) => {
+    const minuteur = minuteursAutoFermeture.current.get(id)
+    if (minuteur) {
+      clearTimeout(minuteur)
+      minuteursAutoFermeture.current.delete(id)
+    }
+  }, [])
+
+  const reprendre = useCallback(
+    (id: number, type: TypeToast) => {
+      if (!minuteursAutoFermeture.current.has(id)) armer(id, type)
+    },
+    [armer]
   )
 
   return (
@@ -75,18 +102,39 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--hauteur-bottom-nav)+0.75rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:items-end lg:px-0"
       >
         {toasts.map((t) => (
-          <ToastItem key={t.id} toast={t} onFermer={() => retirer(t.id)} />
+          <ToastItem
+            key={t.id}
+            toast={t}
+            onFermer={() => retirer(t.id)}
+            onSuspendre={() => suspendre(t.id)}
+            onReprendre={() => reprendre(t.id, t.type)}
+          />
         ))}
       </div>
     </ToastContext.Provider>
   )
 }
 
-function ToastItem({ toast, onFermer }: { toast: Toast; onFermer: () => void }) {
+function ToastItem({
+  toast,
+  onFermer,
+  onSuspendre,
+  onReprendre,
+}: {
+  toast: Toast
+  onFermer: () => void
+  onSuspendre: () => void
+  onReprendre: () => void
+}) {
   return (
     <div
-      role={toast.type === 'erreur' ? 'alert' : 'status'}
-      className={`pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-2xl border px-4 py-3 shadow-card motion-reduce:animate-none ${
+      onMouseEnter={onSuspendre}
+      onMouseLeave={onReprendre}
+      onFocus={onSuspendre}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) onReprendre()
+      }}
+      className={`pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-2xl px-4 py-3 shadow-card motion-reduce:animate-none ${
         toast.enSortie ? 'toast-sortie' : 'toast-entree'
       } ${STYLE_PAR_TYPE[toast.type]}`}
     >

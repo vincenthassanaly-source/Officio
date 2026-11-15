@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { changerOfficineActiveAction } from '@/app/actions/officine'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { useToast } from '@/components/ui/toast-provider'
 import type { Adhesion } from '@/lib/data/adhesions'
 
 // Doit rester synchronisée avec la classe `w-[220px]` du panneau plus bas.
@@ -32,6 +33,7 @@ export function OfficineSwitcher({
   const [position, setPosition] = useState({ top: 0, left: 0 })
   const [isPending, startTransition] = useTransition()
   const boutonRef = useRef<HTMLButtonElement>(null)
+  const toast = useToast()
 
   useFermerAvecRetour(ouvert, () => setOuvert(false))
 
@@ -76,7 +78,13 @@ export function OfficineSwitcher({
   function choisir(officineId: string) {
     setOuvert(false)
     if (officineId === officineActiveId) return
-    startTransition(() => changerOfficineActiveAction(officineId))
+    startTransition(async () => {
+      try {
+        await changerOfficineActiveAction(officineId)
+      } catch {
+        toast({ type: 'erreur', message: "Impossible de changer d'officine, réessayez" })
+      }
+    })
   }
 
   // Une seule officine (cas le plus courant) : rien à sélectionner, pas de
@@ -87,7 +95,7 @@ export function OfficineSwitcher({
         className={
           avecLogo
             ? 'flex min-w-0 flex-1 items-center gap-2 rounded-full py-1 pl-1 pr-3'
-            : 'flex min-w-0 flex-1 items-center rounded-full bg-surface px-3 py-1.5 shadow-card'
+            : 'flex min-h-11 min-w-0 flex-1 items-center rounded-full bg-surface px-3 py-1.5 shadow-card'
         }
       >
         {logo}
@@ -95,10 +103,9 @@ export function OfficineSwitcher({
             conteneur (min-w-0 flex-1) : sur mobile, ~190px restaient libres
             entre le logo et la cloche de notifications, coupant « Pharmacie
             Rome Village » en « Pharmacie R… » alors que la place existait.
-            `truncate` reste en filet de sécurité pour un nom qui dépasse
-            malgré tout la largeur réellement disponible (header étroit,
-            nom très long). */}
-        <span className={`min-w-0 flex-1 truncate font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
+            `line-clamp-2` (au lieu de `truncate`) laisse un nom long passer
+            sur deux lignes avant de le couper. */}
+        <span className={`min-w-0 flex-1 line-clamp-2 wrap-anywhere leading-tight font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
           {officineActive?.officine_nom}
         </span>
       </div>
@@ -117,18 +124,18 @@ export function OfficineSwitcher({
         className={
           avecLogo
             ? 'flex min-h-11 min-w-0 w-full items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
-            : 'flex min-w-0 w-full items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
+            : 'flex min-h-11 min-w-0 w-full items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
         }
       >
         {logo}
         {/* Même correctif que la variante « une seule officine » ci-dessus :
-            largeur flexible plutôt qu'un plafond fixe, truncate en filet de
-            sécurité. */}
-        <span className={`min-w-0 flex-1 truncate font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
+            largeur flexible plutôt qu'un plafond fixe, line-clamp-2
+            plutôt que truncate. */}
+        <span className={`min-w-0 flex-1 line-clamp-2 wrap-anywhere leading-tight font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
           {isPending ? 'Changement…' : officineActive?.officine_nom}
         </span>
         <svg
-          className={`h-2.5 w-2.5 shrink-0 text-muted transition-transform ${ouvert ? 'rotate-180' : ''}`}
+          className={`h-2.5 w-2.5 shrink-0 text-muted motion-safe:transition-transform ${ouvert ? 'rotate-180' : ''}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

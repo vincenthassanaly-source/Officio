@@ -3,25 +3,13 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
+import { formatDateRelative } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
-
-function formatDate(iso: string) {
-  const date = new Date(iso)
-  const now = new Date()
-  const hier = new Date(now)
-  hier.setDate(now.getDate() - 1)
-
-  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-  if (date.toDateString() === now.toDateString()) return `Aujourd'hui · ${heure}`
-  if (date.toDateString() === hier.toDateString()) return `Hier · ${heure}`
-  return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
-}
 
 // Même pattern que taches-list.tsx (non exportée là-bas non plus) : icône
 // propre à l'accordéon, dupliquée plutôt que partagée entre composants.
@@ -290,7 +278,7 @@ function CarteSuggestion({
           <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {suggestion.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
-          <div className="text-[12px] text-muted">{formatDate(suggestion.created_at)}</div>
+          <div className="text-[12px] text-muted">{formatDateRelative(suggestion.created_at)}</div>
         </div>
         {suggestion.auteur?.id === profilActuelId && (
           <button

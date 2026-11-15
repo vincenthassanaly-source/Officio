@@ -69,7 +69,7 @@ export function dueInfo(
   if (diffJours === 0) return { label: `Aujourd'hui${suffixeHeure}`, className: 'bg-accent-soft text-accent' }
   if (diffJours === 1) return { label: `Demain${suffixeHeure}`, className: 'bg-accent-soft text-accent' }
   return {
-    label: `${echeance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}${suffixeHeure}`,
+    label: `${new Date(`${tache.echeance}T12:00:00Z`).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', timeZone: 'Europe/Paris' })}${suffixeHeure}`,
     className: 'bg-primary-soft text-primary',
   }
 }

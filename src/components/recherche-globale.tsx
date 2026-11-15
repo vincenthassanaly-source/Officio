@@ -72,6 +72,7 @@ export function RechercheGlobale() {
   const [requete, setRequete] = useState('')
   const [ouvert, setOuvert] = useState(false)
   const [resultats, setResultats] = useState<GroupeResultatsRecherche[] | null>(null)
+  const [erreur, setErreur] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -98,12 +99,24 @@ export function RechercheGlobale() {
     }
 
     setOuvert(true)
+    setErreur(false)
     const idCourant = ++requeteIdRef.current
     debounceRef.current = setTimeout(() => {
       startTransition(async () => {
-        const res = await rechercherGlobal(q)
-        // Ignore une réponse obsolète arrivée après une frappe plus récente.
-        if (requeteIdRef.current === idCourant) setResultats(res)
+        try {
+          const res = await rechercherGlobal(q)
+          // Ignore une réponse obsolète arrivée après une frappe plus récente.
+          if (requeteIdRef.current === idCourant) {
+            setErreur(false)
+            setResultats(res)
+          }
+        } catch {
+          // Échec réseau : message dans le panneau plutôt que page d'erreur.
+          if (requeteIdRef.current === idCourant) {
+            setErreur(true)
+            setResultats([])
+          }
+        }
       })
     }, DEBOUNCE_MS)
   }
@@ -122,7 +135,7 @@ export function RechercheGlobale() {
   // pas seulement pendant isPending : évite un flash "Aucun résultat" entre
   // l'ouverture du panneau et le déclenchement réel de la recherche.
   const chargement = ouvert && (isPending || resultats === null)
-  const aAffiner = ouvert && !chargement && (resultats?.length ?? 0) === 0
+  const aAffiner = ouvert && !chargement && !erreur && (resultats?.length ?? 0) === 0
 
   return (
     <div className="relative">
@@ -159,10 +172,18 @@ export function RechercheGlobale() {
         {ouvert && (
           <div
             aria-live="polite"
+            // Le panneau est dans la pastille : sans ce stop, un clic dans les
+            // résultats remontait à son onClick et redonnait le focus à
+            // l'input (clavier mobile rouvert pendant la navigation).
+            onClick={(e) => e.stopPropagation()}
             className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70dvh] overflow-y-auto rounded-[20px] border border-border bg-surface p-2 shadow-lg"
           >
             {chargement ? (
               <p className="px-3 py-6 text-center text-[12.5px] text-muted">Recherche…</p>
+            ) : erreur ? (
+              <p role="status" className="px-3 py-6 text-center text-[12.5px] text-muted">
+                Recherche indisponible, réessayez
+              </p>
             ) : aAffiner ? (
               <p className="px-3 py-6 text-center text-[12.5px] text-muted">
                 Aucun résultat pour « {requete.trim()} »

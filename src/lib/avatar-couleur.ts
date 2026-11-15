@@ -1,14 +1,14 @@
 // Palette reprise telle quelle du design system (voir globals.css) : chaque
 // teinte y est déjà validée ailleurs dans l'app sur fond plein (ex. bg-rec /
 // bg-accent avec text-white sur les badges de notifications et de suppression).
-// text-ink est utilisé à la place de text-white sur bg-green, moins sombre
-// que les autres teintes : le contraste y est meilleur avec le texte foncé.
+// text-white partout, y compris sur bg-green (5,39:1) : text-ink y donnait
+// seulement 3,29:1.
 const PALETTE_AVATAR: { fond: string; texte: string }[] = [
   { fond: 'bg-primary', texte: 'text-white' },
   { fond: 'bg-accent', texte: 'text-white' },
   { fond: 'bg-rec', texte: 'text-white' },
   { fond: 'bg-purple', texte: 'text-white' },
-  { fond: 'bg-green', texte: 'text-ink' },
+  { fond: 'bg-green', texte: 'text-white' },
   { fond: 'bg-brun', texte: 'text-white' },
 ]
 

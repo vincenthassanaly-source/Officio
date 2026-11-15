@@ -28,7 +28,7 @@ function badgeEcheance(echeance: string | null, aujourdhuiIso: string): { label:
 
   if (diffJours === 1) return { label: 'Demain', className: 'text-accent' }
   return {
-    label: dateEcheance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+    label: new Date(`${echeance}T12:00:00Z`).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', timeZone: 'Europe/Paris' }),
     className: 'text-muted',
   }
 }
