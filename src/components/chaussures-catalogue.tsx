@@ -4,6 +4,8 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
+import { useToast } from '@/components/ui/toast-provider'
+import { normaliserRecherche } from '@/lib/promesses-patients'
 import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { ChaussureModele, ChaussureVariante, GenreChaussure } from '@/lib/data/chaussures'
@@ -20,6 +22,9 @@ type GenreFiltre = GenreChaussure | 'tous'
 const GENRE_TOUS: GenreFiltre = 'tous'
 
 const MONTANT_REMBOURSEMENT_SECU = 50
+
+// Plafond de saisie du prix : au-delà, c'est presque sûrement une faute de frappe.
+const PRIX_MAX = 5000
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -63,17 +68,29 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
   const [enEdition, setEnEdition] = useState(false)
   const [valeur, setValeur] = useState(chaussure.prix?.toString() ?? '')
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   function enregistrer() {
     const nombre = valeur.trim() === '' ? null : Number(valeur.replace(',', '.'))
-    if (nombre !== null && !Number.isFinite(nombre)) {
+    if (nombre !== null && (!Number.isFinite(nombre) || nombre < 0 || nombre > PRIX_MAX)) {
+      if (nombre !== null && Number.isFinite(nombre)) {
+        toast({ type: 'erreur', message: `Prix invalide : saisissez un montant entre 0 et ${PRIX_MAX} €.` })
+      }
       setValeur(chaussure.prix?.toString() ?? '')
       setEnEdition(false)
       return
     }
-    startTransition(async () => {
-      await modifierPrixChaussure(chaussure.id, nombre)
+    if (nombre === chaussure.prix) {
       setEnEdition(false)
+      return
+    }
+    startTransition(async () => {
+      try {
+        await modifierPrixChaussure(chaussure.id, nombre)
+        setEnEdition(false)
+      } catch {
+        toast({ type: 'erreur', message: 'Prix non enregistré, vérifiez la connexion' })
+      }
     })
   }
 
@@ -110,7 +127,7 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
       type="button"
       onClick={() => setEnEdition(true)}
       aria-label={`Modifier le prix de ${chaussure.nom_modele}${prixFormate ? `, actuellement ${prixFormate} euros` : ''}`}
-      className={`flex min-h-11 items-center rounded-lg px-2 text-left text-[13px] font-semibold tabular-nums ${
+      className={`-ml-2 flex min-h-11 items-center rounded-lg px-2 text-left text-[13px] font-semibold tabular-nums ${
         prixFormate ? 'text-ink' : 'text-accent'
       } ${CLASSE_FOCUS}`}
     >
@@ -352,6 +369,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
   const chaussureOuverte = chaussures.find((ch) => ch.id === chaussureOuverteId) ?? null
 
   useFermerAvecRetour(chaussureOuverteId !== null, () => setChaussureOuverteId(null))
+  useFermerAvecRetour(vue === 'scanner', () => setVue('catalogue'))
 
   const genresDisponibles = useMemo(() => {
     const c: Partial<Record<GenreChaussure, number>> = {}
@@ -370,14 +388,14 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
   }, [genresDisponibles, chaussures])
 
   const groupes = useMemo(() => {
-    const rechercheNormalisee = recherche.trim().toLowerCase()
+    const rechercheNormalisee = normaliserRecherche(recherche)
     const visibles = chaussures
       .filter((ch) => genreActif === GENRE_TOUS || ch.genre === genreActif)
       .filter(
         (ch) =>
           !rechercheNormalisee ||
-          ch.nom_modele.toLowerCase().includes(rechercheNormalisee) ||
-          ch.categorie.toLowerCase().includes(rechercheNormalisee)
+          normaliserRecherche(ch.nom_modele).includes(rechercheNormalisee) ||
+          normaliserRecherche(ch.categorie).includes(rechercheNormalisee)
       )
 
     const parCategorie = new Map<string, ChaussureModele[]>()
@@ -394,12 +412,21 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
   return (
     <div className="flex flex-1 flex-col gap-3">
       {vue === 'scanner' && (
-        <ChaussuresScanner
-          onSelectionner={(id) => {
-            setChaussureOuverteId(id)
-            setVue('catalogue')
-          }}
-        />
+        <>
+          <button
+            type="button"
+            onClick={() => setVue('catalogue')}
+            className={`flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-4 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+          >
+            Retour au catalogue
+          </button>
+          <ChaussuresScanner
+            onSelectionner={(id) => {
+              setChaussureOuverteId(id)
+              setVue('catalogue')
+            }}
+          />
+        </>
       )}
 
       {vue === 'catalogue' && tabsGenre.length > 0 && (
@@ -427,13 +454,19 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
         </div>
       )}
 
-      {vue === 'catalogue' && (
+      {vue === 'catalogue' && chaussures.length === 0 && (
+        <p className="py-10 text-center text-sm text-muted">Aucune chaussure au catalogue pour l&apos;instant</p>
+      )}
+
+      {vue === 'catalogue' && chaussures.length > 0 && (
         <>
           <div className="flex gap-1.5">
+            <div className="relative min-w-0 flex-1">
             <input
+              type="search"
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Rechercher un modèle ou une catégorie…"
+              placeholder="Modèle ou catégorie…"
               aria-label="Rechercher un modèle ou une catégorie"
               // `min-w-0` indispensable : sans lui, un <input> dans un
               // conteneur flex garde sa largeur minimale intrinsèque
@@ -441,8 +474,19 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               // au lieu de suivre `flex-1`, ce qui pousse le bouton scanner
               // voisin (`shrink-0`) hors du viewport à 320 px de large
               // (constat re-vérifié : bouton mesuré à 8 px hors écran).
-              className={`min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+              className={`w-full min-w-0 rounded-xl border border-champ-bord bg-bg py-2.5 pl-3 pr-11 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-search-cancel-button]:appearance-none`}
             />
+            {recherche && (
+              <button
+                type="button"
+                onClick={() => setRecherche('')}
+                aria-label="Effacer la recherche"
+                className={`absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-muted hover:text-ink ${CLASSE_FOCUS}`}
+              >
+                <IconFermer className="h-4 w-4" />
+              </button>
+            )}
+            </div>
             <button
               type="button"
               onClick={() => setVue('scanner')}

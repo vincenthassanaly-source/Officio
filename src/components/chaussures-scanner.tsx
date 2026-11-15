@@ -72,8 +72,8 @@ function CandidatCarte({ candidat, onOuvrir }: { candidat: CandidatChaussure; on
           <div className="flex h-full items-center justify-center text-[12px] text-muted">Pas de photo</div>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1">
-        <div className="text-[13px] font-semibold text-ink">{candidat.nom_modele}</div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="wrap-anywhere text-[13px] font-semibold text-ink">{candidat.nom_modele}</div>
         <div className="truncate text-[12px] font-medium uppercase tracking-wide text-muted">
           {candidat.categorie}
         </div>
@@ -159,6 +159,13 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
   // Coupe systématiquement la caméra si l'utilisateur quitte l'écran Scanner
   // pendant qu'elle est active (démontage du composant).
   useEffect(() => arreterFlux, [])
+
+  // Libère l'URL d'aperçu (blob) quand elle est remplacée, retirée ou au
+  // démontage : sinon chaque photo prise garde son image en mémoire.
+  useEffect(() => {
+    if (!photoApercu) return
+    return () => URL.revokeObjectURL(photoApercu)
+  }, [photoApercu])
 
   function analyser(fichierOriginal: File, dejaRedimensionnee: boolean) {
     setErreur(null)
@@ -296,7 +303,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
           type="button"
           onClick={reprendrePhoto}
           disabled={isPending}
-          className={`min-h-11 rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+          className={`min-h-11 rounded-xl border border-border bg-surface px-4 py-3 text-center text-sm font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
         >
           Reprendre une photo
         </button>
@@ -320,7 +327,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
 
       {candidats && candidats.length > 0 && !isPending && (
         <div className="flex flex-col gap-2">
-          <div className="text-[12px] font-bold uppercase tracking-wide text-muted">
+          <div className="text-[13px] text-muted">
             Modèles ressemblants, du plus au moins proche — parcourez la liste et confirmez le bon avant d&apos;ouvrir la fiche
           </div>
           {candidats.map((c) => (

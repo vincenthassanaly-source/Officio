@@ -532,13 +532,14 @@ function CartePromesse({
           </span>
         </button>
         <span className="min-w-0 flex-1 truncate text-[12px] text-muted">{depuisQuand(p.created_at)}</span>
+        <div className="-mr-2.5 flex shrink-0 items-center">
         <button
           type="button"
           onClick={() => onModifier(p)}
           disabled={desactive}
           data-action-modifier={p.id}
           aria-label={`Modifier la promesse de ${p.nom_patient}`}
-          className={`-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-50 ${CLASSE_FOCUS}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-50 ${CLASSE_FOCUS}`}
         >
           <IconCrayon className="h-4 w-4" />
         </button>
@@ -547,10 +548,11 @@ function CartePromesse({
           onClick={() => onDemanderSuppression(p)}
           disabled={desactive}
           aria-label={`Supprimer la promesse de ${p.nom_patient}`}
-          className={`-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec disabled:opacity-50 ${CLASSE_FOCUS}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec disabled:opacity-50 ${CLASSE_FOCUS}`}
         >
           <IconCorbeille className="h-4 w-4" />
         </button>
+        </div>
       </div>
     </li>
   )
