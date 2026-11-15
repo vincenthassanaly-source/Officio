@@ -197,7 +197,7 @@ export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => v
       <button
         type="button"
         onClick={enregistrement ? arreter : demarrer}
-        aria-label={enregistrement ? `Arrêter l’enregistrement, ${formatCompteur(ecoule)}` : 'Enregistrer un vocal'}
+        aria-label="Enregistrer un vocal"
         aria-pressed={enregistrement}
         className={`-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
           enregistrement ? 'motion-safe:animate-pulse' : ''
