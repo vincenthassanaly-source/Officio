@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
   useTransition,
-  type TransitionStartFunction,
 } from 'react'
 import {
   ajouterHuile,
@@ -21,6 +20,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { ModaleAjoutDepuisStock } from '@/components/huiles-essentielles-modale-ajout-stock'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { normaliser } from '@/lib/normaliser'
 import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const DELAI_APPUI_LONG_MS = 500
@@ -30,7 +30,7 @@ function estElementInteractif(cible: EventTarget | null) {
 }
 
 const STATUTS: { value: StatutHuile; label: string }[] = [
-  { value: 'en_stock', label: 'Huile essentielle' },
+  { value: 'en_stock', label: 'Catalogue' },
   { value: 'a_commander', label: 'À commander' },
   { value: 'en_commande', label: 'En commande' },
 ]
@@ -141,6 +141,9 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   const [modaleAjoutStockOuverte, setModaleAjoutStockOuverte] = useState(false)
   const [isPending, startTransition] = useTransition()
   const toastListe = useToast()
+  // Une seule modale de confirmation pour toute la liste (et non une par
+  // carte). `terminer` referme l'état « actions affichées » de la carte.
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string; terminer: () => void } | null>(null)
 
   // Remplace les deux Set d'ids « en cours » (idsEnTransition /
   // idsVolumeEnSauvegarde) qui servaient de palliatif à l'absence
@@ -212,16 +215,24 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   }, [huilesOptimistes])
 
   const visibles = useMemo(() => {
-    const rechercheNormalisee = recherche.trim().toLowerCase()
+    const rechercheNormalisee = normaliser(recherche.trim())
     const statutFiltre = ongletStatut === 'en_stock' ? filtreDisponibilite : ongletStatut
     return huilesOptimistes
       .filter((h) => h.statut === statutFiltre)
-      .filter((h) => !rechercheNormalisee || h.nom.toLowerCase().includes(rechercheNormalisee))
+      .filter((h) => !rechercheNormalisee || normaliser(h.nom).includes(rechercheNormalisee))
   }, [huilesOptimistes, ongletStatut, filtreDisponibilite, recherche])
+
+  // Message d'état vide selon le contexte (recherche en cours ou non, onglet).
+  let messageVide: string
+  if (recherche.trim()) messageVide = 'Aucune huile ne correspond à la recherche.'
+  else if (ongletStatut === 'a_commander') messageVide = 'Aucune huile à commander. Ajoutez-en depuis le stock.'
+  else if (ongletStatut === 'en_commande') messageVide = 'Aucune huile en commande. Ajoutez-en depuis le stock.'
+  else if (filtreDisponibilite === 'non_tenu_en_stock') messageVide = 'Aucune huile non tenue en stock.'
+  else messageVide = 'Aucune huile en stock. Créez une nouvelle huile ci-dessus.'
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-1.5 overflow-x-auto">
+      <div className="-mr-4 flex gap-1.5 overflow-x-auto pr-4">
         {STATUTS.map((s) => (
           <button
             type="button"
@@ -317,8 +328,16 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterHuile(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterHuile(formData)
+                setFormOuvert(false)
+                toastListe({ type: 'succes', message: 'Huile essentielle ajoutée.' })
+              } catch (err) {
+                toastListe({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : "Échec de l'ajout de l'huile essentielle.",
+                })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -336,9 +355,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
 
       <div className="flex flex-1 flex-col gap-2 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-2.5">
         {visibles.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted lg:col-span-2">
-            Aucune huile ne correspond.
-          </p>
+          <p className="py-10 text-center text-sm text-muted lg:col-span-2">{messageVide}</p>
         )}
         {visibles.map((h) => {
           if (enEdition === h.id) {
@@ -347,8 +364,16 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                 key={h.id}
                 action={(formData) => {
                   startTransition(async () => {
-                    await modifierHuile(h.id, formData)
-                    setEnEdition(null)
+                    try {
+                      await modifierHuile(h.id, formData)
+                      setEnEdition(null)
+                      toastListe({ type: 'succes', message: 'Huile essentielle modifiée.' })
+                    } catch (err) {
+                      toastListe({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : "Échec de la modification de l'huile essentielle.",
+                      })
+                    }
                   })
                 }}
                 className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3 lg:col-span-2"
@@ -380,7 +405,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
               huile={h}
               ongletStatut={ongletStatut}
               isPending={isPending}
-              startTransition={startTransition}
+              onDemanderSuppression={(terminer) => setASupprimer({ id: h.id, nom: h.nom, terminer })}
               onChangerStatut={changerStatut}
               onSauvegarderVolume={sauvegarderVolumeACommander}
               onEditer={(id) => {
@@ -400,6 +425,32 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           onFerme={() => setModaleAjoutStockOuverte(false)}
         />
       )}
+
+      <ModaleConfirmation
+        ouvert={aSupprimer !== null}
+        titre={`Supprimer l'huile essentielle « ${aSupprimer?.nom} » ?`}
+        onConfirmer={() => {
+          if (!aSupprimer) return
+          const { id, terminer } = aSupprimer
+          startTransition(async () => {
+            try {
+              await supprimerHuile(id)
+              toastListe({ type: 'succes', message: 'Huile essentielle supprimée.' })
+            } catch (err) {
+              toastListe({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de la suppression de l'huile essentielle.",
+              })
+            }
+          })
+          terminer()
+          setASupprimer(null)
+        }}
+        onAnnuler={() => {
+          aSupprimer?.terminer()
+          setASupprimer(null)
+        }}
+      />
     </div>
   )
 }
@@ -408,7 +459,7 @@ function CarteHuile({
   huile,
   ongletStatut,
   isPending,
-  startTransition,
+  onDemanderSuppression,
   onChangerStatut,
   onSauvegarderVolume,
   onEditer,
@@ -416,17 +467,17 @@ function CarteHuile({
   huile: HuileEssentielle
   ongletStatut: StatutHuile
   isPending: boolean
-  startTransition: TransitionStartFunction
+  onDemanderSuppression: (terminer: () => void) => void
   onChangerStatut: (id: string, nouveauStatut: StatutHuile) => void
   onSauvegarderVolume: (id: string, valeurSaisie: string) => void
   onEditer: (id: string) => void
 }) {
   const [enMaintien, setEnMaintien] = useState(false)
   const [selectionneePourSuppression, setSelectionneePourSuppression] = useState(false)
-  const [confirmationOuverte, setConfirmationOuverte] = useState(false)
   const minuterieRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const carteRef = useRef<HTMLDivElement>(null)
-  const toast = useToast()
+  const boutonPoubelleRef = useRef<HTMLButtonElement>(null)
+  const boutonOptionsRef = useRef<HTMLButtonElement>(null)
 
   function demarrerAppuiLong(e: { target: EventTarget | null }) {
     if (estElementInteractif(e.target)) return
@@ -465,6 +516,18 @@ function CarteHuile({
     }
   }, [selectionneePourSuppression])
 
+  // Le bouton « Voir les actions » est remplacé par la poubelle : le focus
+  // clavier y est replacé pour ne pas être perdu avec l'ancien bouton.
+  useEffect(() => {
+    if (selectionneePourSuppression) boutonPoubelleRef.current?.focus()
+  }, [selectionneePourSuppression])
+
+  function fermerActions() {
+    setSelectionneePourSuppression(false)
+    // Rend le focus au bouton « Voir les actions » une fois remonté.
+    requestAnimationFrame(() => boutonOptionsRef.current?.focus())
+  }
+
   return (
     <div
       ref={carteRef}
@@ -477,6 +540,12 @@ function CarteHuile({
       onMouseDown={demarrerAppuiLong}
       onMouseUp={annulerAppuiLong}
       onMouseLeave={annulerAppuiLong}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && selectionneePourSuppression) {
+          e.stopPropagation()
+          fermerActions()
+        }
+      }}
       onContextMenu={(e) => {
         if (!estElementInteractif(e.target)) e.preventDefault()
       }}
@@ -495,60 +564,60 @@ function CarteHuile({
         </div>
         {selectionneePourSuppression ? (
           <button
+            ref={boutonPoubelleRef}
             type="button"
             disabled={isPending}
-            onClick={() => setConfirmationOuverte(true)}
+            onClick={() => onDemanderSuppression(() => setSelectionneePourSuppression(false))}
             aria-label={`Supprimer l'huile ${huile.nom}`}
             className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 6h18" />
                 <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
               </svg>
             </span>
           </button>
         ) : (
-          <>
-            {/* Les icônes d'action se limitent au bouton Modifier, toujours
-                visible — l'appui long ne fait qu'ajouter la possibilité de
-                supprimer. Ce bouton en est l'alternative visible, accessible
-                au clavier et au lecteur d'écran : le geste reste disponible
-                en plus, pas à la place (voir DESIGN.md, Alternative à l'appui
-                long). */}
-            <button
-              type="button"
-              onClick={() => setSelectionneePourSuppression(true)}
-              aria-label={`Voir les actions pour ${huile.nom}`}
-              className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
-            >
-              <IconOptions className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onEditer(huile.id)}
-              aria-label={`Modifier ${huile.nom}`}
-              className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </span>
-            </button>
-          </>
+          /* Alternative visible, accessible au clavier et au lecteur d'écran,
+             à l'appui long (voir DESIGN.md, Alternative à l'appui long). */
+          <button
+            ref={boutonOptionsRef}
+            type="button"
+            onClick={() => setSelectionneePourSuppression(true)}
+            aria-label={`Voir les actions pour ${huile.nom}`}
+            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
+          >
+            <IconOptions className="h-4 w-4" />
+          </button>
         )}
+        {/* « Modifier » reste toujours visible, y compris quand la poubelle
+            est affichée. */}
+        <button
+          type="button"
+          onClick={() => onEditer(huile.id)}
+          aria-label={`Modifier ${huile.nom}`}
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </span>
+        </button>
       </div>
+      <span role="status" aria-live="polite" className="sr-only">
+        {selectionneePourSuppression
+          ? `Action disponible : supprimer ${huile.nom}. Échap pour fermer.`
+          : ''}
+      </span>
 
       {/* Ligne 2 : prix à gauche, contrôle de statut à droite (select /
           case à cocher / champ volume selon l'onglet — inchangés). */}
       <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0 font-mono text-[12px] text-muted">
+        <div className="min-w-0 text-[12px] tabular-nums text-muted">
           {formatPrix(huile.prix_reference, huile.volume_reference_ml)}
-          {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
-            huile.volume_a_commander_ml != null &&
-            ` · Commande : ${formatVolume(huile.volume_a_commander_ml)} mL`}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
@@ -558,7 +627,12 @@ function CarteHuile({
                 min="0"
                 step="1"
                 defaultValue={huile.volume_a_commander_ml ?? ''}
-                onBlur={(e) => onSauvegarderVolume(huile.id, e.target.value)}
+                onBlur={(e) => {
+                  // Rien à envoyer au serveur si la valeur n'a pas changé.
+                  const valeurInitiale = huile.volume_a_commander_ml == null ? '' : String(huile.volume_a_commander_ml)
+                  if (e.target.value.trim() === valeurInitiale) return
+                  onSauvegarderVolume(huile.id, e.target.value)
+                }}
                 placeholder="Vol."
                 aria-label={`Volume à commander pour ${huile.nom}`}
                 inputMode="numeric"
@@ -590,37 +664,13 @@ function CarteHuile({
                   const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
                   onChangerStatut(huile.id, nouveauStatut)
                 }}
-                className={`h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60 ${CLASSE_FOCUS}`}
+                className={`h-5 w-5 accent-[var(--color-primary)] disabled:opacity-60 ${CLASSE_FOCUS}`}
               />
               {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
             </label>
           )}
         </div>
       </div>
-
-      <ModaleConfirmation
-        ouvert={confirmationOuverte}
-        titre={`Supprimer l'huile essentielle « ${huile.nom} » ?`}
-        onConfirmer={() => {
-          startTransition(async () => {
-            try {
-              await supprimerHuile(huile.id)
-              toast({ type: 'succes', message: 'Huile essentielle supprimée.' })
-            } catch (err) {
-              toast({
-                type: 'erreur',
-                message: err instanceof Error ? err.message : "Échec de la suppression de l'huile essentielle.",
-              })
-            }
-          })
-          setConfirmationOuverte(false)
-          setSelectionneePourSuppression(false)
-        }}
-        onAnnuler={() => {
-          setConfirmationOuverte(false)
-          setSelectionneePourSuppression(false)
-        }}
-      />
     </div>
   )
 }

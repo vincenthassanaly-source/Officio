@@ -6,6 +6,7 @@ import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentiell
 import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { formatPrix } from '@/components/huiles-essentielles-liste'
+import { normaliser } from '@/lib/normaliser'
 
 // Même astuce que ModaleEditionTache (taches-list.tsx) : ne monte le portail
 // (createPortal) qu'après hydratation, document.body n'existant pas côté
@@ -51,10 +52,10 @@ export function ModaleAjoutDepuisStock({
 
   if (!monte) return null
 
-  const rechercheNormalisee = recherche.trim().toLowerCase()
+  const rechercheNormalisee = normaliser(recherche.trim())
   const huilesEnStock = huiles
     .filter((h) => h.statut === 'en_stock')
-    .filter((h) => !rechercheNormalisee || h.nom.toLowerCase().includes(rechercheNormalisee))
+    .filter((h) => !rechercheNormalisee || normaliser(h.nom).includes(rechercheNormalisee))
 
   return createPortal(
     <div
@@ -99,7 +100,11 @@ export function ModaleAjoutDepuisStock({
 
         <div className="order-3 flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain">
           {huilesEnStock.length === 0 && (
-            <p className="py-10 text-center text-sm text-muted">Aucune huile ne correspond.</p>
+            <p className="py-10 text-center text-sm text-muted">
+              {rechercheNormalisee
+                ? 'Aucune huile ne correspond à la recherche.'
+                : 'Aucune huile en stock à ajouter.'}
+            </p>
           )}
           {huilesEnStock.map((h) => (
             <button
@@ -112,7 +117,7 @@ export function ModaleAjoutDepuisStock({
               className={`flex min-h-11 items-center justify-between gap-2 rounded-xl border border-border bg-bg px-3 py-2.5 text-left ${CLASSE_FOCUS}`}
             >
               <span className="truncate text-[13px] font-semibold text-ink">{h.nom}</span>
-              <span className="shrink-0 font-mono text-[12px] text-muted">
+              <span className="shrink-0 text-[12px] tabular-nums text-muted">
                 {formatPrix(h.prix_reference, h.volume_reference_ml)}
               </span>
             </button>
