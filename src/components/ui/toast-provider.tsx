@@ -9,9 +9,23 @@ type Toast = {
   type: TypeToast
   message: string
   enSortie: boolean
+  action?: ActionToast
 }
 
-type ParametresToast = { type: TypeToast; message: string }
+// Action optionnelle (ex. « Annuler ») : un clic exécute `onClick` puis ferme
+// le toast, sans appeler `onFermeture`.
+export type ActionToast = { libelle: string; onClick: () => void }
+
+type ParametresToast = {
+  type: TypeToast
+  message: string
+  action?: ActionToast
+  // Durée d'affichage en ms (sinon DUREE_PAR_TYPE).
+  duree?: number
+  // Appelé quand le toast disparaît SANS clic sur l'action : échéance,
+  // bouton Fermer ou éviction par un toast plus récent.
+  onFermeture?: () => void
+}
 
 type ToastContextValue = {
   toast: (parametres: ParametresToast) => void
@@ -46,7 +60,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const minuteursAutoFermeture = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
 
-  const retirer = useCallback((id: number) => {
+  const dureesRef = useRef<Map<number, number>>(new Map())
+  // onFermeture en attente, par toast.
+  const fermeturesRef = useRef<Map<number, () => void>>(new Map())
+
+  const retirer = useCallback((id: number, declencherFermeture = true) => {
+    const fermeture = fermeturesRef.current.get(id)
+    fermeturesRef.current.delete(id)
+    dureesRef.current.delete(id)
+    if (declencherFermeture) fermeture?.()
     const minuteur = minuteursAutoFermeture.current.get(id)
     if (minuteur) {
       clearTimeout(minuteur)
@@ -60,17 +82,38 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const armer = useCallback(
     (id: number, type: TypeToast) => {
-      const minuteur = setTimeout(() => retirer(id), DUREE_PAR_TYPE[type])
+      const minuteur = setTimeout(() => retirer(id), dureesRef.current.get(id) ?? DUREE_PAR_TYPE[type])
       minuteursAutoFermeture.current.set(id, minuteur)
     },
     [retirer]
   )
 
   const toast = useCallback(
-    ({ type, message }: ParametresToast) => {
+    ({ type, message, action, duree, onFermeture }: ParametresToast) => {
       const id = prochainId++
-      // Plafond à MAX_TOASTS : les plus anciens sont retirés en premier.
-      setToasts((t) => [...t, { id, type, message, enSortie: false }].slice(-MAX_TOASTS))
+      if (duree !== undefined) dureesRef.current.set(id, duree)
+      if (onFermeture) fermeturesRef.current.set(id, onFermeture)
+      // Plafond à MAX_TOASTS : les plus anciens sont retirés en premier. Un
+      // toast évincé déclenche son onFermeture (sinon une action différée
+      // resterait en attente sans que personne ne puisse plus l'annuler).
+      setToasts((t) => {
+        const suite = [...t, { id, type, message, enSortie: false, action }]
+        const evinces = suite.slice(0, -MAX_TOASTS)
+        if (evinces.length) {
+          queueMicrotask(() =>
+            evinces.forEach((e) => {
+              const minuteur = minuteursAutoFermeture.current.get(e.id)
+              if (minuteur) clearTimeout(minuteur)
+              minuteursAutoFermeture.current.delete(e.id)
+              const f = fermeturesRef.current.get(e.id)
+              fermeturesRef.current.delete(e.id)
+              dureesRef.current.delete(e.id)
+              f?.()
+            })
+          )
+        }
+        return suite.slice(-MAX_TOASTS)
+      })
       armer(id, type)
     },
     [armer]
@@ -106,6 +149,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             toast={t}
             onFermer={() => retirer(t.id)}
+            onAction={() => {
+              t.action?.onClick()
+              retirer(t.id, false)
+            }}
             onSuspendre={() => suspendre(t.id)}
             onReprendre={() => reprendre(t.id, t.type)}
           />
@@ -118,11 +165,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 function ToastItem({
   toast,
   onFermer,
+  onAction,
   onSuspendre,
   onReprendre,
 }: {
   toast: Toast
   onFermer: () => void
+  onAction: () => void
   onSuspendre: () => void
   onReprendre: () => void
 }) {
@@ -139,6 +188,17 @@ function ToastItem({
       } ${STYLE_PAR_TYPE[toast.type]}`}
     >
       <p className="min-w-0 flex-1 wrap-anywhere text-[13.5px] font-medium leading-snug">{toast.message}</p>
+      {toast.action && (
+        // Cible 44 px comme le bouton Fermer ; marge négative = padding
+        // vertical du conteneur pour ne pas épaissir la carte.
+        <button
+          type="button"
+          onClick={onAction}
+          className="-my-3 flex min-h-11 shrink-0 items-center rounded-full px-3 text-[13.5px] font-bold underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+        >
+          {toast.action.libelle}
+        </button>
+      )}
       <button
         type="button"
         onClick={onFermer}

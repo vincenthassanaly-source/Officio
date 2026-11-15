@@ -22,23 +22,29 @@ export default async function RupturesStockPage() {
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Ruptures de stock</h1>
 
-      <div className="mb-2 flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-ink">Ruptures</h2>
-        {ruptures.length > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold tabular-nums text-white">
-            {ruptures.length}
-          </span>
-        )}
+      <div className="mb-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-ink">Ruptures</h2>
+          {ruptures.length > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold tabular-nums text-white">
+              {ruptures.length}
+            </span>
+          )}
+        </div>
+        <p className="text-[13px] text-muted">Cochez quand le produit est de nouveau disponible</p>
       </div>
       <RupturesStockListe ruptures={ruptures} />
 
-      <div className="mb-2 mt-6 flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-ink">À recommander</h2>
-        {produitsARecommander.length > 0 && (
-          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold tabular-nums text-white">
-            {produitsARecommander.length}
-          </span>
-        )}
+      <div className="mb-2 mt-6">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-ink">À recommander</h2>
+          {produitsARecommander.length > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold tabular-nums text-white">
+              {produitsARecommander.length}
+            </span>
+          )}
+        </div>
+        <p className="text-[13px] text-muted">Cochez quand le produit est recommandé ou reçu</p>
       </div>
       <ProduitsARecommanderListe produits={produitsARecommander} />
     </PullToRefresh>
