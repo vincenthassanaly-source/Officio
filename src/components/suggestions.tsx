@@ -1,6 +1,6 @@
 'use client'
 
-import { useOptimistic, useState, useTransition } from 'react'
+import { useId, useOptimistic, useState, useTransition } from 'react'
 import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { formatDateRelative } from '@/lib/dates'
@@ -50,7 +50,19 @@ export function Suggestions({
   const [message, setMessage] = useState('')
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  // Ids des suggestions dont une action (bascule/suppression) est en cours :
+  // seuls leurs contrôles sont désactivés, pas toute la liste.
+  const [idsEnCours, setIdsEnCours] = useState<Set<string>>(() => new Set())
+  const idArchive = useId()
   const toast = useToast()
+  function marquerEnCours(id: string, enCours: boolean) {
+    setIdsEnCours((ids) => {
+      const suivants = new Set(ids)
+      if (enCours) suivants.add(id)
+      else suivants.delete(id)
+      return suivants
+    })
+  }
   // La suppression rejoint la bascule dans le même reducer : l'animation de
   // sortie ci-dessous suppose un retrait garanti dans les 180 ms, ce qu'un
   // aller-retour serveur ne peut pas promettre (la carte resterait invisible
@@ -70,6 +82,7 @@ export function Suggestions({
     retirerApresAnimation(id, () =>
       startTransition(async () => {
         vibrer()
+        marquerEnCours(id, true)
         appliquerOptimiste({ type: 'suppression', id })
         try {
           await supprimerSuggestion(id)
@@ -79,6 +92,8 @@ export function Suggestions({
             type: 'erreur',
             message: err instanceof Error ? err.message : 'Échec de la suppression de la suggestion.',
           })
+        } finally {
+          marquerEnCours(id, false)
         }
       })
     )
@@ -93,6 +108,7 @@ export function Suggestions({
     retirerApresAnimation(s.id, () =>
       startTransition(async () => {
         vibrer()
+        marquerEnCours(s.id, true)
         appliquerOptimiste({ type: 'bascule', id: s.id })
         try {
           await basculerSuggestionFaite(s.id, !s.fait)
@@ -101,6 +117,8 @@ export function Suggestions({
             type: 'erreur',
             message: err instanceof Error ? err.message : 'Échec du changement de statut de la suggestion.',
           })
+        } finally {
+          marquerEnCours(s.id, false)
         }
       })
     )
@@ -149,7 +167,7 @@ export function Suggestions({
         </button>
       </form>
 
-      <div className="flex flex-1 flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {suggestionsActives.length === 0 && suggestionsArchivees.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">
             Aucune suggestion pour le moment. Propose la première idée ci-dessus.
@@ -162,7 +180,7 @@ export function Suggestions({
             suggestion={s}
             profilActuelId={profilActuelId}
             couleurs={couleurs}
-            isPending={isPending}
+            enCours={idsEnCours.has(s.id)}
             enSortie={estEnSortie(s.id)}
             onBasculerFait={basculerFait}
             onDemanderSuppression={setIdASupprimer}
@@ -176,6 +194,7 @@ export function Suggestions({
             type="button"
             onClick={() => setArchiveOuverte((o) => !o)}
             aria-expanded={archiveOuverte}
+            aria-controls={idArchive}
             className="flex min-h-11 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span className="text-[13.5px] font-semibold tabular-nums text-ink">
@@ -192,7 +211,7 @@ export function Suggestions({
               archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             }`}
           >
-            <div className="overflow-hidden">
+            <div id={idArchive} inert={!archiveOuverte} className="overflow-hidden">
               <div className="flex flex-col gap-3 pt-3">
                 {suggestionsArchivees.map((s) => (
                   <CarteSuggestion
@@ -200,7 +219,7 @@ export function Suggestions({
                     suggestion={s}
                     profilActuelId={profilActuelId}
                     couleurs={couleurs}
-                    isPending={isPending}
+                    enCours={idsEnCours.has(s.id)}
                     enSortie={estEnSortie(s.id)}
                     onBasculerFait={basculerFait}
                     onDemanderSuppression={setIdASupprimer}
@@ -234,7 +253,7 @@ function CarteSuggestion({
   suggestion,
   profilActuelId,
   couleurs,
-  isPending,
+  enCours,
   enSortie,
   onBasculerFait,
   onDemanderSuppression,
@@ -242,7 +261,7 @@ function CarteSuggestion({
   suggestion: SuggestionAvecAuteur
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
-  isPending: boolean
+  enCours: boolean
   enSortie: boolean
   onBasculerFait: (suggestion: SuggestionAvecAuteur) => void
   onDemanderSuppression: (id: string) => void
@@ -263,7 +282,7 @@ function CarteSuggestion({
           <input
             type="checkbox"
             checked={suggestion.fait}
-            disabled={isPending}
+            disabled={enCours}
             onChange={() => onBasculerFait(suggestion)}
             aria-label={suggestion.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
             className="h-4 w-4 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
@@ -283,7 +302,7 @@ function CarteSuggestion({
         {suggestion.auteur?.id === profilActuelId && (
           <button
             type="button"
-            disabled={isPending}
+            disabled={enCours}
             onClick={() => onDemanderSuppression(suggestion.id)}
             aria-label="Supprimer la suggestion"
             className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"

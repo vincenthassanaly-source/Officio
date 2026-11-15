@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react'
 import { reinitialiserPlanPosologie } from '@/app/actions/plan-posologie'
 import type { LigneMedicament } from '@/lib/data/plan-posologie'
 import { CHAMP_CLASS } from '@/components/ui/champ'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -78,9 +80,16 @@ export function PlanPosologie({
 
   const lignesRenseignees = useMemo(() => lignes.filter((l) => l.nom.trim() !== ''), [lignes])
 
+  const [confirmerReinitialisation, setConfirmerReinitialisation] = useState(false)
+  const toast = useToast()
+
   async function reinitialiser() {
-    setLignes([nouvelleLigne()])
-    await reinitialiserPlanPosologie()
+    try {
+      await reinitialiserPlanPosologie()
+      setLignes([nouvelleLigne()])
+    } catch {
+      toast({ type: 'erreur', message: 'Plan non réinitialisé, vérifiez la connexion' })
+    }
   }
 
   return (
@@ -119,6 +128,7 @@ export function PlanPosologie({
                       </label>
                       <input
                         id={idChamp}
+                        aria-label={`${libelle}, médicament ${index + 1}`}
                         type="text"
                         value={ligne[champ]}
                         onChange={(e) => modifierLigne(ligne.id, { [champ]: e.target.value })}
@@ -160,23 +170,36 @@ export function PlanPosologie({
           Ajouter un médicament
         </button>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => window.print()}
-            className={`min-h-11 self-start rounded-xl bg-primary px-4 text-[13px] font-semibold text-white ${CLASSE_FOCUS}`}
+            disabled={lignesRenseignees.length === 0}
+            className={`min-h-11 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white disabled:opacity-50 ${CLASSE_FOCUS}`}
           >
             Imprimer le plan
           </button>
           <button
             type="button"
-            onClick={reinitialiser}
-            className={`min-h-11 self-start rounded-xl border border-border px-4 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+            onClick={() => setConfirmerReinitialisation(true)}
+            className={`min-h-11 rounded-xl border border-border px-4 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
           >
             Réinitialiser
           </button>
         </div>
       </div>
+
+      <ModaleConfirmation
+        ouvert={confirmerReinitialisation}
+        titre="Réinitialiser le plan ?"
+        description="Tous les médicaments saisis seront effacés, y compris le brouillon enregistré."
+        texteConfirmer="Réinitialiser"
+        onConfirmer={() => {
+          setConfirmerReinitialisation(false)
+          void reinitialiser()
+        }}
+        onAnnuler={() => setConfirmerReinitialisation(false)}
+      />
 
       {/* Aperçu imprimable : rendu en temps réel à l'écran, et seul élément
           visible à l'impression (voir globals.css, règle .plan-posologie-impression). */}
