@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien } from '@/lib/data/entretiens'
 import type { FicheBpmResume } from '@/lib/data/bpm'
@@ -9,7 +9,7 @@ import { OpioidesFiches } from '@/components/opioides-fiches'
 import { EntretienEligibilite } from '@/components/entretien-eligibilite'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
 import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
-import { BandeauEdition, CLASSE_FOCUS } from '@/components/entretien-ui'
+import { BandeauEdition, CLASSE_FOCUS, Icone } from '@/components/entretien-ui'
 
 // Un seul onglet est visible à la fois : les sections autres que la
 // méthodologie (affichée par défaut à l'ouverture) sont chargées à la
@@ -30,15 +30,6 @@ const ONGLETS: { id: OngletEntretien; label: string }[] = [
   { id: 'documents', label: 'Documents' },
 ]
 
-// « Entretien » n'a de sens que sur le script : sur Facturation et Documents,
-// le même mode (lecture) s'appelle « Consultation ». Le comportement est
-// identique, seul le libellé change.
-const LIBELLE_MODE_LECTURE: Record<OngletEntretien, string> = {
-  methodologie: 'Entretien',
-  facturation: 'Consultation',
-  documents: 'Consultation',
-}
-
 function ChargementSection() {
   return (
     <div aria-busy="true" aria-label="Chargement de la section…" className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
@@ -53,12 +44,15 @@ export function EntretienDetail({
   items,
   documents,
   fiches,
+  retour,
 }: {
   type: TypeEntretien
   items: Record<SectionEntretien, ItemEntretien[]>
   documents: DocumentEntretien[]
   // Fiches saisies (types à fiche : BPM, opioïdes) ; vide pour les autres types.
   fiches: FicheBpmResume[]
+  // Lien « Retour » (rendu par la page), affiché sur la même ligne que le bouton Modifier.
+  retour: ReactNode
 }) {
   const [onglet, setOnglet] = useState<OngletEntretien>('methodologie')
   const [modeEdition, setModeEdition] = useState(false)
@@ -88,6 +82,26 @@ export function EntretienDetail({
     // data-sticky-layout : voir globals.css (le wrapper du layout empêche sinon
     // tout élément sticky de coller en mobile).
     <div data-sticky-layout className="flex flex-1 flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        {retour}
+        {!surFiches && (
+          // Réglage rare : bouton secondaire discret sur la ligne du lien
+          // « Retour ». Le libellé dit l'action à venir (Modifier / Terminer la
+          // modification), donc pas d'aria-pressed : l'état est porté par le
+          // nom accessible lui-même.
+          <button
+            type="button"
+            onClick={() => setModeEdition((v) => !v)}
+            className={`-mr-2 -mt-3 flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-2 text-[13px] font-semibold text-muted hover:text-ink motion-safe:transition-colors ${CLASSE_FOCUS}`}
+          >
+            <Icone nom="crayon" taille={16} />
+            {modeEdition ? 'Terminer la modification' : 'Modifier'}
+          </button>
+        )}
+      </div>
+
+      <h1 className="mb-1 font-heading text-2xl text-ink text-balance">{type.nom}</h1>
+
       {!type.actif && (
         <p className="rounded-xl bg-neutral-soft px-3 py-2 text-[12.5px] font-semibold text-muted">
           Ce type d’entretien est archivé.
@@ -95,31 +109,6 @@ export function EntretienDetail({
       )}
 
       <EntretienEligibilite typeEntretienId={type.id} texte={type.eligibilite} peutAjouter={aFiches || modeEdition} />
-
-      {!surFiches && (
-        <div role="group" aria-label="Mode d’affichage" className="flex shrink-0 gap-1 rounded-xl bg-track p-1">
-          <button
-            type="button"
-            aria-pressed={!modeEdition}
-            onClick={() => setModeEdition(false)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold motion-safe:transition-colors ${CLASSE_FOCUS} ${
-              !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-            }`}
-          >
-            {LIBELLE_MODE_LECTURE[onglet]}
-          </button>
-          <button
-            type="button"
-            aria-pressed={modeEdition}
-            onClick={() => setModeEdition(true)}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold motion-safe:transition-colors ${CLASSE_FOCUS} ${
-              modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-            }`}
-          >
-            Édition
-          </button>
-        </div>
-      )}
 
       <EntretienNavigation
         ongletActif={onglet}

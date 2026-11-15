@@ -32,10 +32,15 @@ export default async function EntretienDetailPage({ params }: { params: Promise<
 
   return (
     <>
-      <LienRetour href="/entretiens-pharmaceutiques" />
-      <h1 className="mb-4 font-heading text-2xl text-ink text-balance">{type.nom}</h1>
       {/* key : l'état du mode entretien (cases cochées) repart de zéro d'un type à l'autre. */}
-      <EntretienDetail key={type.id} type={type} items={items} documents={documents} fiches={fiches} />
+      <EntretienDetail
+        key={type.id}
+        type={type}
+        items={items}
+        documents={documents}
+        fiches={fiches}
+        retour={<LienRetour href="/entretiens-pharmaceutiques" />}
+      />
     </>
   )
 }
