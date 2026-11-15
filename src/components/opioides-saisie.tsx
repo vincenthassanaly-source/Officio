@@ -39,6 +39,8 @@ import {
 } from '@/lib/opioides'
 import { useEnregistrementAuto } from '@/lib/use-enregistrement-auto'
 import { useToast } from '@/components/ui/toast-provider'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { useEcranAllume } from '@/lib/use-ecran-allume'
 import { ChampLigne, ChampTexte, IndicateurEnregistrement, ListeSections } from '@/components/bpm-saisie'
 import {
   CLASSE_BOUTON_PRIMAIRE,
@@ -98,6 +100,11 @@ export function OpioidesSaisie({
 
   const [index, setIndex] = useState(0)
   const [sectionsOuvertes, setSectionsOuvertes] = useState(false)
+  // Sortie en cours (enregistrement puis navigation) : désactive les boutons de sortie.
+  const [sortie, setSortie] = useState<'quitter' | 'imprimer' | null>(null)
+
+  // Écran gardé allumé : la fiche est lue face au patient.
+  useEcranAllume(true)
 
   const { donnees, statut, modifier, sauvegarder } = useEnregistrementAuto<DonneesOpioides>(initial, (d) =>
     enregistrerFicheEntretien(ficheId, d)
@@ -139,23 +146,27 @@ export function OpioidesSaisie({
     void sauvegarder()
   }
 
+  // Retour système / Échap : quitte la fiche (la feuille « Sections » gère le
+  // sien et se ferme d'abord). Ignoré tant qu'une autre feuille est ouverte.
+  const signalerNavigation = useFermerAvecRetour(true, () => {
+    if (document.querySelectorAll('[aria-modal="true"]').length > 1) return
+    void quitter()
+  })
+
   async function quitter(destination?: string) {
+    if (sortie) return
+    setSortie(destination ? 'imprimer' : 'quitter')
     const ok = await sauvegarder()
     if (!ok) {
+      setSortie(null)
       toast({ type: 'erreur', message: 'La fiche n’a pas pu être enregistrée. Réessayez avant de quitter.' })
       return
     }
+    signalerNavigation()
     router.push(destination ?? `/entretiens-pharmaceutiques/${typeEntretienId}`)
   }
 
   function surKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      if (sectionsOuvertes) setSectionsOuvertes(false)
-      else void quitter()
-      return
-    }
-
     if (e.key === 'Tab') {
       const focusables = Array.from(conteneurRef.current?.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE) ?? [])
       if (focusables.length === 0) return
@@ -202,11 +213,12 @@ export function OpioidesSaisie({
       onKeyDown={surKeyDown}
       className="fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header className="flex shrink-0 flex-col gap-2 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+      <header inert={sectionsOuvertes} className="shrink-0 border-b border-border bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-8">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-ink">{nomPatient}</p>
-            <p className="truncate text-[12px] text-muted" title={nomType}>
+            <p className="truncate text-[13px] font-semibold text-ink" title={nomType}>{nomPatient}</p>
+            <p className="truncate text-[12px] text-muted">
               {estFin ? 'Fin de la fiche' : SECTIONS[sectionIndex].titre}
             </p>
           </div>
@@ -215,9 +227,10 @@ export function OpioidesSaisie({
             <button
               type="button"
               onClick={() => void quitter()}
-              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+              disabled={sortie !== null}
+              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
             >
-              Quitter
+              {sortie === 'quitter' ? 'Enregistrement…' : 'Quitter'}
             </button>
           </div>
         </div>
@@ -242,13 +255,14 @@ export function OpioidesSaisie({
             ))}
           </div>
         </div>
+        </div>
       </header>
 
-      <p role="status" aria-live="polite" className="sr-only">
+      <p inert={sectionsOuvertes} role="status" aria-live="polite" className="sr-only">
         {estFin ? 'Fin de la fiche.' : `Étape ${index + 1} sur ${ETAPES.length - 1} : ${titreEtape(etape)}`}
       </p>
 
-      <div data-defilement className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
+      <div data-defilement inert={sectionsOuvertes} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
           <h2
             id={idTitre}
@@ -291,6 +305,8 @@ export function OpioidesSaisie({
               donnees={donnees}
               progression={progression}
               typeEntretienId={typeEntretienId}
+              ouvertureEnCours={sortie !== null}
+              imprimerEnCours={sortie === 'imprimer'}
               onImprimer={() =>
                 void quitter(`/entretiens-pharmaceutiques/${typeEntretienId}/opioides/${ficheId}/imprimer`)
               }
@@ -300,7 +316,7 @@ export function OpioidesSaisie({
         </div>
       </div>
 
-      <footer className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
+      <footer inert={sectionsOuvertes} className="shrink-0 border-t border-border bg-surface px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-8">
         <div className="mx-auto flex w-full max-w-2xl gap-2">
           <button
             type="button"
@@ -311,8 +327,13 @@ export function OpioidesSaisie({
             Précédent
           </button>
           {estFin ? (
-            <button type="button" onClick={() => void quitter()} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}>
-              Fermer
+            <button
+              type="button"
+              onClick={() => void quitter()}
+              disabled={sortie !== null}
+              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}
+            >
+              {sortie === 'quitter' ? 'Enregistrement…' : 'Fermer'}
             </button>
           ) : (
             <button type="button" onClick={() => aller(index + 1)} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}>
@@ -431,7 +452,7 @@ function EtapeBonUsage({ coches, onBasculer }: { coches: boolean[]; onBasculer: 
             key={regle}
             className={`rounded-2xl shadow-card ${coches[i] ? 'bg-primary-soft' : 'bg-surface'}`}
           >
-            <label className="flex min-h-12 cursor-pointer items-start gap-3 px-3.5 py-3 text-[13.5px] leading-snug text-ink">
+            <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl px-3.5 py-3 text-[13.5px] motion-safe:transition-colors motion-safe:active:bg-neutral-soft leading-snug text-ink">
               <input
                 type="checkbox"
                 checked={coches[i]}
@@ -599,12 +620,16 @@ function EtapeFin({
   donnees,
   progression,
   typeEntretienId,
+  ouvertureEnCours,
+  imprimerEnCours,
   onImprimer,
   onAller,
 }: {
   donnees: DonneesOpioides
   progression: { titre: string; renseignees: number; total: number }[]
   typeEntretienId: string
+  ouvertureEnCours: boolean
+  imprimerEnCours: boolean
   onImprimer: () => void
   onAller: (indexSection: number) => void
 }) {
@@ -634,9 +659,14 @@ function EtapeFin({
 
   return (
     <div className="flex flex-col gap-4">
-      <button type="button" onClick={onImprimer} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}>
+      <button
+        type="button"
+        onClick={onImprimer}
+        disabled={ouvertureEnCours}
+        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+      >
         <Icone nom="imprimante" taille={18} />
-        Voir et imprimer le compte rendu
+        {imprimerEnCours ? 'Ouverture…' : 'Voir et imprimer le compte rendu'}
       </button>
 
       {incompletes.length > 0 ? (
@@ -671,7 +701,7 @@ function EtapeFin({
       <div className="flex flex-col gap-2 rounded-2xl bg-surface p-3.5 shadow-card">
         <h3 className="text-[15px] font-bold text-ink">Journal des entretiens</h3>
         <p className="text-[13px] leading-relaxed text-muted">
-          Ajoute une ligne (patient, date, type d’entretien) au journal. Le contenu de la fiche n’y est pas copié.
+          Ajoutez une ligne (patient, date, type d’entretien) au journal. Le contenu de la fiche n’y est pas copié.
         </p>
         <button
           type="button"

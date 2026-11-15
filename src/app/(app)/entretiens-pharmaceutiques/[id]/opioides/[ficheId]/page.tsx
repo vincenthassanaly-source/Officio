@@ -7,6 +7,8 @@ import { OpioidesSaisie } from '@/components/opioides-saisie'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
+export const metadata = { title: 'Fiche opioïdes' }
+
 // Saisie pas à pas d'une fiche « Opioïdes ». La saisie est un plein écran : la
 // page ne rend rien d'autre.
 export default async function OpioidesSaisiePage({ params }: { params: Promise<{ id: string; ficheId: string }> }) {

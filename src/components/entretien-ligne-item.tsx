@@ -16,7 +16,7 @@ export function LigneItem({ item, coche, onBasculer }: { item: ItemEntretien; co
 
   return (
     <label
-      className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl p-2.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${classesLigneItem(type, coche)}`}
+      className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-xl p-2.5 motion-safe:transition-colors motion-safe:active:bg-neutral-soft has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary ${classesLigneItem(type, coche)}`}
     >
       <input
         type="checkbox"

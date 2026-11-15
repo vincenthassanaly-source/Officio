@@ -312,8 +312,8 @@ export function EntretiensListe({
   return (
     <div className="flex flex-1 flex-col gap-3">
       <p className="text-[13px] leading-relaxed text-muted">
-        Un type par entretien encadré par la convention. Ouvre un type pour renseigner son script, sa
-        facturation et ses documents.
+        Un type par entretien encadré par la convention. Ouvrez-en un pour renseigner script, facturation et
+        documents.
       </p>
 
       <div className="flex items-center gap-2">
@@ -415,7 +415,7 @@ export function EntretiensListe({
       <ModaleConfirmation
         ouvert={aSupprimer !== null}
         titre={`Supprimer le type « ${aSupprimer?.nom} » ?`}
-        description="Impossible si des éléments ou documents y sont déjà liés — archive-le dans ce cas."
+        description="Impossible tant que des éléments ou documents y sont liés."
         onConfirmer={() => {
           if (!aSupprimer) return
           supprimer(aSupprimer.id)

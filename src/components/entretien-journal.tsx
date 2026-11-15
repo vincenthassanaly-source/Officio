@@ -68,7 +68,7 @@ export function EntretienJournal({
   return (
     <div className="flex flex-1 flex-col gap-3">
       <p className="text-[13px] leading-relaxed text-muted">
-        Journal manuel des entretiens réalisés : date, patient et type. Appui long sur une entrée pour la
+        Journal manuel des entretiens réalisés : date, patient et type. Touchez le crayon d’une entrée pour la
         modifier ou la supprimer.
       </p>
 
@@ -155,7 +155,7 @@ export function EntretienJournal({
           </div>
           {typesActifs.length === 0 && (
             <p className="text-[12px] text-muted">
-              Aucun type d’entretien actif : crée d’abord un type d’entretien ci-dessus.
+              Aucun type d’entretien actif : créez d’abord un type d’entretien dans l’onglet Types.
             </p>
           )}
         </form>
@@ -233,7 +233,14 @@ function CarteEntreeJournal({
           <div className="wrap-anywhere text-[15px] font-semibold text-ink">{entree.patient_nom}</div>
           <p className="mt-0.5 text-[13px] text-muted">
             {entree.type_entretien_nom} · {formatDateEntretien(entree.date_entretien)}
-            {entree.realise_par && ` · ${entree.realise_par.initiales}`}
+            {entree.realise_par && (
+              <>
+                {' · '}
+                <abbr title={entree.realise_par.nom_complet} className="no-underline">
+                  {entree.realise_par.initiales}
+                </abbr>
+              </>
+            )}
           </p>
           {entree.note && (
             <p className="mt-1 line-clamp-2 wrap-anywhere whitespace-pre-wrap text-[13px] text-ink">{entree.note}</p>
@@ -316,7 +323,7 @@ function ModaleEditionEntreeJournal({
         className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2.5 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface p-4 shadow-card sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 id="modale-edition-journal-titre" className="text-sm font-bold text-ink">
+          <h2 id="modale-edition-journal-titre" className="font-heading text-lg font-semibold text-ink">
             Modifier l’entrée
           </h2>
           <button
