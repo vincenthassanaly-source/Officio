@@ -40,7 +40,9 @@ export function NotificationsParametres({
     // serveur) — évite un décalage d'hydratation en gardant le premier
     // rendu identique serveur/client.
     Promise.resolve().then(() => setIosSansStandalone(estIOS() && !estModeStandalone()))
-    notificationsActivesSurCetAppareil().then(setActif)
+    notificationsActivesSurCetAppareil()
+      .then(setActif)
+      .catch(() => setActif(false))
   }, [])
 
   function toggleActivation() {

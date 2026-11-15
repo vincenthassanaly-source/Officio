@@ -119,8 +119,15 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterDocument(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterDocument(formData)
+                setFormOuvert(false)
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : "Échec de l'ajout du document.",
+                })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
