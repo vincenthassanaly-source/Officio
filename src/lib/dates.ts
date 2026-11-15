@@ -79,20 +79,36 @@ export function formatMoisAnnee(reference: Date): string {
   return `${mois.charAt(0).toUpperCase()}${mois.slice(1)} ${reference.getFullYear()}`
 }
 
+// Fuseau fixé : ces libellés sont calculés au rendu serveur (Vercel, en UTC)
+// puis au client (Europe/Paris) ; sans fuseau explicite, l'heure et le
+// "Aujourd'hui / Hier" divergeaient à l'hydratation.
+const FUSEAU = 'Europe/Paris'
+const FORMAT_CLE_JOUR = new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU, year: 'numeric', month: '2-digit', day: '2-digit' })
+const FORMAT_JOUR_MOIS = new Intl.DateTimeFormat('fr-FR', { timeZone: FUSEAU, day: '2-digit', month: '2-digit' })
+const FORMAT_HEURE = new Intl.DateTimeFormat('fr-FR', { timeZone: FUSEAU, hour: '2-digit', minute: '2-digit' })
+
+// Clé de jour AAAA-MM-JJ calculée en fuseau Paris.
+export function cleJourParis(date: Date): string {
+  return FORMAT_CLE_JOUR.format(date)
+}
+
+function cleHierParis(maintenant: Date): string {
+  const [a, m, j] = cleJourParis(maintenant).split('-').map(Number)
+  return toISODate(new Date(a, m - 1, j - 1))
+}
+
 // Horodatage relatif ("Aujourd'hui · 14:32", "Hier · 09:10", "05/08 · 11:00")
 // — extrait de fil-de-messages.tsx pour être réutilisé ailleurs (ex. le
 // centre de notifications) sans dupliquer la logique.
 export function formatDateRelative(iso: string): string {
   const date = new Date(iso)
   const maintenant = new Date()
-  const hier = new Date(maintenant)
-  hier.setDate(maintenant.getDate() - 1)
+  const heure = FORMAT_HEURE.format(date)
+  const cle = cleJourParis(date)
 
-  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-  if (date.toDateString() === maintenant.toDateString()) return `Aujourd'hui · ${heure}`
-  if (date.toDateString() === hier.toDateString()) return `Hier · ${heure}`
-  return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
+  if (cle === cleJourParis(maintenant)) return `Aujourd'hui · ${heure}`
+  if (cle === cleHierParis(maintenant)) return `Hier · ${heure}`
+  return `${FORMAT_JOUR_MOIS.format(date)} · ${heure}`
 }
 
 // Étiquette de séparateur de jour pour un fil de messages ("Aujourd'hui",
@@ -100,14 +116,15 @@ export function formatDateRelative(iso: string): string {
 export function formatSeparateurJour(iso: string): string {
   const date = new Date(iso)
   const maintenant = new Date()
-  const hier = new Date(maintenant)
-  hier.setDate(maintenant.getDate() - 1)
+  const cle = cleJourParis(date)
 
-  if (date.toDateString() === maintenant.toDateString()) return "Aujourd'hui"
-  if (date.toDateString() === hier.toDateString()) return 'Hier'
+  if (cle === cleJourParis(maintenant)) return "Aujourd'hui"
+  if (cle === cleHierParis(maintenant)) return 'Hier'
 
-  const memeAnnee = date.getFullYear() === maintenant.getFullYear()
-  return `${JOURS_LONGS[date.getDay()]} ${date.getDate()} ${MOIS_LONG[date.getMonth()]}${memeAnnee ? '' : ' ' + date.getFullYear()}`
+  const [annee, mois, jour] = cle.split('-').map(Number)
+  const jourSemaine = new Date(annee, mois - 1, jour).getDay()
+  const memeAnnee = annee === Number(cleJourParis(maintenant).slice(0, 4))
+  return `${JOURS_LONGS[jourSemaine]} ${jour} ${MOIS_LONG[mois - 1]}${memeAnnee ? '' : ' ' + annee}`
 }
 
 export function formatPeriodeSemaine(weekDates: Date[]): string {

@@ -50,7 +50,7 @@ function nouvelleLigne(): LigneMedicament {
 }
 
 function dateDuJour(): string {
-  return new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' })
 }
 
 export function PlanPosologie({

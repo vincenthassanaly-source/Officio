@@ -215,7 +215,10 @@ export default async function AccueilPage() {
         profilActuelId={profil?.id ?? ''}
       />
 
-      <div className="mt-5 grid grid-cols-2 gap-2.5">
+      {/* pb-[4.5rem] : le FAB (fixe, 56 px, au-dessus de la bottom nav) recouvrait le
+          bas de la dernière tuile ; le main du layout réserve déjà bottom nav
+          + safe-area, il reste à dégager la hauteur du FAB. */}
+      <div className="mt-5 grid grid-cols-2 gap-2.5 pb-[4.5rem] lg:pb-0">
         <TuileModule
           href="/liaison"
           Icone={IconLiaison}
@@ -272,7 +275,7 @@ export default async function AccueilPage() {
         <TuileModule
           href="/suggestions"
           Icone={IconSuggestions}
-          couleur="bg-primary-soft text-primary-light"
+          couleur="bg-primary-soft text-primary"
           titre="Suggestions"
           detail={pluriel(suggestionsNonTraitees, 'proposition')}
           indisponible={!suggestionsOk}
@@ -305,7 +308,7 @@ export default async function AccueilPage() {
         <TuileModule
           href="/activite"
           Icone={IconActivite}
-          couleur="bg-neutral-soft text-neutral-text"
+          couleur="bg-neutral-soft text-muted"
           titre="Activité"
           detail={pluriel(activitesAujourdhui, 'activité récente', 'activités récentes')}
           indisponible={!journalActiviteOk}

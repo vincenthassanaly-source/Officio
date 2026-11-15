@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
 import type { NoteAvecAuteur } from '@/lib/data/notes'
 import { normaliser } from '@/lib/recherche-texte'
+import { formatDateRelative } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
@@ -40,19 +41,6 @@ function IconOptions({ className }: { className?: string }) {
       <circle cx="12" cy="19" r="1.75" />
     </svg>
   )
-}
-
-function formatDate(iso: string) {
-  const date = new Date(iso)
-  const now = new Date()
-  const hier = new Date(now)
-  hier.setDate(now.getDate() - 1)
-
-  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-  if (date.toDateString() === now.toDateString()) return `Aujourd'hui · ${heure}`
-  if (date.toDateString() === hier.toDateString()) return `Hier · ${heure}`
-  return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
 }
 
 export function Notes({
@@ -336,7 +324,7 @@ function CarteNote({
           <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {note.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
-          <div className="text-[12px] text-muted">{formatDate(note.created_at)}</div>
+          <div className="text-[12px] text-muted">{formatDateRelative(note.created_at)}</div>
         </div>
         {estAuteur && (
           <>

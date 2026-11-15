@@ -33,6 +33,7 @@ function formatDate(dateIso: string) {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Europe/Paris',
   })
 }
 

@@ -47,6 +47,9 @@ export function PullToRefresh({
   const gererDebutTouche = useCallback(
     (e: React.TouchEvent) => {
       if (rafraichissement) return
+      // Les sheets/dialogs sont rendus en portail React : leurs touches
+      // remontent jusqu'ici malgré leur position hors du conteneur.
+      if (e.target instanceof Element && e.target.closest('[role="dialog"]')) return
       const conteneurScrollable = trouverConteneurScrollable(conteneurRef.current)
       if (!conteneurScrollable || conteneurScrollable.scrollTop > 0) return
       departY.current = e.touches[0].clientY

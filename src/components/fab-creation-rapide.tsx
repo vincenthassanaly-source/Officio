@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -41,6 +41,8 @@ export function FabCreationRapide({
   profilActuelId: string
 }) {
   const [vue, setVue] = useState<VueFabCreationRapide>('ferme')
+  const boutonRef = useRef<HTMLButtonElement>(null)
+  const etaitOuvert = useRef(false)
 
   function fermer() {
     setVue('ferme')
@@ -48,23 +50,33 @@ export function FabCreationRapide({
 
   useFermerAvecRetour(vue !== 'ferme', fermer)
 
+  // Le bouton reste monté (invisible pendant l'ouverture) : à la fermeture
+  // (Échap, retour, croix), le focus lui est rendu plutôt que de tomber sur
+  // <body>.
+  useEffect(() => {
+    if (vue === 'ferme' && etaitOuvert.current) boutonRef.current?.focus()
+    etaitOuvert.current = vue !== 'ferme'
+  }, [vue])
+
   return (
     <>
-      {vue === 'ferme' && (
-        <button
-          type="button"
-          onClick={() => setVue('menu')}
-          aria-label="Créer"
-          // `bottom-20` (80px) fixe ne dégageait la bottom nav (≈72px) que de
-          // 8px sans safe-area : sur un téléphone à zone gestuelle/encoche
-          // (safe-area-inset-bottom non nul, 20-34px courant), le FAB se
-          // recouvrait avec le bas de la nav — voir DESIGN.md, règle du bas
-          // collant. Même variable que le formulaire d'envoi et les toasts.
-          className="fixed bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.5rem)] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8"
-        >
-          <IconPlus className="h-6 w-6" />
-        </button>
-      )}
+      <button
+        ref={boutonRef}
+        type="button"
+        onClick={() => setVue('menu')}
+        aria-label="Créer"
+        aria-haspopup="dialog"
+        aria-hidden={vue !== 'ferme' ? true : undefined}
+        tabIndex={vue !== 'ferme' ? -1 : undefined}
+        // `bottom-20` (80px) fixe ne dégageait la bottom nav (≈72px) que de
+        // 8px sans safe-area : sur un téléphone à zone gestuelle/encoche
+        // (safe-area-inset-bottom non nul, 20-34px courant), le FAB se
+        // recouvrait avec le bas de la nav — voir DESIGN.md, règle du bas
+        // collant. Même variable que le formulaire d'envoi et les toasts.
+        className={`fixed bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.5rem)] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8${vue !== 'ferme' ? ' invisible' : ''}`}
+      >
+        <IconPlus className="h-6 w-6" />
+      </button>
 
       {vue !== 'ferme' && (
         <FabCreationRapideModal
