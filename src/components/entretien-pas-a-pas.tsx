@@ -227,10 +227,15 @@ export function EntretienPasAPas({
               >
                 {titrePhase}
               </h2>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-3">
                 {groupe.items.map((item) => (
                   <li key={item.id}>
-                    <LigneItem item={item} coche={coches.has(item.id)} onBasculer={() => basculerItem(item)} />
+                    <LigneItem
+                      item={item}
+                      coche={coches.has(item.id)}
+                      onBasculer={() => basculerItem(item)}
+                      variante="pas-a-pas"
+                    />
                   </li>
                 ))}
               </ul>
