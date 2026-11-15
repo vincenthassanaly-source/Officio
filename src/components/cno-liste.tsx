@@ -6,6 +6,7 @@ import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { normaliser } from '@/lib/normaliser'
 import { IconCno } from '@/components/nav-icons'
 import { CHAMP_CLASS } from '@/components/ui/champ'
 
@@ -112,6 +113,7 @@ function ChampsFormulaire() {
       <input
         name="nom_patient"
         required
+        autoFocus
         placeholder="Nom du patient"
         aria-label="Nom du patient"
         className={CHAMP_CLASS}
@@ -181,9 +183,9 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
   }
 
   const visibles = useMemo(() => {
-    const rechercheNormalisee = recherche.trim().toLowerCase()
+    const rechercheNormalisee = normaliser(recherche.trim())
     if (!rechercheNormalisee) return patientsOptimistes
-    return patientsOptimistes.filter((p) => p.nom_patient.toLowerCase().includes(rechercheNormalisee))
+    return patientsOptimistes.filter((p) => normaliser(p.nom_patient).includes(rechercheNormalisee))
   }, [patientsOptimistes, recherche])
 
   function demanderSuppression(id: string, nom: string) {
@@ -247,6 +249,16 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
               ? 'Aucune fiche pour l’instant — crée la première avec le bouton d’ajout.'
               : 'Aucun patient ne correspond à la recherche.'}
           </p>
+          {patientsOptimistes.length === 0 && !formOuvert && (
+            <button
+              type="button"
+              onClick={() => setFormOuvert(true)}
+              className={`flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-[13.5px] font-semibold text-white ${CLASSE_FOCUS}`}
+            >
+              <IconAjouter className="h-4 w-4" />
+              Ajouter un patient
+            </button>
+          )}
         </div>
       )}
 
@@ -257,7 +269,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
             className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5"
           >
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-semibold text-ink">{p.nom_patient}</div>
+              <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{p.nom_patient}</div>
               <div className="mt-0.5 text-[12px] text-muted">Mis à jour le {formatDate(p.derniere_maj)}</div>
             </div>
             <QuantiteEditable patient={p} onEnregistrerQuantite={enregistrerQuantite} />
@@ -268,7 +280,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
               className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M3 6h18" />
                   <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
                 </svg>

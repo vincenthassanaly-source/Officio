@@ -1,8 +1,10 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
 import { CHAMP_CLASS } from '@/components/ui/champ'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { normaliser } from '@/lib/normaliser'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -50,13 +52,6 @@ function arrondirDixCentimesSuperieur(montant: number): number {
   return dizainesDeCentimes / 10
 }
 
-function normaliser(texte: string): string {
-  return texte
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-}
-
 function SelecteurHuile({
   huiles,
   valeur,
@@ -80,16 +75,30 @@ function SelecteurHuile({
   const ouvert = brouillon !== null
   const texte = brouillon ?? huileSelectionnee?.nom ?? ''
 
+  // Tant que le brouillon est vide ou égal au nom de l'huile déjà choisie
+  // (champ rempli qui reçoit le focus), on montre toutes les huiles : sinon
+  // la liste se réduirait à l'huile courante.
   const suggestions = useMemo(() => {
     const recherche = normaliser((brouillon ?? '').trim())
-    if (!recherche) return huiles
+    if (!recherche || (huileSelectionnee && brouillon === huileSelectionnee.nom)) return huiles
     return huiles.filter((h) => normaliser(h.nom).includes(recherche))
-  }, [huiles, brouillon])
+  }, [huiles, brouillon, huileSelectionnee])
+
+  function idOption(index: number) {
+    return `${listboxId}-option-${index}`
+  }
 
   function ouvrir() {
     setBrouillon(huileSelectionnee?.nom ?? '')
-    setIndexActif(0)
+    const indexSelection = huileSelectionnee ? huiles.findIndex((h) => h.id === huileSelectionnee.id) : 0
+    setIndexActif(Math.max(indexSelection, 0))
   }
+
+  // Garde l'option active visible quand la liste défile (flèches clavier).
+  useEffect(() => {
+    if (!ouvert) return
+    document.getElementById(`${listboxId}-option-${indexActif}`)?.scrollIntoView({ block: 'nearest' })
+  }, [ouvert, indexActif, listboxId])
 
   function selectionner(h: HuileEssentielle) {
     onChange(h.id)
@@ -108,10 +117,14 @@ function SelecteurHuile({
         aria-expanded={ouvert}
         aria-controls={listboxId}
         aria-autocomplete="list"
+        aria-activedescendant={ouvert && suggestions.length > 0 ? idOption(indexActif) : undefined}
         aria-label={label}
-        placeholder="Rechercher une huile…"
+        placeholder="Huile…"
         value={texte}
-        onFocus={ouvrir}
+        onFocus={(e) => {
+          ouvrir()
+          e.currentTarget.select()
+        }}
         onClick={() => {
           if (!ouvert) ouvrir()
         }}
@@ -150,7 +163,7 @@ function SelecteurHuile({
             <li className="px-3 py-2.5 text-[13px] text-muted">Aucune huile trouvée</li>
           ) : (
             suggestions.map((h, index) => (
-              <li key={h.id} role="option" aria-selected={h.id === valeur}>
+              <li key={h.id} id={idOption(index)} role="option" aria-selected={h.id === valeur}>
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
@@ -231,6 +244,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
   const [mode, setMode] = useState<'melange' | 'flacons_separes'>('melange')
   const [nbGelules, setNbGelules] = useState(0)
   const [nbGelulesVegetales, setNbGelulesVegetales] = useState(0)
+  const [confirmationReinitialisation, setConfirmationReinitialisation] = useState(false)
 
   function ajouterLigne() {
     setLignes((l) => [...l, nouvelleLigne()])
@@ -320,7 +334,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
         className={`flex min-h-11 items-center gap-1.5 self-start text-xs font-semibold text-primary ${CLASSE_FOCUS}`}
       >
         <IconAjouter className="h-4 w-4" />
-        Ajouter une huile
+        Ajouter une ligne
       </button>
 
       <div className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3">
@@ -368,8 +382,9 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
         {detail.map(({ ligne, huile, prix }) =>
           huile ? (
             <div key={ligne.id} className="flex items-center justify-between text-[12.5px] text-muted">
-              <span className="truncate pr-2">
-                {huile.nom} ({ligne.volumeMl || 0} mL)
+              <span className="flex min-w-0 flex-1 gap-1 pr-2">
+                <span className="min-w-0 truncate">{huile.nom}</span>
+                <span className="shrink-0 tabular-nums">({ligne.volumeMl || 0} mL)</span>
               </span>
               <span className="shrink-0 font-semibold tabular-nums text-ink">{formatEuro(prix)}</span>
             </div>
@@ -395,7 +410,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
           </div>
         )}
 
-        <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
+        <div role="status" className="mt-1 flex items-center justify-between border-t border-border pt-2">
           <span className="text-[14px] font-semibold text-ink">Total</span>
           <span className="font-heading text-xl font-bold tabular-nums text-primary">{formatEuro(total)}</span>
         </div>
@@ -403,11 +418,23 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
 
       <button
         type="button"
-        onClick={reinitialiser}
+        onClick={() => setConfirmationReinitialisation(true)}
         className={`flex min-h-11 items-center self-start text-xs font-semibold text-muted hover:text-rec ${CLASSE_FOCUS}`}
       >
         Réinitialiser
       </button>
+
+      <ModaleConfirmation
+        ouvert={confirmationReinitialisation}
+        titre="Réinitialiser le calcul ?"
+        description="Les huiles, volumes et gélules saisis seront effacés."
+        texteConfirmer="Réinitialiser"
+        onConfirmer={() => {
+          reinitialiser()
+          setConfirmationReinitialisation(false)
+        }}
+        onAnnuler={() => setConfirmationReinitialisation(false)}
+      />
     </div>
   )
 }

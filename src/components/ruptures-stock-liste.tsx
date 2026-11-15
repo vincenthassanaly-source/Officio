@@ -99,7 +99,7 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
                 aria-label={`${r.nom_produit} de nouveau disponible`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-ink">{r.nom_produit}</span>
+              <span className="line-clamp-2 min-w-0 flex-1 break-words text-[13.5px] font-medium text-ink">{r.nom_produit}</span>
             </label>
           ))}
         </div>

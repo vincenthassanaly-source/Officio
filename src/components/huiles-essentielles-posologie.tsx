@@ -159,34 +159,36 @@ export function HuilesEssentiellesPosologie() {
         </div>
       </div>
 
-      {resultat ? (
-        <div className="flex flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3.5">
-          <p className="text-[12.5px] text-muted">
-            {formatNombre(resultat.gouttes)} goutte{resultat.gouttes > 1 ? 's' : ''} ×{' '}
-            {formatNombre(resultat.prises)} prise{resultat.prises > 1 ? 's' : ''}/jour ×{' '}
-            {formatNombre(resultat.joursTotal)} jour{resultat.joursTotal > 1 ? 's' : ''} ={' '}
-            {formatNombre(resultat.gouttesTotales)} gouttes
-          </p>
+      <div role="status">
+        {resultat ? (
+          <div className="flex flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3.5">
+            <p className="text-[12.5px] text-muted">
+              {formatNombre(resultat.gouttes)} goutte{resultat.gouttes > 1 ? 's' : ''} ×{' '}
+              {formatNombre(resultat.prises)} prise{resultat.prises > 1 ? 's' : ''}/jour ×{' '}
+              {formatNombre(resultat.joursTotal)} jour{resultat.joursTotal > 1 ? 's' : ''} ={' '}
+              {formatNombre(resultat.gouttesTotales)} gouttes
+            </p>
 
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
-            <span className="text-[14px] font-semibold text-ink">Volume nécessaire</span>
-            <span className="font-mono text-lg font-bold text-primary">
-              {formatVolume(resultat.volumeMl)} mL
-            </span>
+            <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
+              <span className="text-[14px] font-semibold text-ink">Volume nécessaire</span>
+              <span className="text-lg font-bold tabular-nums text-primary">
+                {formatVolume(resultat.volumeMl)} mL
+              </span>
+            </div>
+
+            <p className="text-[12.5px] text-muted">
+              Prévoir :{' '}
+              <span className="font-semibold text-ink">
+                1 flacon de {suggererFlacon(resultat.volumeMl)} mL
+              </span>
+            </p>
           </div>
-
-          <p className="text-[12.5px] text-muted">
-            Prévoir :{' '}
-            <span className="font-semibold text-ink">
-              1 flacon de {suggererFlacon(resultat.volumeMl)} mL
-            </span>
+        ) : (
+          <p className="py-6 text-center text-sm text-muted">
+            Renseigne tous les champs pour voir le volume nécessaire.
           </p>
-        </div>
-      ) : (
-        <p className="py-6 text-center text-sm text-muted">
-          Renseigne tous les champs pour voir le volume nécessaire.
-        </p>
-      )}
+        )}
+      </div>
 
       <button
         type="button"

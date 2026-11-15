@@ -1,10 +1,18 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { HuilesEssentiellesListe } from './huiles-essentielles-liste'
-import { HuilesEssentiellesCalculateur } from './huiles-essentielles-calculateur'
-import { HuilesEssentiellesPosologie } from './huiles-essentielles-posologie'
 import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
+
+// Calculateur et posologie ne servent qu'une fois leur onglet ouvert : chargés
+// à la demande pour alléger le JS initial de /huiles-essentielles.
+const HuilesEssentiellesCalculateur = dynamic(() =>
+  import('./huiles-essentielles-calculateur').then((m) => m.HuilesEssentiellesCalculateur)
+)
+const HuilesEssentiellesPosologie = dynamic(() =>
+  import('./huiles-essentielles-posologie').then((m) => m.HuilesEssentiellesPosologie)
+)
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
