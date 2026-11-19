@@ -13,6 +13,7 @@ import {
   IconActivite,
   IconPosologie,
   IconEntretien,
+  IconTrodAngine,
 } from '@/components/nav-icons'
 
 export const NAV_ITEMS = [
@@ -42,6 +43,7 @@ export const MODULES_SECONDAIRES = [
   { href: '/activite', label: 'Activité', icone: IconActivite, couleurFond: 'bg-neutral-soft', couleurTexte: 'text-muted' },
   { href: '/plan-posologie', label: 'Plan de posologie', icone: IconPosologie, couleurFond: 'bg-accent-soft', couleurTexte: 'text-accent' },
   { href: '/entretiens-pharmaceutiques', label: 'Entretiens pharmaceutiques', icone: IconEntretien, couleurFond: 'bg-purple-soft', couleurTexte: 'text-purple' },
+  { href: '/trod-angine', label: 'TROD angine', icone: IconTrodAngine, couleurFond: 'bg-rec-soft', couleurTexte: 'text-rec' },
 ]
 
 export function estLienActif(href: string, pathname: string): boolean {

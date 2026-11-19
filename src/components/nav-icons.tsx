@@ -319,6 +319,25 @@ export function IconEntretien({ className }: IconProps) {
   )
 }
 
+// Thermomètre : TROD angine (prise en charge de l'angine à l'officine).
+export function IconTrodAngine({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+      <path d="M11.5 8v8" />
+    </svg>
+  )
+}
+
 // Grille 2x2 : symbole générique "plus de modules", utilisé par le bouton
 // "Plus" de la bottom nav mobile pour ouvrir le panneau des modules
 // secondaires (voir menu-plus-panel.tsx).

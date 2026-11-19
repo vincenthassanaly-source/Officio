@@ -38,6 +38,7 @@ import {
   IconActivite,
   IconPosologie,
   IconEntretien,
+  IconTrodAngine,
 } from '@/components/nav-icons'
 import { getTypesEntretien, type TypeEntretien } from '@/lib/data/entretiens'
 
@@ -326,6 +327,12 @@ export default async function AccueilPage() {
           titre="Entretiens pharmaceutiques"
           detail={pluriel(typesEntretienActifs, 'type actif', 'types actifs')}
           indisponible={!typesEntretienOk}
+        />
+        <TuileModule
+          href="/trod-angine"
+          Icone={IconTrodAngine}
+          couleur="bg-rec-soft text-rec"
+          titre="TROD angine"
         />
       </div>
 
