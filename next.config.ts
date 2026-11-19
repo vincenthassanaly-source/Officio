@@ -35,6 +35,13 @@ const nextConfig: NextConfig = {
     // src/react-view-transitions.d.ts pour les types correspondants.
     viewTransition: true,
   },
+  // Les PDF officiels du TROD angine (assets/trod-angine/) sont lus sur le
+  // disque par les route handlers : le tracing ne les voit pas dans le code,
+  // il faut les inclure dans le déploiement de ces routes.
+  outputFileTracingIncludes: {
+    '/trod-angine/*/compte-rendu': ['./assets/trod-angine/**/*'],
+    '/trod-angine/*/bon': ['./assets/trod-angine/**/*'],
+  },
   async headers() {
     return [
       {
@@ -72,6 +79,12 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
       {
+        // TROD angine : fiches de santé nominatives et PDF générés à la demande,
+        // jamais servis depuis un cache.
+        source: '/trod-angine/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
         // Toutes les autres pages (documents, carnet, fournisseurs, profil,
         // huiles essentielles, chaussures, etc.) : leurs données changent
         // rarement en cours de session, un court cache navigateur évite de
@@ -82,7 +95,7 @@ const nextConfig: NextConfig = {
         // concernés par cette règle : exclus explicitement, comme les routes
         // ci-dessus (`.+` plutôt que `.*` exclut aussi la racine `/`
         // elle-même, dont le nombre de caractères après le `/` est nul).
-        source: '/((?!_next/static|_next/image|liaison|agenda|entretiens-pharmaceutiques|promesses-patients).+)',
+        source: '/((?!_next/static|_next/image|liaison|agenda|entretiens-pharmaceutiques|promesses-patients|trod-angine).+)',
         headers: [{ key: 'Cache-Control', value: 'private, max-age=10, must-revalidate' }],
       },
     ]
