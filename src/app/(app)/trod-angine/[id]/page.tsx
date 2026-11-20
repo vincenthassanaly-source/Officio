@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getTrodAngineFiche } from '@/lib/data/trod-angine'
+import { getTrodAngineIdentite } from '@/lib/data/trod-angine-identite'
 import { TrodAngineSaisie } from '@/components/trod-angine-saisie'
 
 export const dynamic = 'force-dynamic'
@@ -15,5 +16,8 @@ export default async function TrodAngineSaisiePage({ params }: { params: Promise
   const fiche = await getTrodAngineFiche(id)
   if (!fiche) notFound()
 
-  return <TrodAngineSaisie ficheId={fiche.id} initial={fiche.donnees} />
+  const identite = await getTrodAngineIdentite(fiche.officine_id)
+  const identiteRenseignee = Boolean(identite.nom_structure || identite.adresse || identite.numero_am)
+
+  return <TrodAngineSaisie ficheId={fiche.id} initial={fiche.donnees} identiteRenseignee={identiteRenseignee} />
 }

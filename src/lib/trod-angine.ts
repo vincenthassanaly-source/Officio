@@ -12,7 +12,14 @@ import { dateDuJourIso } from '@/lib/bpm'
 
 // --- Libellés officiels ----------------------------------------------------------
 
-export type IdGravite = 'temperature' | 'constantes' | 'respiratoire' | 'trismus' | 'hypersialorrhee' | 'cervicalgie'
+export type IdGravite =
+  | 'temperature'
+  | 'constantes'
+  | 'respiratoire'
+  | 'trismus'
+  | 'hypersialorrhee'
+  | 'cervicalgie'
+  | 'endobuccal'
 
 // Bloc 5 du compte rendu : symptômes de gravité, prise en charge médicale immédiate.
 export const SIGNES_GRAVITE: { id: IdGravite; libelle: string }[] = [
@@ -26,6 +33,11 @@ export const SIGNES_GRAVITE: { id: IdGravite; libelle: string }[] = [
   { id: 'trismus', libelle: 'Trismus (limitation de l’ouverture buccale)' },
   { id: 'hypersialorrhee', libelle: 'Hypersialorrhée' },
   { id: 'cervicalgie', libelle: 'Cervicalgie ou torticolis limitant les mouvements de la tête' },
+  {
+    id: 'endobuccal',
+    libelle:
+      'Examen endo-buccal anormal : angine ulcéreuse ou ulcéro-nécrotique, vésiculeuse, pseudo-membraneuse, hypertrophie unilatérale des amygdales, déviation médiane de l’amygdale, déviation de la luette du côté sain, autre…',
+  },
 ]
 
 export type IdExclusion =
@@ -42,6 +54,7 @@ export type IdExclusion =
   | 'episode_recent'
   | 'episodes_repetes'
   | 'contre_indication'
+  | 'doute'
 
 // Bloc 4 du compte rendu : critères ne permettant pas la prise en charge en officine.
 export const CRITERES_EXCLUSION: { id: IdExclusion; libelle: string }[] = [
@@ -79,8 +92,9 @@ export const CRITERES_EXCLUSION: { id: IdExclusion; libelle: string }[] = [
   {
     id: 'contre_indication',
     libelle:
-      'Contre-indication à l’utilisation de l’amoxicilline, du céfuroxime, du cefpodoxime ou de la clarithromycine, conformément au RCP',
+      'Contre-indication à l’utilisation de l’amoxicilline, du céfuroxime, du cefpodoxime, de l’azithromycine ou de la clarithromycine, conformément au RCP',
   },
+  { id: 'doute', libelle: 'Doute du pharmacien' },
 ]
 
 export type IdBloc = 'b1' | 'b2' | 'b3' | 'b4' | 'b5'
@@ -100,13 +114,7 @@ export const BLOCS: { id: IdBloc; numero: number; libelle: string }[] = [
 
 // --- Antibiotiques -----------------------------------------------------------------
 
-export type IdAntibiotique =
-  | 'amoxicilline'
-  | 'cefuroxime'
-  | 'cefpodoxime'
-  | 'azithromycine'
-  | 'clarithromycine'
-  | 'josamycine'
+export type IdAntibiotique = 'amoxicilline' | 'cefuroxime' | 'cefpodoxime' | 'clarithromycine'
 
 export type TypeBon = 'enfant' | 'adulte'
 export type Allergie = 'aucune' | 'penicillines' | 'betalactamines'
@@ -131,7 +139,7 @@ type DefinitionAntibiotique = {
 }
 
 // Posologies recopiées du bon de prise en charge (angine de l'enfant / de
-// l'adulte) : toute modification doit suivre le document officiel.
+// l'adulte, version 2024 : amoxicilline, céfuroxime, cefpodoxime, clarithromycine) : toute modification doit suivre le document officiel.
 export const ANTIBIOTIQUES: Record<IdAntibiotique, DefinitionAntibiotique> = {
   amoxicilline: {
     nom: 'Amoxicilline',
@@ -159,16 +167,6 @@ export const ANTIBIOTIQUES: Record<IdAntibiotique, DefinitionAntibiotique> = {
       texte: '8 mg/kg/j en 2 prises par jour par voie orale, sans dépasser la dose adulte de 200 mg par jour, pendant 5 jours',
     },
   },
-  azithromycine: {
-    nom: 'Azithromycine',
-    adulte: { texte: '500 mg en 1 prise orale par jour pendant 3 jours', mgParJour: 500 },
-    enfant: {
-      mgParKgJour: 20,
-      prises: 1,
-      duree: 3,
-      texte: '20 mg/kg/j en 1 prise orale par jour pendant 3 jours',
-    },
-  },
   clarithromycine: {
     nom: 'Clarithromycine',
     adulte: { texte: '500 mg par jour en 2 prises orales par jour pendant 5 jours', mgParJour: 500 },
@@ -177,16 +175,6 @@ export const ANTIBIOTIQUES: Record<IdAntibiotique, DefinitionAntibiotique> = {
       prises: 2,
       duree: 5,
       texte: '15 mg/kg/j en 2 prises orales par jour pendant 5 jours',
-    },
-  },
-  josamycine: {
-    nom: 'Josamycine',
-    adulte: { texte: '2 g par jour en 2 prises orales par jour pendant 5 jours', mgParJour: 2000 },
-    enfant: {
-      mgParKgJour: 50,
-      prises: 1,
-      duree: 5,
-      texte: '50 mg/kg/j en 1 prise orale par jour pendant 5 jours',
     },
   },
 }
@@ -200,7 +188,7 @@ export const LIBELLES_ALLERGIE: Record<Allergie, string> = {
 const ANTIBIOTIQUES_PAR_ALLERGIE: Record<Allergie, IdAntibiotique[]> = {
   aucune: ['amoxicilline'],
   penicillines: ['cefuroxime', 'cefpodoxime'],
-  betalactamines: ['azithromycine', 'clarithromycine', 'josamycine'],
+  betalactamines: ['clarithromycine'],
 }
 
 // Choix proposé d'office quand l'allergie est renseignée (le pharmacien change à son gré).
@@ -232,10 +220,30 @@ export type MesuresTrod = { temperature: string; pas: string; fc: string; fr: st
 
 export type ResultatTrod = 'positif' | 'negatif' | null
 
+// Score de Mac Isaac (fiche mémo HAS) : 4 critères à 1 point + point d'âge.
+export type IdCritereMacIsaac = 'temperature' | 'sans_toux' | 'adenopathie' | 'amygdales'
+
+export const CRITERES_MAC_ISAAC: { id: IdCritereMacIsaac; libelle: string }[] = [
+  { id: 'temperature', libelle: 'Température > 38 °C' },
+  { id: 'sans_toux', libelle: 'Absence de toux' },
+  { id: 'adenopathie', libelle: 'Adénopathie(s) cervicale(s) antérieure(s) douloureuse(s)' },
+  { id: 'amygdales', libelle: 'Augmentation de volume ou exsudat amygdalien' },
+]
+
+export type MacIsaac = {
+  criteres: Record<IdCritereMacIsaac, boolean>
+  // Point d'âge saisi à la main : la fiche HAS ne le donne ni sous 15 ans ni de
+  // façon explicite à 45 ans pile. Utilisé seulement sous 15 ans.
+  age_manuel: 0 | 1 | null
+}
+
 export type DonneesTrodAngine = {
   patient: PatientTrod
   mesures: MesuresTrod
+  macisaac: MacIsaac
   gravite: Record<IdGravite, boolean>
+  // Précision de l'examen endo-buccal (« autre… »), reportée en compléments.
+  gravite_precision: string
   exclusions: Record<IdExclusion, boolean>
   trod: ResultatTrod
   allergie: Allergie | null
@@ -245,6 +253,8 @@ export type DonneesTrodAngine = {
   // Corrections manuelles des 5 blocs du compte rendu (absent : valeur proposée).
   blocs: Partial<Record<IdBloc, boolean>>
   points_divers: string
+  // Nom du pharmacien (compte rendu et bon), saisi sur chaque fiche.
+  pharmacien: string
 }
 
 const MAX_COURT = 120
@@ -254,6 +264,11 @@ export function trodAngineVide(): DonneesTrodAngine {
   return {
     patient: { nom: '', prenom: '', age: '', poids: '', secu: '', medecin: '', date: dateDuJourIso() },
     mesures: { temperature: '', pas: '', fc: '', fr: '' },
+    macisaac: {
+      criteres: Object.fromEntries(CRITERES_MAC_ISAAC.map((c) => [c.id, false])) as Record<IdCritereMacIsaac, boolean>,
+      age_manuel: null,
+    },
+    gravite_precision: '',
     gravite: Object.fromEntries(SIGNES_GRAVITE.map((s) => [s.id, false])) as Record<IdGravite, boolean>,
     exclusions: Object.fromEntries(CRITERES_EXCLUSION.map((c) => [c.id, false])) as Record<IdExclusion, boolean>,
     trod: null,
@@ -262,6 +277,7 @@ export function trodAngineVide(): DonneesTrodAngine {
     antibiotique: null,
     blocs: {},
     points_divers: '',
+    pharmacien: '',
   }
 }
 
@@ -306,6 +322,12 @@ export function normaliserTrodAngine(brut: unknown): DonneesTrodAngine {
     fr: texte(m.fr, 4),
   }
 
+  const mi = objet(source.macisaac)
+  const critMi = objet(mi.criteres)
+  for (const c of CRITERES_MAC_ISAAC) base.macisaac.criteres[c.id] = critMi[c.id] === true
+  base.macisaac.age_manuel = mi.age_manuel === 0 || mi.age_manuel === 1 ? mi.age_manuel : null
+  base.gravite_precision = texte(source.gravite_precision, 300)
+
   const g = objet(source.gravite)
   for (const s of SIGNES_GRAVITE) base.gravite[s.id] = g[s.id] === true
   const e = objet(source.exclusions)
@@ -320,6 +342,7 @@ export function normaliserTrodAngine(brut: unknown): DonneesTrodAngine {
   for (const bloc of BLOCS) if (typeof b[bloc.id] === 'boolean') base.blocs[bloc.id] = b[bloc.id] as boolean
 
   base.points_divers = texte(source.points_divers, MAX_LONG)
+  base.pharmacien = texte(source.pharmacien, MAX_COURT)
   return base
 }
 
@@ -420,6 +443,52 @@ export function changerBon(donnees: DonneesTrodAngine, bon: TypeBon | null): Don
   return { ...suivant, antibiotique: defautPour(donnees.allergie, effectif) }
 }
 
+// --- Score de Mac Isaac ---------------------------------------------------------------------
+
+// Point d'âge : 15 à 44 ans = 0, 45 ans et plus = −1 (la fiche écrit « > 45 »
+// mais ne couvre pas 45 ; on le range avec les plus de 45). Sous 15 ans, la
+// fiche est muette : valeur choisie à la main, null tant qu'elle ne l'est pas.
+export function pointAgeMacIsaac(donnees: DonneesTrodAngine): number | null {
+  const age = ageEnAnnees(donnees)
+  if (age === null) return null
+  if (age >= 45) return -1
+  if (age >= 15) return 0
+  return donnees.macisaac.age_manuel
+}
+
+// Le point d'âge doit être saisi à la main (âge sous 15 ans renseigné).
+export function pointAgeManuelRequis(donnees: DonneesTrodAngine): boolean {
+  const age = ageEnAnnees(donnees)
+  return age !== null && age < 15
+}
+
+export function scoreMacIsaac(donnees: DonneesTrodAngine): number | null {
+  const age = pointAgeMacIsaac(donnees)
+  if (age === null) return null
+  const criteres = CRITERES_MAC_ISAAC.filter((c) => donnees.macisaac.criteres[c.id]).length
+  return criteres + age
+}
+
+export type IndicationMacIsaac = 'trod_indique' | 'pas_antibiotique' | null
+
+// Score ≥ 2 : TROD indiqué ; < 2 : pas d'antibiotique selon la HAS.
+export function indicationMacIsaac(donnees: DonneesTrodAngine): IndicationMacIsaac {
+  const score = scoreMacIsaac(donnees)
+  if (score === null) return null
+  return score >= 2 ? 'trod_indique' : 'pas_antibiotique'
+}
+
+// Ligne reportée dans les compléments du compte rendu. Vide tant que le score
+// n'est pas calculable (âge manquant, ou point d'âge sous 15 ans non choisi).
+export function texteMacIsaac(donnees: DonneesTrodAngine): string {
+  const score = scoreMacIsaac(donnees)
+  if (score === null) return ''
+  const cochees = CRITERES_MAC_ISAAC.filter((c) => donnees.macisaac.criteres[c.id]).map((c) => c.libelle)
+  const age = pointAgeMacIsaac(donnees) as number
+  const detail = [...cochees, `âge ${age > 0 ? '+' : ''}${age}`].join(' ; ')
+  return `Score de Mac Isaac : ${score} (${detail}).`
+}
+
 // --- Blocs du compte rendu ----------------------------------------------------------------
 
 // Valeur proposée pour chaque bloc d'après les réponses, avant corrections manuelles.
@@ -516,13 +585,30 @@ export function enteteTrodAngine(donnees: DonneesTrodAngine): { nom: string; pre
 
 // --- Étapes de saisie -------------------------------------------------------------------------------
 
-export type EtapeTrod = 'patient' | 'gravite' | 'exclusions' | 'trod' | 'antibiotique' | 'documents'
+export type EtapeTrod = 'patient' | 'macisaac' | 'gravite' | 'exclusions' | 'trod' | 'antibiotique' | 'documents'
 
 export const ETAPES_TROD: { id: EtapeTrod; titre: string }[] = [
   { id: 'patient', titre: 'Le patient' },
+  { id: 'macisaac', titre: 'Score de Mac Isaac' },
   { id: 'gravite', titre: 'Signes de gravité' },
   { id: 'exclusions', titre: 'Critères d’exclusion' },
   { id: 'trod', titre: 'Résultat du TROD' },
   { id: 'antibiotique', titre: 'Antibiotique' },
   { id: 'documents', titre: 'Compte rendu et bon' },
 ]
+
+// --- Identité de l'officine -----------------------------------------------------------------------
+
+// Imprimée sur le compte rendu et le bon (tampon) ; saisie une fois par officine.
+export type IdentiteOfficine = { nom_structure: string; adresse: string; numero_am: string }
+
+export const IDENTITE_VIDE: IdentiteOfficine = { nom_structure: '', adresse: '', numero_am: '' }
+
+export function normaliserIdentite(brut: unknown): IdentiteOfficine {
+  const source = objet(brut)
+  return {
+    nom_structure: texte(source.nom_structure, 150).trim(),
+    adresse: texte(source.adresse, 250).trim(),
+    numero_am: texte(source.numero_am, 40).trim(),
+  }
+}

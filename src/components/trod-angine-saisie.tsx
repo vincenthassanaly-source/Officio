@@ -8,6 +8,7 @@ import {
   ANTIBIOTIQUES,
   BLOCS,
   CRITERES_EXCLUSION,
+  CRITERES_MAC_ISAAC,
   ETAPES_TROD,
   LIBELLES_ALLERGIE,
   SIGNES_GRAVITE,
@@ -21,6 +22,10 @@ import {
   changerBon,
   changerMesure,
   doseEnTexte,
+  indicationMacIsaac,
+  pointAgeManuelRequis,
+  pointAgeMacIsaac,
+  scoreMacIsaac,
   nombreCriteresExclusion,
   nombreSignesGravite,
   poidsEnKg,
@@ -29,6 +34,7 @@ import {
   type Allergie,
   type DonneesTrodAngine,
   type IdAntibiotique,
+  type IdCritereMacIsaac,
   type IdExclusion,
   type IdGravite,
   type MesuresTrod,
@@ -40,6 +46,7 @@ import { useEnregistrementAuto } from '@/lib/use-enregistrement-auto'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { useEcranAllume } from '@/lib/use-ecran-allume'
 import { ouvrirDocumentDansOnglet } from '@/lib/ouvrir-document-onglet'
+import { imprimerPdf, telechargerPdf } from '@/lib/pdf-sortie'
 import { useToast } from '@/components/ui/toast-provider'
 import { ChampLigne, ChampTexte, IndicateurEnregistrement } from '@/components/bpm-saisie'
 import { CLASSE_BOUTON_PRIMAIRE, CLASSE_BOUTON_SECONDAIRE, CLASSE_FOCUS, Icone } from '@/components/entretien-ui'
@@ -57,7 +64,15 @@ function sabonnerSansChangement() {
 // fiches opioïdes et BPM). Tout est enregistré automatiquement ; passer un écran
 // sans répondre n'est jamais bloqué : les réponses pré-cochent le compte rendu,
 // que le pharmacien corrige à la dernière étape.
-export function TrodAngineSaisie({ ficheId, initial }: { ficheId: string; initial: DonneesTrodAngine }) {
+export function TrodAngineSaisie({
+  ficheId,
+  initial,
+  identiteRenseignee,
+}: {
+  ficheId: string
+  initial: DonneesTrodAngine
+  identiteRenseignee: boolean
+}) {
   const router = useRouter()
   const toast = useToast()
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
@@ -154,13 +169,33 @@ export function TrodAngineSaisie({ ficheId, initial }: { ficheId: string; initia
   const basculerExclusion = (id: IdExclusion) =>
     modifier((d) => ({ ...d, exclusions: { ...d.exclusions, [id]: !d.exclusions[id] } }))
 
-  async function ouvrirPdf(chemin: 'compte-rendu' | 'bon') {
-    const resultat = await ouvrirDocumentDansOnglet(async () => {
+  const basculerCritereMacIsaac = (id: IdCritereMacIsaac) =>
+    modifier((d) => ({
+      ...d,
+      macisaac: { ...d.macisaac, criteres: { ...d.macisaac.criteres, [id]: !d.macisaac.criteres[id] } },
+    }))
+
+  // Aperçu (onglet), téléchargement ou impression d'un document. La fiche est
+  // d'abord enregistrée : le PDF est toujours généré d'après la dernière saisie.
+  async function sortiePdf(chemin: 'compte-rendu' | 'bon' | 'dossier', mode: 'apercu' | 'telecharger' | 'imprimer') {
+    const url = `/trod-angine/${ficheId}/${chemin}`
+    if (mode === 'apercu') {
+      const resultat = await ouvrirDocumentDansOnglet(async () => {
+        const ok = await sauvegarder()
+        if (!ok) throw new Error('La fiche n’a pas pu être enregistrée : le document ne peut pas être généré.')
+        return url
+      })
+      if (!resultat.succes) toast({ type: 'erreur', message: resultat.message })
+      return
+    }
+    try {
       const ok = await sauvegarder()
       if (!ok) throw new Error('La fiche n’a pas pu être enregistrée : le document ne peut pas être généré.')
-      return `/trod-angine/${ficheId}/${chemin}`
-    })
-    if (!resultat.succes) toast({ type: 'erreur', message: resultat.message })
+      if (mode === 'telecharger') await telechargerPdf(`${url}?telecharger=1`)
+      else await imprimerPdf(url)
+    } catch (err) {
+      toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Impossible de générer le document.' })
+    }
   }
 
   const nomPatient = `${donnees.patient.nom} ${donnees.patient.prenom}`.trim() || 'Patient sans nom'
@@ -228,11 +263,20 @@ export function TrodAngineSaisie({ ficheId, initial }: { ficheId: string; initia
 
           {etape.id === 'patient' && <EtapePatient patient={donnees.patient} onChanger={changerPatient} />}
 
+          {etape.id === 'macisaac' && (
+            <EtapeMacIsaac
+              donnees={donnees}
+              onBasculer={basculerCritereMacIsaac}
+              onAgeManuel={(valeur) => modifier((d) => ({ ...d, macisaac: { ...d.macisaac, age_manuel: valeur } }))}
+            />
+          )}
+
           {etape.id === 'gravite' && (
             <EtapeGravite
               donnees={donnees}
               onMesure={changerLaMesure}
               onBasculer={basculerGravite}
+              onPrecision={(v) => modifier((d) => ({ ...d, gravite_precision: v }))}
               onAllerDocuments={() => aller(INDEX_DOCUMENTS)}
             />
           )}
@@ -264,7 +308,9 @@ export function TrodAngineSaisie({ ficheId, initial }: { ficheId: string; initia
               onBasculerBloc={(id) => modifier((d) => basculerBloc(d, id))}
               onPointsDivers={(v) => modifier((d) => ({ ...d, points_divers: v }))}
               onChangerPatient={changerPatient}
-              onOuvrir={(chemin) => void ouvrirPdf(chemin)}
+              onPharmacien={(v) => modifier((d) => ({ ...d, pharmacien: v }))}
+              identiteRenseignee={identiteRenseignee}
+              onSortie={(chemin, mode) => void sortiePdf(chemin, mode)}
             />
           )}
         </div>
@@ -417,15 +463,99 @@ function EtapePatient({
   )
 }
 
+function EtapeMacIsaac({
+  donnees,
+  onBasculer,
+  onAgeManuel,
+}: {
+  donnees: DonneesTrodAngine
+  onBasculer: (id: IdCritereMacIsaac) => void
+  onAgeManuel: (valeur: 0 | 1) => void
+}) {
+  const score = scoreMacIsaac(donnees)
+  const indication = indicationMacIsaac(donnees)
+  const age = ageEnAnnees(donnees)
+  const pointAge = pointAgeMacIsaac(donnees)
+  const manuel = pointAgeManuelRequis(donnees)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[13.5px] leading-snug text-muted">
+        Cochez ce que vous constatez : chaque critère vaut 1 point. Score ≥ 2 : le TROD est indiqué. Score &lt; 2 : pas
+        d’antibiotique selon la HAS.
+      </p>
+      <ul className="flex flex-col gap-2">
+        {CRITERES_MAC_ISAAC.map((c) => (
+          <LigneCase
+            key={c.id}
+            libelle={c.libelle}
+            coche={donnees.macisaac.criteres[c.id]}
+            onBasculer={() => onBasculer(c.id)}
+          />
+        ))}
+      </ul>
+
+      <section className="flex flex-col gap-2" aria-labelledby="titre-age-macisaac">
+        <h3 id="titre-age-macisaac" className="text-[14.5px] font-bold text-ink">
+          Point d’âge
+        </h3>
+        {age === null ? (
+          <Bandeau ton="info">Âge non renseigné : revenez à la première étape pour calculer le score.</Bandeau>
+        ) : manuel ? (
+          <>
+            <p className="text-[12.5px] leading-snug text-muted">
+              La fiche HAS ne donne un point d’âge que pour 15 à 44 ans (0) et à partir de 45 ans (−1). Pour {age} ans, à
+              vous de choisir.
+            </p>
+            <ul className="flex flex-col gap-2">
+              <LigneChoix
+                nom="age-macisaac"
+                libelle="0 point"
+                coche={donnees.macisaac.age_manuel === 0}
+                onChoisir={() => onAgeManuel(0)}
+              />
+              <LigneChoix
+                nom="age-macisaac"
+                libelle="+1 point"
+                coche={donnees.macisaac.age_manuel === 1}
+                onChoisir={() => onAgeManuel(1)}
+              />
+            </ul>
+          </>
+        ) : (
+          <p className="text-[13.5px] text-ink">
+            {age} ans : <span className="font-semibold">{pointAge === 0 ? '0 point' : `${pointAge} point`}</span>
+          </p>
+        )}
+      </section>
+
+      {score === null ? (
+        <p className="text-[13px] font-semibold text-muted">Score non calculable pour l’instant.</p>
+      ) : (
+        <Bandeau ton={indication === 'trod_indique' ? 'ok' : 'alerte'}>
+          <p className="font-bold">Score de Mac Isaac : {score}</p>
+          <p className="mt-1">
+            {indication === 'trod_indique'
+              ? 'Score ≥ 2 : le TROD est indiqué.'
+              : 'Score < 2 : pas d’antibiotique selon la HAS. Vous pouvez tout de même poursuivre le parcours.'}
+          </p>
+        </Bandeau>
+      )}
+    </div>
+  )
+}
+
 function EtapeGravite({
   donnees,
   onMesure,
   onBasculer,
+  onPrecision,
   onAllerDocuments,
 }: {
   donnees: DonneesTrodAngine
   onMesure: (cle: keyof MesuresTrod, valeur: string) => void
   onBasculer: (id: IdGravite) => void
+  onPrecision: (valeur: string) => void
   onAllerDocuments: () => void
 }) {
   const nb = nombreSignesGravite(donnees)
@@ -445,6 +575,13 @@ function EtapeGravite({
           <LigneCase key={s.id} libelle={s.libelle} coche={donnees.gravite[s.id]} onBasculer={() => onBasculer(s.id)} />
         ))}
       </ul>
+      {donnees.gravite.endobuccal && (
+        <ChampLigne
+          label="Examen endo-buccal : précision (autre…)"
+          valeur={donnees.gravite_precision}
+          onChanger={onPrecision}
+        />
+      )}
       {nb > 0 ? (
         <Bandeau ton="alerte">
           <p className="font-bold">Signe de gravité : orienter le patient vers un médecin en urgence.</p>
@@ -623,11 +760,53 @@ function EtapeAntibiotique({
             ))}
           </ul>
           <p className="text-[12.5px] leading-snug text-muted">
-            Les doses calculées appliquent les mg/kg du bon : à vérifier avant de délivrer. Azithromycine et josamycine
-            figurent sur le bon mais pas sur le compte rendu : elles y seront notées dans « Points divers ».
+            Les doses calculées appliquent les mg/kg du bon : à vérifier avant de délivrer.
           </p>
         </section>
       )}
+    </div>
+  )
+}
+
+type CheminPdf = 'compte-rendu' | 'bon' | 'dossier'
+type ModePdf = 'apercu' | 'telecharger' | 'imprimer'
+
+function BoutonsDocument({
+  titre,
+  chemin,
+  disponible,
+  onSortie,
+  principal = false,
+}: {
+  titre: string
+  chemin: CheminPdf
+  disponible: boolean
+  onSortie: (chemin: CheminPdf, mode: ModePdf) => void
+  principal?: boolean
+}) {
+  const classe = (primaire: boolean) =>
+    `${primaire ? CLASSE_BOUTON_PRIMAIRE : CLASSE_BOUTON_SECONDAIRE} min-h-12 flex-1 px-2 text-[13px]`
+  return (
+    <div className="flex flex-col gap-2" role="group" aria-label={titre}>
+      <p className="text-[13.5px] font-semibold text-ink">{titre}</p>
+      <div className="flex gap-2">
+        <button type="button" disabled={!disponible} onClick={() => onSortie(chemin, 'apercu')} className={classe(false)}>
+          <Icone nom="fichier" taille={16} />
+          Aperçu
+        </button>
+        <button
+          type="button"
+          disabled={!disponible}
+          onClick={() => onSortie(chemin, 'telecharger')}
+          className={classe(principal)}
+        >
+          Télécharger
+        </button>
+        <button type="button" disabled={!disponible} onClick={() => onSortie(chemin, 'imprimer')} className={classe(false)}>
+          <Icone nom="imprimante" taille={16} />
+          Imprimer
+        </button>
+      </div>
     </div>
   )
 }
@@ -637,13 +816,17 @@ function EtapeDocuments({
   onBasculerBloc,
   onPointsDivers,
   onChangerPatient,
-  onOuvrir,
+  onPharmacien,
+  identiteRenseignee,
+  onSortie,
 }: {
   donnees: DonneesTrodAngine
   onBasculerBloc: (id: (typeof BLOCS)[number]['id']) => void
   onPointsDivers: (v: string) => void
   onChangerPatient: (cle: keyof PatientTrod, valeur: string) => void
-  onOuvrir: (chemin: 'compte-rendu' | 'bon') => void
+  onPharmacien: (v: string) => void
+  identiteRenseignee: boolean
+  onSortie: (chemin: CheminPdf, mode: ModePdf) => void
 }) {
   const effectifs = blocsEffectifs(donnees)
   const proposes = blocsProposes(donnees)
@@ -653,7 +836,8 @@ function EtapeDocuments({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-[13.5px] leading-snug text-muted">
-        Les blocs du compte rendu sont cochés d’après vos réponses. Corrigez-les si besoin, puis ouvrez les documents.
+        Les blocs du compte rendu sont cochés d’après vos réponses. Corrigez-les si besoin, puis éditez, téléchargez ou
+        imprimez les documents.
       </p>
 
       <ul className="flex flex-col gap-2">
@@ -668,14 +852,23 @@ function EtapeDocuments({
         ))}
       </ul>
 
-      <ChampTexte label="Points divers" valeur={donnees.points_divers} onChanger={onPointsDivers} />
+      <ChampTexte label="Points divers (imprimés en compléments)" valeur={donnees.points_divers} onChanger={onPointsDivers} />
+
+      <ChampLigne label="Nom du pharmacien" valeur={donnees.pharmacien} onChanger={onPharmacien} autoComplete="off" />
+
+      {!identiteRenseignee && (
+        <Bandeau ton="info">
+          L’identité de l’officine (structure, adresse, n° AM) n’est pas renseignée : le tampon est à apposer à la main.
+          Vous pouvez la saisir une fois pour toutes depuis la liste « TROD angine ».
+        </Bandeau>
+      )}
 
       {(donnees.patient.secu.length === 0 || secuIncomplet) && (
         <div className="flex flex-col gap-2">
           <Bandeau ton="info">
             {secuIncomplet
               ? 'N° de Sécurité sociale incomplet : il compte 15 chiffres.'
-              : 'N° de Sécurité sociale non renseigné : les cases du compte rendu resteront vides.'}
+              : 'N° de Sécurité sociale non renseigné : il restera vide sur le compte rendu.'}
           </Bandeau>
           <ChampLigne
             label="N° de Sécurité sociale (15 chiffres)"
@@ -686,29 +879,25 @@ function EtapeDocuments({
         </div>
       )}
 
-      <div className="flex flex-col gap-2 rounded-[20px] bg-surface p-4 shadow-card">
+      <div className="flex flex-col gap-4 rounded-[20px] bg-surface p-4 shadow-card">
         <h3 className="text-[14.5px] font-bold text-ink">Documents remplis (PDF)</h3>
-        <button type="button" onClick={() => onOuvrir('compte-rendu')} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14`}>
-          <Icone nom="fichier" taille={18} />
-          Ouvrir le compte rendu
-        </button>
-        <button
-          type="button"
-          onClick={() => onOuvrir('bon')}
-          disabled={!bon}
-          className={`${CLASSE_BOUTON_SECONDAIRE} min-h-14`}
-        >
-          <Icone nom="fichier" taille={18} />
-          Ouvrir le bon de prise en charge
-        </button>
+        <BoutonsDocument
+          titre="Dossier complet (compte rendu + bon)"
+          chemin="dossier"
+          disponible
+          onSortie={onSortie}
+          principal
+        />
+        <BoutonsDocument titre="Compte rendu de prise en charge" chemin="compte-rendu" disponible onSortie={onSortie} />
+        <BoutonsDocument titre="Bon de prise en charge" chemin="bon" disponible={bon} onSortie={onSortie} />
         {!bon && (
           <p className="text-[12.5px] leading-snug text-muted">
             Le bon n’est disponible que si un antibiotique est délivré (bloc 1 coché et antibiotique choisi).
           </p>
         )}
         <p className="text-[12.5px] leading-snug text-muted">
-          Le tampon de l’officine et la signature restent à apposer à la main sur le bon. Imprimez ou enregistrez le
-          PDF depuis le lecteur.
+          Pour modifier un document, corrigez les réponses ci-dessus : il est régénéré à chaque ouverture. La signature
+          reste à apposer à la main sur le bon, ainsi que le tampon si l’identité de l’officine n’est pas renseignée.
         </p>
       </div>
     </div>

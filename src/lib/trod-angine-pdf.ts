@@ -1,8 +1,8 @@
-// Remplissage des PDF officiels de l'Assurance Maladie pour le TROD angine :
-// le compte rendu (2 pages) et le bon de prise en charge des antibiotiques
-// délivrés sans ordonnance (angine de l'enfant ou de l'adulte).
+// Remplissage des PDF officiels pour le TROD angine : le compte rendu de prise
+// en charge (1 page) et le bon de prise en charge des antibiotiques délivrés
+// sans ordonnance (angine de l'enfant ou de l'adulte, un fichier chacun).
 //
-// Les PDF d'origine (assets/trod-angine/) servent de fond : on y écrit le
+// Les PDF d'origine (assets/trod-angine/documents/) servent de fond : on y écrit le
 // texte et on y dessine les croix, sans rien recréer. Les positions sont
 // relevées sur un rendu à 144 dpi (1 px = 0,5 pt), origine en haut à gauche, d'où
 // les constantes en pixels. Le cadre du tampon et de la signature du bon reste
@@ -17,16 +17,18 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import {
   CRITERES_EXCLUSION,
   SIGNES_GRAVITE,
-  ANTIBIOTIQUES,
   ageEnAnnees,
   blocsEffectifs,
+  bonDisponible,
   doseEnTexte,
   poidsEnKg,
+  texteMacIsaac,
   typeBonEffectif,
   type DonneesTrodAngine,
   type IdAntibiotique,
   type IdExclusion,
   type IdGravite,
+  type IdentiteOfficine,
 } from '@/lib/trod-angine'
 
 type Point = readonly [number, number]
@@ -35,7 +37,7 @@ const PX = 0.5
 const ENCRE = rgb(0.05, 0.1, 0.35)
 
 async function lireModele(nom: string): Promise<PDFDocument> {
-  const octets = await readFile(join(process.cwd(), 'assets', 'trod-angine', nom))
+  const octets = await readFile(join(process.cwd(), 'assets', 'trod-angine', 'documents', nom))
   return PDFDocument.load(octets)
 }
 
@@ -97,175 +99,224 @@ function decouper(police: PDFFont, texte: string, taille: number, largeurPx: num
   return lignes
 }
 
+// --- Utilitaires de texte ---------------------------------------------------------------------
+
+// Écrit un texte sur une seule ligne, en réduisant la taille jusqu'à ce qu'il
+// tienne dans la largeur disponible (en px de page).
+function ecrireAjuste(
+  page: PDFPage,
+  police: PDFFont,
+  texte: string,
+  x: number,
+  baseline: number,
+  largeurPx: number,
+  taille = 11,
+  tailleMin = 6.5
+) {
+  if (!texte) return
+  let t = taille
+  while (t > tailleMin && police.widthOfTextAtSize(sur(police, texte), t) > largeurPx * PX) t -= 0.5
+  ecrire(page, police, texte, x, baseline, t)
+}
+
+// N° de sécurité sociale en groupes lisibles (sexe, année, mois, département, commune, ordre, clé).
+function formaterSecu(secu: string): string {
+  const coupes = [1, 2, 2, 2, 3, 3, 2]
+  const groupes: string[] = []
+  let i = 0
+  for (const n of coupes) {
+    if (i >= secu.length) break
+    groupes.push(secu.slice(i, i + n))
+    i += n
+  }
+  return groupes.join(' ')
+}
+
 // --- Compte rendu ---------------------------------------------------------------------------
 
-const CR_NOM: Point = [152, 409]
-const CR_PRENOM: Point = [775, 409]
-const CR_AGE: Point = [140, 474]
-const CR_MEDECIN: Point = [395, 541]
-// Bord gauche des 15 cases du n° de sécurité sociale (largeur d'une case : 28 px).
-const CR_SECU_X = [590, 629, 663, 702, 737, 776, 810, 849, 884, 918, 957, 991, 1025, 1064, 1099]
-const CR_SECU_BASELINE = 469
-const CR_SECU_LARGEUR = 28
+// Le compte rendu est un formulaire PDF : ses cases sont des champs, dessinés par
+// dessus le contenu de la page, donc une croix tracée dessous resterait cachée.
+// On aplatit le formulaire en premier (les champs deviennent du contenu de page),
+// puis on trace les croix et les textes par dessus.
 
-// Centres des cases, page 1 : blocs 1 à 3 et molécules du bloc 1.
-const CR_BLOC: Record<'b1' | 'b2' | 'b3', Point> = { b1: [159, 725], b2: [147, 1302], b3: [149, 1450] }
-const CR_MOLECULE: Partial<Record<IdAntibiotique, Point>> = {
-  amoxicilline: [102, 800],
-  cefuroxime: [102, 937],
-  cefpodoxime: [102, 1042],
-  clarithromycine: [655, 803],
-}
-// Posologie cochée sous la molécule : adulte ou enfant.
-const CR_POSOLOGIE: Partial<Record<IdAntibiotique, { adulte: Point; enfant?: Point }>> = {
-  amoxicilline: { adulte: [150, 842], enfant: [150, 876] },
-  cefuroxime: { adulte: [150, 982] },
-  cefpodoxime: { adulte: [150, 1088], enfant: [150, 1142] },
-  clarithromycine: { adulte: [706, 849], enfant: [706, 902] },
-}
+const CR_NOM_PRENOM: Point = [250, 177]
+const CR_AGE: Point = [146, 217]
+const CR_SECU: Point = [312, 257]
+const CR_MEDECIN: Point = [535, 297]
+const CR_DATE: Point = [806, 177]
+const CR_STRUCTURE: Point = [806, 217]
+const CR_PHARMACIEN: Point = [806, 257]
+const CR_LARGEUR_DROITE = 305
 
-// Page 2 : blocs 4 et 5 et leurs critères.
-const CR_BLOC_P2: Record<'b4' | 'b5', Point> = { b4: [126, 151], b5: [126, 713] }
+// Centres des cases : blocs 1 à 5 et molécules du bloc 1 (une case par molécule,
+// la ligne couvre les posologies adulte et enfant).
+const CR_BLOC: Record<'b1' | 'b2' | 'b3' | 'b4' | 'b5', Point> = {
+  b1: [84, 373],
+  b2: [84, 713],
+  b3: [84, 763],
+  b4: [84, 842],
+  b5: [84, 1338],
+}
+const CR_MOLECULE: Record<IdAntibiotique, Point> = {
+  amoxicilline: [121, 433],
+  cefuroxime: [121, 522],
+  cefpodoxime: [121, 574],
+  clarithromycine: [743, 434],
+}
 const CR_EXCLUSION: Record<IdExclusion, Point> = {
-  age: [68, 227],
-  recueil: [68, 274],
-  voyage: [68, 353],
-  grossesse: [68, 424],
-  evolution: [68, 461],
-  eruption: [68, 498],
-  insuffisance_renale: [68, 542],
-  immunodepression: [635, 245],
-  catheter: [635, 329],
-  antibiotherapie: [635, 370],
-  episode_recent: [635, 411],
-  episodes_repetes: [635, 457],
-  contre_indication: [635, 522],
+  recueil: [121, 909],
+  age: [121, 944],
+  eruption: [121, 980],
+  evolution: [121, 1015],
+  voyage: [121, 1051],
+  grossesse: [121, 1107],
+  immunodepression: [121, 1143],
+  insuffisance_renale: [121, 1202],
+  antibiotherapie: [121, 1266],
+  episode_recent: [743, 912],
+  episodes_repetes: [743, 969],
+  contre_indication: [743, 1046],
+  catheter: [743, 1181],
+  doute: [743, 1217],
 }
 const CR_GRAVITE: Record<IdGravite, Point> = {
-  temperature: [68, 790],
-  constantes: [68, 837],
-  respiratoire: [68, 906],
-  trismus: [635, 790],
-  hypersialorrhee: [635, 827],
-  cervicalgie: [635, 868],
-}
-const CR_DIVERS = { x: 60, premiereLigne: 1120, interligne: 23, largeur: 1070, lignesMax: 19, taille: 10.5 }
-
-// Antibiotiques du bon absents du compte rendu : signalés dans « Points divers ».
-function noteHorsCompteRendu(donnees: DonneesTrodAngine): string {
-  const id = donnees.antibiotique
-  if (!id || CR_MOLECULE[id]) return ''
-  const bon = typeBonEffectif(donnees)
-  const posologie = ANTIBIOTIQUES[id][bon]?.texte ?? ''
-  return `Antibiotique délivré : ${ANTIBIOTIQUES[id].nom} ${posologie} (molécule absente de la liste ci-dessus).`
+  temperature: [121, 1405],
+  constantes: [121, 1440],
+  respiratoire: [121, 1526],
+  trismus: [121, 1562],
+  hypersialorrhee: [121, 1598],
+  cervicalgie: [743, 1404],
+  endobuccal: [743, 1463],
 }
 
-export async function genererCompteRendu(donnees: DonneesTrodAngine): Promise<Uint8Array> {
-  const doc = await lireModele('compte-rendu.pdf')
+// Le compte rendu n'a pas de zone libre : le score de Mac Isaac, la précision de
+// l'examen endo-buccal et les points divers vont sur une page de compléments,
+// ajoutée seulement s'il y a quelque chose à y écrire.
+function complements(donnees: DonneesTrodAngine): string[] {
+  const lignes: string[] = []
+  const score = texteMacIsaac(donnees)
+  if (score) lignes.push(score)
+  const precision = donnees.gravite_precision.trim()
+  if (donnees.gravite.endobuccal && precision) lignes.push(`Examen endo-buccal : ${precision}`)
+  const divers = donnees.points_divers.trim()
+  if (divers) lignes.push('Points divers :', divers)
+  return lignes
+}
+
+function ajouterPageComplements(doc: PDFDocument, police: PDFFont, gras: PDFFont, donnees: DonneesTrodAngine) {
+  const lignes = complements(donnees)
+  if (lignes.length === 0) return
+  const page = doc.addPage([595.276, 841.89])
+  const { nom, prenom, date } = donnees.patient
+  const identite = [`${nom.toUpperCase()} ${prenom}`.trim(), dateFrancaise(date)].filter(Boolean).join(' – ')
+  page.drawText('Compléments au compte rendu de prise en charge', {
+    x: 48,
+    y: 790,
+    size: 14,
+    font: gras,
+    color: ENCRE,
+  })
+  if (identite) page.drawText(sur(gras, identite), { x: 48, y: 770, size: 10.5, font: police, color: ENCRE })
+  let y = 735
+  for (const ligne of lignes) {
+    for (const morceau of decouper(police, ligne, 11, 1010)) {
+      if (y < 60) return
+      page.drawText(sur(police, morceau), { x: 48, y, size: 11, font: police, color: ENCRE })
+      y -= 17
+    }
+    y -= 5
+  }
+}
+
+export async function genererCompteRendu(donnees: DonneesTrodAngine, identite: IdentiteOfficine): Promise<Uint8Array> {
+  const doc = await lireModele('compte-rendu-prise-en-charge.pdf')
   const police = await doc.embedFont(StandardFonts.Helvetica)
-  const [p1, p2] = doc.getPages()
+  const gras = await doc.embedFont(StandardFonts.HelveticaBold)
+  doc.getForm().flatten()
+  const [page] = doc.getPages()
   const blocs = blocsEffectifs(donnees)
   const { patient } = donnees
 
-  ecrire(p1, police, patient.nom, CR_NOM[0], CR_NOM[1])
-  ecrire(p1, police, patient.prenom, CR_PRENOM[0], CR_PRENOM[1])
-  ecrire(p1, police, patient.age ? `${patient.age} ans` : '', CR_AGE[0], CR_AGE[1])
-  ecrire(p1, police, patient.medecin, CR_MEDECIN[0], CR_MEDECIN[1])
+  ecrireAjuste(page, police, `${patient.nom.toUpperCase()} ${patient.prenom}`.trim(), CR_NOM_PRENOM[0], CR_NOM_PRENOM[1], 420)
+  ecrire(page, police, patient.age ? `${patient.age} ans` : '', CR_AGE[0], CR_AGE[1])
+  ecrire(page, police, formaterSecu(patient.secu), CR_SECU[0], CR_SECU[1], 12)
+  ecrireAjuste(page, police, patient.medecin, CR_MEDECIN[0], CR_MEDECIN[1], 560)
+  ecrire(page, police, dateFrancaise(patient.date), CR_DATE[0], CR_DATE[1])
+  // Structure sur deux lignes (la case est étroite) : nom, puis adresse et n° AM.
+  const detailStructure = [identite.adresse, identite.numero_am && `n° AM ${identite.numero_am}`].filter(Boolean).join(' – ')
+  ecrireAjuste(page, police, identite.nom_structure, CR_STRUCTURE[0], CR_STRUCTURE[1] - 8, CR_LARGEUR_DROITE, 9, 6)
+  ecrireAjuste(page, police, detailStructure, CR_STRUCTURE[0], CR_STRUCTURE[1] + 8, CR_LARGEUR_DROITE, 8, 5.5)
+  ecrireAjuste(page, police, donnees.pharmacien, CR_PHARMACIEN[0], CR_PHARMACIEN[1], CR_LARGEUR_DROITE)
 
-  for (let i = 0; i < CR_SECU_X.length; i++) {
-    const chiffre = patient.secu[i]
-    if (!chiffre) continue
-    const largeur = police.widthOfTextAtSize(chiffre, 12) / PX
-    ecrire(p1, police, chiffre, CR_SECU_X[i] + (CR_SECU_LARGEUR - largeur) / 2, CR_SECU_BASELINE, 12)
-  }
+  for (const id of ['b1', 'b2', 'b3', 'b4', 'b5'] as const) if (blocs[id]) cocher(page, CR_BLOC[id], 5)
 
-  for (const id of ['b1', 'b2', 'b3'] as const) if (blocs[id]) cocher(p1, CR_BLOC[id])
+  // Molécule cochée seulement si le bloc 1 l'est : l'adulte et l'enfant partagent la même case.
+  if (blocs.b1 && donnees.antibiotique) cocher(page, CR_MOLECULE[donnees.antibiotique], 5)
 
-  // Détail de l'antibiotique : seulement si le bloc 1 est coché.
-  const id = donnees.antibiotique
-  if (blocs.b1 && id) {
-    const molecule = CR_MOLECULE[id]
-    const posologie = CR_POSOLOGIE[id]
-    if (molecule && posologie) {
-      cocher(p1, molecule)
-      const bon = typeBonEffectif(donnees)
-      cocher(p1, bon === 'enfant' && posologie.enfant ? posologie.enfant : posologie.adulte, 4.5)
-    }
-  }
+  for (const c of CRITERES_EXCLUSION) if (donnees.exclusions[c.id]) cocher(page, CR_EXCLUSION[c.id], 5)
+  for (const s of SIGNES_GRAVITE) if (donnees.gravite[s.id]) cocher(page, CR_GRAVITE[s.id], 5)
 
-  for (const bloc of ['b4', 'b5'] as const) if (blocs[bloc]) cocher(p2, CR_BLOC_P2[bloc])
-  for (const c of CRITERES_EXCLUSION) if (donnees.exclusions[c.id]) cocher(p2, CR_EXCLUSION[c.id])
-  for (const s of SIGNES_GRAVITE) if (donnees.gravite[s.id]) cocher(p2, CR_GRAVITE[s.id])
-
-  const divers = [noteHorsCompteRendu(donnees), donnees.points_divers.trim()].filter(Boolean).join('\n')
-  const lignes = decouper(police, divers, CR_DIVERS.taille, CR_DIVERS.largeur).slice(0, CR_DIVERS.lignesMax)
-  lignes.forEach((ligne, i) =>
-    ecrire(p2, police, ligne, CR_DIVERS.x, CR_DIVERS.premiereLigne + i * CR_DIVERS.interligne, CR_DIVERS.taille)
-  )
-
+  ajouterPageComplements(doc, police, gras, donnees)
   return doc.save()
 }
 
 // --- Bon de prise en charge -----------------------------------------------------------------------
 
 type DispositionBon = {
+  fichier: string
   date: Point
   nom: Point
   age: Point
+  // Premier baseline du tampon (nom du pharmacien, structure, adresse, n° AM) et interligne.
+  tampon: Point
   cases: Partial<Record<IdAntibiotique, Point>>
   // Où écrire la dose calculée (bon enfant), sous la ligne de l'antibiotique.
   doses: Partial<Record<IdAntibiotique, Point>>
 }
 
 const BON_ENFANT: DispositionBon = {
-  date: [945, 436],
-  nom: [445, 537],
+  fichier: 'bon-prise-en-charge-enfant.pdf',
+  date: [945, 437],
+  nom: [445, 539],
   age: [335, 589],
-  cases: {
-    amoxicilline: [259, 685],
-    cefpodoxime: [259, 899],
-    azithromycine: [259, 1081],
-    clarithromycine: [259, 1183],
-    josamycine: [259, 1285],
-  },
-  doses: {
-    amoxicilline: [286, 747],
-    cefpodoxime: [286, 962],
-    azithromycine: [286, 1112],
-    clarithromycine: [286, 1214],
-    josamycine: [286, 1316],
-  },
+  tampon: [142, 322],
+  cases: { amoxicilline: [259, 682], cefpodoxime: [259, 897], clarithromycine: [259, 1080] },
+  doses: { amoxicilline: [286, 747], cefpodoxime: [286, 962], clarithromycine: [286, 1112] },
 }
 
 const BON_ADULTE: DispositionBon = {
-  date: [945, 418],
+  fichier: 'bon-prise-en-charge-adulte.pdf',
+  date: [945, 419],
   nom: [445, 521],
   age: [335, 571],
+  tampon: [142, 326],
   cases: {
-    amoxicilline: [259, 666],
-    cefuroxime: [259, 850],
-    cefpodoxime: [259, 952],
-    azithromycine: [259, 1104],
-    clarithromycine: [259, 1206],
-    josamycine: [259, 1308],
+    amoxicilline: [259, 664],
+    cefuroxime: [259, 848],
+    cefpodoxime: [259, 950],
+    clarithromycine: [259, 1102],
   },
   doses: {},
 }
 
-// Le PDF du bon compte 3 pages : enfant, cystite (hors périmètre), adulte. On
-// ne garde que la page du bon utilisé.
-export async function genererBon(donnees: DonneesTrodAngine): Promise<Uint8Array> {
-  const doc = await lireModele('bon-de-prise-en-charge.pdf')
+export async function genererBon(donnees: DonneesTrodAngine, identite: IdentiteOfficine): Promise<Uint8Array> {
+  const bon = typeBonEffectif(donnees)
+  const disposition = bon === 'enfant' ? BON_ENFANT : BON_ADULTE
+  const doc = await lireModele(disposition.fichier)
   const police = await doc.embedFont(StandardFonts.Helvetica)
   const italique = await doc.embedFont(StandardFonts.HelveticaOblique)
-  const bon = typeBonEffectif(donnees)
+  const [page] = doc.getPages()
 
-  // Index 0 : enfant, 1 : cystite, 2 : adulte.
-  const [enfant, , adulte] = doc.getPages()
-  const page = bon === 'enfant' ? enfant : adulte
-  const disposition = bon === 'enfant' ? BON_ENFANT : BON_ADULTE
-  doc.removePage(bon === 'enfant' ? 2 : 0)
-  doc.removePage(bon === 'enfant' ? 1 : 0)
+  // Tampon : pharmacien, structure, adresse, n° AM (la signature reste à la main).
+  const lignesTampon = [
+    donnees.pharmacien && `Pharmacien : ${donnees.pharmacien}`,
+    identite.nom_structure,
+    identite.adresse,
+    identite.numero_am && `N° AM : ${identite.numero_am}`,
+  ].filter(Boolean) as string[]
+  lignesTampon.forEach((ligne, i) =>
+    ecrireAjuste(page, police, ligne, disposition.tampon[0], disposition.tampon[1] + i * 26, 700, 11)
+  )
 
   const { patient } = donnees
   ecrire(page, police, dateFrancaise(patient.date), disposition.date[0], disposition.date[1])
@@ -281,11 +332,26 @@ export async function genererBon(donnees: DonneesTrodAngine): Promise<Uint8Array
   const id = donnees.antibiotique
   if (id) {
     const caseAntibiotique = disposition.cases[id]
-    if (caseAntibiotique) cocher(page, caseAntibiotique, 3.4, 1.4)
+    if (caseAntibiotique) cocher(page, caseAntibiotique, 5.5, 1.6)
     const emplacementDose = disposition.doses[id]
     const dose = doseEnTexte(donnees, id)
     if (emplacementDose && dose) ecrire(page, italique, dose, emplacementDose[0], emplacementDose[1], 9.5)
   }
 
   return doc.save()
+}
+
+// --- Dossier (compte rendu + bon) -------------------------------------------------------------------
+
+// Un seul PDF avec le compte rendu puis, si un antibiotique est délivré, le bon.
+export async function genererDossier(donnees: DonneesTrodAngine, identite: IdentiteOfficine): Promise<Uint8Array> {
+  const dossier = await PDFDocument.create()
+  const sources = [await genererCompteRendu(donnees, identite)]
+  if (bonDisponible(donnees)) sources.push(await genererBon(donnees, identite))
+  for (const octets of sources) {
+    const source = await PDFDocument.load(octets)
+    const pages = await dossier.copyPages(source, source.getPageIndices())
+    for (const page of pages) dossier.addPage(page)
+  }
+  return dossier.save()
 }

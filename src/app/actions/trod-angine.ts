@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import { enteteTrodAngine, normaliserTrodAngine, trodAngineVide } from '@/lib/trod-angine'
+import { enteteTrodAngine, normaliserIdentite, normaliserTrodAngine, trodAngineVide } from '@/lib/trod-angine'
 
 const CHEMIN_MODULE = '/trod-angine'
 
@@ -75,6 +75,28 @@ export async function supprimerTrodAngine(id: string) {
 
   const supabase = await createClient()
   const { error } = await supabase.from('trod_angine_fiches').delete().eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(CHEMIN_MODULE)
+}
+
+// Identité de l'officine (nom de la structure, adresse, n° AM) imprimée sur le
+// compte rendu et le bon. Une ligne par officine, modifiable par tout membre ; les
+// valeurs sont reconstruites et tronquées côté serveur.
+export async function enregistrerIdentiteTrodAngine(brut: unknown) {
+  const profil = await getCurrentProfil()
+  const officine = await getOfficineActive()
+  if (!profil || !officine) throw new Error('Non connecté')
+
+  const identite = normaliserIdentite(brut)
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('trod_angine_officine').upsert({
+    officine_id: officine.officine_id,
+    ...identite,
+    updated_at: new Date().toISOString(),
+  })
 
   if (error) throw new Error(error.message)
 
