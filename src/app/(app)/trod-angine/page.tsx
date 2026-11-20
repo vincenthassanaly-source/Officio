@@ -1,6 +1,8 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getTrodAngineFiches } from '@/lib/data/trod-angine'
+import { getTrodAngineDocuments } from '@/lib/data/trod-angine-documents'
 import { TrodAngineListe } from '@/components/trod-angine-liste'
+import { TrodAngineDocuments } from '@/components/trod-angine-documents'
 import { LienRetour } from '@/components/lien-retour'
 
 // Fiches modifiées par plusieurs membres de l'équipe : même fraîcheur immédiate
@@ -14,7 +16,10 @@ export default async function TrodAnginePage() {
   const officine = await getOfficineActive()
   if (!officine) return null
 
-  const fiches = await getTrodAngineFiches(officine.officine_id)
+  const [fiches, documents] = await Promise.all([
+    getTrodAngineFiches(officine.officine_id),
+    getTrodAngineDocuments(officine.officine_id),
+  ])
 
   return (
     <>
@@ -25,6 +30,7 @@ export default async function TrodAnginePage() {
         l’Assurance Maladie.
       </p>
       <TrodAngineListe fiches={fiches} />
+      <TrodAngineDocuments documents={documents} />
     </>
   )
 }

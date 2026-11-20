@@ -41,6 +41,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/trod-angine/*/compte-rendu': ['./assets/trod-angine/**/*'],
     '/trod-angine/*/bon': ['./assets/trod-angine/**/*'],
+    // Chargement des PDF officiels (section Documents) par une Server Action.
+    '/trod-angine': ['./assets/trod-angine/documents/**/*'],
   },
   async headers() {
     return [
