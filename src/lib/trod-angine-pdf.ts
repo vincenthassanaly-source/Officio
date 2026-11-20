@@ -18,6 +18,7 @@ import {
   CRITERES_EXCLUSION,
   SIGNES_GRAVITE,
   ageEnAnnees,
+  antibiotiqueDelivre,
   blocsEffectifs,
   bonDisponible,
   doseEnTexte,
@@ -251,7 +252,8 @@ export async function genererCompteRendu(donnees: DonneesTrodAngine, identite: I
   for (const id of ['b1', 'b2', 'b3', 'b4', 'b5'] as const) if (blocs[id]) cocher(page, CR_BLOC[id], 5)
 
   // Molécule cochée seulement si le bloc 1 l'est : l'adulte et l'enfant partagent la même case.
-  if (blocs.b1 && donnees.antibiotique) cocher(page, CR_MOLECULE[donnees.antibiotique], 5)
+  const delivre = antibiotiqueDelivre(donnees)
+  if (delivre) cocher(page, CR_MOLECULE[delivre], 5)
 
   for (const c of CRITERES_EXCLUSION) if (donnees.exclusions[c.id]) cocher(page, CR_EXCLUSION[c.id], 5)
   for (const s of SIGNES_GRAVITE) if (donnees.gravite[s.id]) cocher(page, CR_GRAVITE[s.id], 5)
