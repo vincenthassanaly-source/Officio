@@ -519,9 +519,15 @@ export function basculerBloc(donnees: DonneesTrodAngine, bloc: IdBloc): DonneesT
   return { ...donnees, blocs: { ...donnees.blocs, [bloc]: !courant } }
 }
 
-// Le bon n'a de sens que si un antibiotique est délivré (bloc 1 coché).
+// Antibiotique réellement délivré : bloc 1 coché, TROD positif et molécule choisie.
+// Sans TROD positif, ni la case de la molécule ni le bon ne sont remplis.
+export function antibiotiqueDelivre(donnees: DonneesTrodAngine): IdAntibiotique | null {
+  return blocsEffectifs(donnees).b1 && donnees.trod === 'positif' ? donnees.antibiotique : null
+}
+
+// Le bon n'a de sens que si un antibiotique est délivré.
 export function bonDisponible(donnees: DonneesTrodAngine): boolean {
-  return blocsEffectifs(donnees).b1 && donnees.antibiotique !== null
+  return antibiotiqueDelivre(donnees) !== null
 }
 
 // --- Doses --------------------------------------------------------------------------------------

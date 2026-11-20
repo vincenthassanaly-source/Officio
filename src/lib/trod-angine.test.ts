@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CRITERES_EXCLUSION,
+  antibiotiqueDelivre,
   SIGNES_GRAVITE,
   antibiotiquesProposes,
   basculerBloc,
@@ -239,5 +240,33 @@ describe('score de Mac Isaac', () => {
       adresse: 'x'.repeat(250),
       numero_am: '',
     })
+  })
+})
+
+describe('antibiotique délivré et bon', () => {
+  function positif() {
+    let d = changerAge(trodAngineVide(), '30')
+    d = { ...d, trod: 'positif' as const }
+    return changerAllergie(d, 'aucune')
+  }
+
+  it('TROD positif : l’allergie « aucune » propose et choisit l’amoxicilline, le bon est disponible', () => {
+    const d = positif()
+    expect(d.antibiotique).toBe('amoxicilline')
+    expect(antibiotiqueDelivre(d)).toBe('amoxicilline')
+    expect(bonDisponible(d)).toBe(true)
+  })
+
+  it('bloc 1 coché à la main sans TROD positif : ni molécule ni bon', () => {
+    const d = { ...positif(), trod: null, blocs: { b1: true } }
+    expect(antibiotiqueDelivre(d)).toBeNull()
+    expect(bonDisponible(d)).toBe(false)
+    expect(bonDisponible({ ...d, trod: 'negatif' })).toBe(false)
+  })
+
+  it('bloc 1 décoché : pas d’antibiotique délivré même choisi', () => {
+    const d = { ...positif(), blocs: { b1: false } }
+    expect(antibiotiqueDelivre(d)).toBeNull()
+    expect(bonDisponible(d)).toBe(false)
   })
 })

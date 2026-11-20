@@ -87,6 +87,14 @@ export function TrodAngineSaisie({
     enregistrerTrodAngine(ficheId, d)
   )
 
+  // TROD positif sans allergie renseignée : « pas d'allergie » (amoxicilline) est
+  // présélectionnée, pour que compte rendu et bon se remplissent sans autre clic.
+  // Concerne aussi les fiches ouvertes avant cette règle. Le pharmacien peut changer.
+  const sansAllergie = donnees.trod === 'positif' && donnees.allergie === null
+  useEffect(() => {
+    if (sansAllergie) modifier((d) => (d.trod === 'positif' && d.allergie === null ? changerAllergie(d, 'aucune') : d))
+  }, [sansAllergie, modifier])
+
   const idTitre = useId()
   const conteneurRef = useRef<HTMLDivElement>(null)
   const titreRef = useRef<HTMLHeadingElement>(null)
@@ -305,6 +313,12 @@ export function TrodAngineSaisie({
           {etape.id === 'documents' && (
             <EtapeDocuments
               donnees={donnees}
+              choix={{
+                onAllergie: (a) => modifier((d) => changerAllergie(d, a)),
+                onBon: (b) => modifier((d) => changerBon(d, b)),
+                onAntibiotique: (antibiotique) => modifier((d) => ({ ...d, antibiotique })),
+              }}
+              onAllerTrod={() => aller(ETAPES_TROD.findIndex((e) => e.id === 'trod'))}
               onBasculerBloc={(id) => modifier((d) => basculerBloc(d, id))}
               onPointsDivers={(v) => modifier((d) => ({ ...d, points_divers: v }))}
               onChangerPatient={changerPatient}
@@ -676,17 +690,15 @@ function EtapeTrod({ donnees, onChoisir }: { donnees: DonneesTrodAngine; onChois
 
 const OPTIONS_ALLERGIE: Allergie[] = ['aucune', 'penicillines', 'betalactamines']
 
-function EtapeAntibiotique({
-  donnees,
-  onAllergie,
-  onBon,
-  onAntibiotique,
-}: {
+type PropsChoixAntibiotique = {
   donnees: DonneesTrodAngine
   onAllergie: (a: Allergie) => void
   onBon: (b: TypeBon | null) => void
   onAntibiotique: (id: IdAntibiotique) => void
-}) {
+}
+
+function EtapeAntibiotique(props: PropsChoixAntibiotique) {
+  const { donnees } = props
   if (donnees.trod !== 'positif') {
     return (
       <Bandeau ton="info">
@@ -696,7 +708,12 @@ function EtapeAntibiotique({
       </Bandeau>
     )
   }
+  return <ChoixAntibiotique {...props} />
+}
 
+// Allergie, bon et antibiotique : utilisé à l'étape « Antibiotique » et, sous le
+// bloc 1, à l'écran final. Le choix coche la molécule du compte rendu et ouvre le bon.
+function ChoixAntibiotique({ donnees, onAllergie, onBon, onAntibiotique }: PropsChoixAntibiotique) {
   const bon = typeBonEffectif(donnees)
   const age = ageEnAnnees(donnees)
   const proposes = donnees.allergie ? antibiotiquesProposes(donnees.allergie, bon) : []
@@ -819,7 +836,11 @@ function EtapeDocuments({
   onPharmacien,
   identiteRenseignee,
   onSortie,
+  choix,
+  onAllerTrod,
 }: {
+  choix: Omit<PropsChoixAntibiotique, 'donnees'>
+  onAllerTrod: () => void
   donnees: DonneesTrodAngine
   onBasculerBloc: (id: (typeof BLOCS)[number]['id']) => void
   onPointsDivers: (v: string) => void
@@ -851,6 +872,27 @@ function EtapeDocuments({
           />
         ))}
       </ul>
+
+      {effectifs.b1 &&
+        (donnees.trod === 'positif' ? (
+          <section className="flex flex-col gap-3 rounded-[20px] bg-surface p-4 shadow-card" aria-labelledby="titre-traitement">
+            <h3 id="titre-traitement" className="text-[14.5px] font-bold text-ink">
+              Traitement délivré
+            </h3>
+            <ChoixAntibiotique donnees={donnees} {...choix} />
+          </section>
+        ) : (
+          <Bandeau ton="alerte">
+            <p className="font-bold">Le TROD n’est pas positif : aucun antibiotique ne peut être choisi.</p>
+            <p className="mt-1">
+              Le bloc 1 et le bon de prise en charge supposent un TROD positif. Corrigez le résultat du TROD, ou
+              décochez le bloc 1.
+            </p>
+            <button type="button" onClick={onAllerTrod} className={`${CLASSE_BOUTON_SECONDAIRE} mt-2 min-h-11`}>
+              Aller au résultat du TROD
+            </button>
+          </Bandeau>
+        ))}
 
       <ChampTexte label="Points divers (imprimés en compléments)" valeur={donnees.points_divers} onChanger={onPointsDivers} />
 
@@ -892,7 +934,7 @@ function EtapeDocuments({
         <BoutonsDocument titre="Bon de prise en charge" chemin="bon" disponible={bon} onSortie={onSortie} />
         {!bon && (
           <p className="text-[12.5px] leading-snug text-muted">
-            Le bon n’est disponible que si un antibiotique est délivré (bloc 1 coché et antibiotique choisi).
+            Le bon n’est disponible que si un antibiotique est délivré (bloc 1 coché, TROD positif et antibiotique choisi).
           </p>
         )}
         <p className="text-[12.5px] leading-snug text-muted">
