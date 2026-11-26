@@ -183,17 +183,24 @@ export default async function AccueilPage() {
   const tachesDuJour = tachesAFaireTous
 
   const prenom = profil?.nom_complet.split(' ')[0] ?? ''
-  // Rendu côté serveur (fuseau UTC sur Vercel) : date et heure affichées sont
-  // calculées explicitement en heure de Paris, sinon la date restait celle de
-  // la veille juste après minuit et « Bonsoir » n'arrivait qu'à 19 h/20 h.
+  // Rendu côté serveur (fuseau UTC sur Vercel) : seuls le libellé de date de
+  // l'en-tête et l'heure de la salutation ci-dessous sont calculés
+  // explicitement en heure de Paris (sinon la date affichée restait celle de
+  // la veille juste après minuit et « Bonsoir » n'arrivait qu'à 19 h/20 h).
+  // Le reste de la page (aujourdhuiIso pour le tri des tâches, comptage
+  // « activités récentes » via toDateString) reste dans le fuseau du serveur.
   const dateLabel = aujourdhui.toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     timeZone: 'Europe/Paris',
   })
+  // formatToParts plutôt que format() : en fr-FR, format() renvoie « 16 h »
+  // (suffixe), que Number() transformerait en NaN.
   const heureParis = Number(
-    new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' }).format(aujourdhui)
+    new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' })
+      .formatToParts(aujourdhui)
+      .find((p) => p.type === 'hour')?.value ?? 0
   )
   // Salutation selon l'heure plutôt qu'un « Bonjour » fixe toute la journée
   // — un même titre, mais qui reflète le moment réel où l'équipe consulte
