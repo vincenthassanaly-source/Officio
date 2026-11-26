@@ -48,6 +48,7 @@ function IconRecherche({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <circle cx="11" cy="11" r="7" />
       <path d="M21 21l-4.3-4.3" />
@@ -57,7 +58,7 @@ function IconRecherche({ className }: { className?: string }) {
 
 function Spinner({ className }: { className?: string }) {
   return (
-    <svg className={`motion-safe:animate-spin ${className ?? ''}`} viewBox="0 0 24 24" fill="none">
+    <svg className={`motion-safe:animate-spin ${className ?? ''}`} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle className="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" />
       <path className="opacity-75" fill="currentColor" d="M21 12a9 9 0 0 0-9-9v3a6 6 0 0 1 6 6h3z" />
     </svg>
@@ -165,6 +166,13 @@ export function RechercheGlobale() {
           }}
           placeholder="Rechercher dans Officio…"
           aria-label="Rechercher dans Officio…"
+          // Touche « Rechercher » du clavier mobile, ni correction ni
+          // majuscule automatique (noms de patients, de produits).
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted"
         />
         {chargement && <Spinner className="h-4 w-4 shrink-0 text-muted" />}

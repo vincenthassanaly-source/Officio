@@ -17,6 +17,7 @@ function IconPlus({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M12 5v14M5 12h14" />
     </svg>
@@ -73,7 +74,7 @@ export function FabCreationRapide({
         // (safe-area-inset-bottom non nul, 20-34px courant), le FAB se
         // recouvrait avec le bas de la nav — voir DESIGN.md, règle du bas
         // collant. Même variable que le formulaire d'envoi et les toasts.
-        className={`fixed bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.5rem)] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8${vue !== 'ferme' ? ' invisible' : ''}`}
+        className={`fixed bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.5rem)] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:bottom-8${vue !== 'ferme' ? ' invisible' : ''}`}
       >
         <IconPlus className="h-6 w-6" />
       </button>

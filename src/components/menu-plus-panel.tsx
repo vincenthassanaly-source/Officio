@@ -38,9 +38,29 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
         onClick={(e) => e.stopPropagation()}
         className="panneau-entree flex max-h-[92dvh] w-full flex-col gap-3 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card sm:max-h-[80dvh] sm:w-96 sm:rounded-[20px]"
       >
-        <h2 id="menu-plus-panel-titre" className="text-sm font-bold text-ink">
-          Autres modules
-        </h2>
+        {/* Titre de sheet en font-heading text-lg, comme la sheet du FAB
+            (DESIGN.md, Typography). Bouton Fermer explicite : sans lui, la
+            sheet ne se refermait qu'au tap sur le fond, à Échap ou au
+            retour physique — aucun de ces gestes n'est annoncé par un
+            lecteur d'écran. Cercle visible de 36 px, cible de 44 px via
+            -m-1 + p-1 (même motif que la cloche de notifications). */}
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="menu-plus-panel-titre" className="font-heading text-lg font-semibold text-ink">
+            Autres modules
+          </h2>
+          <button
+            type="button"
+            onClick={onFermer}
+            aria-label="Fermer"
+            className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-soft">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </span>
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 gap-2.5">
           {MODULES_SECONDAIRES.map((module) => {
@@ -62,9 +82,10 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
                 // tous l'ordinal de Carnet/Plus, donc "avance" depuis
                 // n'importe quel autre onglet de la bottom nav.
                 transitionTypes={direction ? [direction] : undefined}
-                className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3.5 shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <div
+                  aria-hidden="true"
                   className={`flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] ${module.couleurFond} ${module.couleurTexte}`}
                 >
                   <Icone className="h-[18px] w-[18px]" />

@@ -9,7 +9,7 @@ colors:
   primary-dark: "oklch(38% 0.16 275)"
   primary-soft: "oklch(94% 0.03 275)"
   ink: "oklch(21% 0.02 265)"
-  muted: "oklch(52% 0.02 265)"
+  muted: "oklch(51% 0.02 265)"
   border: "oklch(91% 0.006 260)"
   track: "oklch(93% 0.01 265)"
   accent: "oklch(53% 0.14 70)"
@@ -116,7 +116,7 @@ Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulair
 - **Fond de page** (`oklch(98% 0.004 260)`, `--color-bg`) : quasi blanc, légèrement bleuté.
 - **Surface** (`#ffffff`) : fond des cartes, modales, panneaux.
 - **Encre** (`oklch(21% 0.02 265)`, `--color-ink`) : texte principal.
-- **Atténué** (`oklch(52% 0.02 265)`, `--color-muted`) : texte secondaire, libellés, icônes inactives.
+- **Atténué** (`oklch(51% 0.02 265)`, `--color-muted`) : texte secondaire, libellés, icônes inactives, placeholders (règle `::placeholder` de `globals.css`). Passé de 52 % à 51 % le 2026-11-26 : 4,48:1 → 4,7:1 sur `neutral-soft`/`track` (onglets segmentés inactifs), seuil AA tenu sur tous les fonds clairs de la palette.
 - **Bordure** (`oklch(91% 0.006 260)`, `--color-border`) : traits de séparation, contours de boutons fantômes. Décorative (1,2:1) : ne délimite aucun champ de saisie.
 - **Contour de champ** (`oklch(62% 0.02 265)`, `--color-champ-bord`) : contour des `<input>`/`<textarea>`/`<select>` uniquement, 3,4:1 sur `bg` et 3,6:1 sur `surface` (WCAG 1.4.11, contraste des composants d'interface). Ajouté le 2026-10-27 (audit ui-ux-pro-max, constat M1).
 - **Neutre doux** (`oklch(93% 0.01 265)`, `--color-neutral-soft`) : fond au survol/actif des liens de navigation, fond d'avatar par défaut.
@@ -208,7 +208,8 @@ Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur bout
 ### Navigation
 - **Bottom nav (mobile, `lg:hidden`) :** barre fixe en bas, 5 onglets (4 liens directs + « Plus »), icône 20 px + libellé `text-xs`, pill `bg-primary-soft` animée (`transform`/`width`, mesurée en JS) derrière l'onglet actif, hauteur ≈ 50 px (déjà ≥ 44 px).
 - **Sidebar (desktop, `hidden lg:flex`) :** liste verticale de liens, icône 18 px + libellé `text-sm`, fond `bg-primary-soft` sur l'item actif, `hover:bg-neutral-soft` sinon.
-- **Panneau « Plus » :** grille 2 colonnes de tuiles carrées (icône dans un carré `rounded-xl` teinté par module + libellé), même sheet que les modales (`rounded-t-[20px]`, remonte du bas sur mobile).
+- **Panneau « Plus » :** grille 2 colonnes de tuiles carrées (icône dans un carré `rounded-xl` teinté par module + libellé), même sheet que les modales (`rounded-t-[20px]`, remonte du bas sur mobile). En-tête `font-heading text-lg` + bouton « Fermer » rond (36 px visibles, cible 44 px) : toute sheet sans bouton Annuler propose un bouton de fermeture explicite, le fond/Échap/retour physique ne suffisant pas pour un lecteur d'écran.
+- **Focus jamais masqué par la bottom nav :** `html` porte sous `lg` un `scroll-padding-bottom` égal à la hauteur de la nav + safe-area (`globals.css`), pour que le focus clavier ou un `scrollIntoView` ne cale jamais un élément sous la barre fixe (WCAG 2.4.11).
 - **Indicateur de navigation :** fine barre `h-[3px]` en haut de la zone de contenu, feedback immédiat au tap avant la réponse serveur — purement décoratif (`aria-hidden`), n'affecte aucune donnée.
 
 ### Interrupteur (switch)

@@ -37,6 +37,7 @@ function IconTache({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="4" y="4" width="16" height="16" rx="3" />
       <path d="M8 12l2.5 2.5L16 9" />
@@ -59,7 +60,7 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('message')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
           <IconLiaison className="h-5 w-5" />
@@ -72,7 +73,7 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('tache')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
           <IconTache className="h-5 w-5" />
@@ -85,7 +86,7 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('regularisation')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-soft text-purple">
           <IconRegularisation className="h-5 w-5" />
@@ -98,7 +99,7 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('note')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-dark">
           <IconNote className="h-5 w-5" />
@@ -111,7 +112,7 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('promesse')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex items-center gap-3 rounded-[20px] bg-surface p-4 text-left shadow-card hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-soft text-teal">
           <IconPromesses className="h-5 w-5" />
@@ -433,18 +434,23 @@ export default function FabCreationRapideModal({
       aria-modal="true"
       aria-labelledby={idTitre}
       onClick={onFermer}
-      className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
     >
+      {/* panneau-entree : même entrée que les autres sheets (globals.css),
+          la sheet apparaissait jusqu'ici d'un coup. pb safe-area : le bouton
+          d'envoi en bas de formulaire passait sous la barre gestuelle. */}
       <div
         ref={boiteRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[90dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
+        className="panneau-entree relative flex max-h-[90dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface pb-[env(safe-area-inset-bottom)] lg:max-w-lg lg:rounded-3xl lg:pb-0"
       >
         <button
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          // Anneau `primary` et non blanc : la sheet est blanche, un anneau
+          // blanc décalé de 2 px y restait invisible au clavier.
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
             <path d="M18 6 6 18M6 6l12 12" />
