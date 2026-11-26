@@ -129,6 +129,9 @@ export function EntretienMethodologie({
     const nouveauGroupe = [...groupe]
     ;[nouveauGroupe[index], nouveauGroupe[cible]] = [nouveauGroupe[cible], nouveauGroupe[index]]
     const ids = nouveauGroupe.map((i) => i.id)
+    // Jamais d'id provisoire (`temp-…`) envoyé au serveur, ni de second
+    // réordonnancement pendant qu'un envoi est en cours.
+    if (isPending || ids.some(estIdTemporaire)) return
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids })
@@ -141,6 +144,8 @@ export function EntretienMethodologie({
   }
 
   function ligneItem(item: ItemEntretien, index: number, groupe: ItemEntretien[]) {
+    // Un ajout pas encore confirmé fige l'ordre de son groupe (voir deplacer).
+    const groupeProvisoire = groupe.some((i) => estIdTemporaire(i.id))
     if (enEdition === item.id) {
       const idContenu = `contenu-${item.id}`
       const idPhase = `phase-${item.id}`
@@ -210,8 +215,8 @@ export function EntretienMethodologie({
         ) : (
           <BarreActionsItem
             extrait={extraitPourLabel(item.contenu)}
-            peutMonter={index > 0}
-            peutDescendre={index < groupe.length - 1}
+            peutMonter={index > 0 && !groupeProvisoire}
+            peutDescendre={index < groupe.length - 1 && !groupeProvisoire}
             onMonter={() => deplacer(groupe, index, -1)}
             onDescendre={() => deplacer(groupe, index, 1)}
             onModifier={() => {

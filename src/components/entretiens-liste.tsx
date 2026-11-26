@@ -74,6 +74,9 @@ type PropsCarte = {
   total: number
   compteurs: CompteursEntretien
   organiser: boolean
+  // Un type de la liste est en cours de création (id provisoire) : l'ordre
+  // est figé jusqu'à sa confirmation par le serveur.
+  ordreFige: boolean
   enRenommage: boolean
   nomEnEdition: string
   enCours: boolean
@@ -94,6 +97,7 @@ function CarteType({
   total,
   compteurs,
   organiser,
+  ordreFige,
   enRenommage,
   nomEnEdition,
   enCours,
@@ -180,11 +184,16 @@ function CarteType({
 
       {organiser && (
         <div className="flex items-center justify-end gap-0.5 border-t border-border px-2 py-1">
-          <BoutonIcone label={`Monter « ${type.nom} »`} icone="haut" disabled={index === 0} onClick={() => onDeplacer(-1)} />
+          <BoutonIcone
+            label={`Monter « ${type.nom} »`}
+            icone="haut"
+            disabled={index === 0 || ordreFige}
+            onClick={() => onDeplacer(-1)}
+          />
           <BoutonIcone
             label={`Descendre « ${type.nom} »`}
             icone="bas"
-            disabled={index === total - 1}
+            disabled={index === total - 1 || ordreFige}
             onClick={() => onDeplacer(1)}
           />
           <BoutonIcone label={`Renommer « ${type.nom} »`} icone="crayon" onClick={onDemarrerRenommage} />
@@ -211,6 +220,9 @@ export function EntretiensListe({
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [nomEnEdition, setNomEnEdition] = useState('')
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
+  // Dernier nom demandé, gardé après la fermeture : le titre de la modale reste
+  // lisible pendant son animation de sortie.
+  const [nomASupprimer, setNomASupprimer] = useState('')
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
@@ -299,6 +311,9 @@ export function EntretiensListe({
     const nouvelleListe = [...liste]
     ;[nouvelleListe[index], nouvelleListe[cible]] = [nouvelleListe[cible], nouvelleListe[index]]
     const ids = nouvelleListe.map((t) => t.id)
+    // Jamais d'id provisoire (`temp-…`) envoyé au serveur, ni de second
+    // réordonnancement pendant qu'un envoi est en cours.
+    if (isPending || ids.some(estIdTemporaire)) return
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids: [...ids, ...archives.map((t) => t.id)] })
@@ -341,6 +356,7 @@ export function EntretiensListe({
           total={liste.length}
           compteurs={compteurs[type.id] ?? VIDE}
           organiser={organiser}
+          ordreFige={liste.some((t) => estIdTemporaire(t.id))}
           enRenommage={enEdition === type.id}
           nomEnEdition={nomEnEdition}
           enCours={isPending}
@@ -352,7 +368,10 @@ export function EntretiensListe({
           onAnnulerRenommage={() => terminerRenommage(type.id)}
           onRenommer={() => renommer(type.id)}
           onDeplacer={(direction) => deplacer(liste, index, direction)}
-          onSupprimer={() => setASupprimer({ id: type.id, nom: type.nom })}
+          onSupprimer={() => {
+            setASupprimer({ id: type.id, nom: type.nom })
+            setNomASupprimer(type.nom)
+          }}
         />
       </li>
     )
@@ -471,7 +490,7 @@ export function EntretiensListe({
 
       <ModaleConfirmation
         ouvert={aSupprimer !== null}
-        titre={`Supprimer le type « ${aSupprimer?.nom} » ?`}
+        titre={`Supprimer le type « ${nomASupprimer} » ?`}
         description="Impossible tant que des éléments ou documents y sont liés."
         onConfirmer={() => {
           if (!aSupprimer) return

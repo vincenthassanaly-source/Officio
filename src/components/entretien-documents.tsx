@@ -219,6 +219,9 @@ export function EntretienDocuments({
 }) {
   const [formOuvert, setFormOuvert] = useState(false)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
+  // Dernier nom demandé, gardé après la fermeture : le titre de la modale reste
+  // lisible pendant son animation de sortie.
+  const [nomASupprimer, setNomASupprimer] = useState('')
   const [enEditionTag, setEnEditionTag] = useState<string | null>(null)
   const [tagEnEdition, setTagEnEdition] = useState('')
   const [filtreTag, setFiltreTag] = useState('')
@@ -328,7 +331,10 @@ export function EntretienDocuments({
             onTagChange={setTagEnEdition}
             onEnregistrerTag={() => enregistrerTag(d.id)}
             onAnnulerTag={() => setEnEditionTag(null)}
-            onSupprimer={() => setASupprimer({ id: d.id, nom: d.nom })}
+            onSupprimer={() => {
+              setASupprimer({ id: d.id, nom: d.nom })
+              setNomASupprimer(d.nom)
+            }}
           />
         ))}
       </ul>
@@ -532,7 +538,7 @@ export function EntretienDocuments({
 
       <ModaleConfirmation
         ouvert={aSupprimer !== null}
-        titre={`Supprimer le document « ${aSupprimer?.nom} » ?`}
+        titre={`Supprimer le document « ${nomASupprimer} » ?`}
         onConfirmer={() => {
           if (aSupprimer) supprimer(aSupprimer.id)
           setASupprimer(null)

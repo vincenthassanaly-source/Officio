@@ -40,6 +40,9 @@ export function EntretienItems({
 
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
   const tries = useMemo(() => [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre), [itemsOptimistes])
+  // Un ajout pas encore confirmé par le serveur fige l'ordre de la liste :
+  // Monter/Descendre restent indisponibles jusqu'à sa création.
+  const aProvisoire = tries.some((i) => estIdTemporaire(i.id))
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
@@ -106,6 +109,9 @@ export function EntretienItems({
     const nouveauxTries = [...tries]
     ;[nouveauxTries[index], nouveauxTries[cible]] = [nouveauxTries[cible], nouveauxTries[index]]
     const ids = nouveauxTries.map((i) => i.id)
+    // Jamais d'id provisoire (`temp-…`) envoyé au serveur, ni de second
+    // réordonnancement pendant qu'un envoi est en cours.
+    if (isPending || ids.some(estIdTemporaire)) return
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids })
@@ -198,8 +204,8 @@ export function EntretienItems({
         ) : (
           <BarreActionsItem
             extrait={extraitPourLabel(item.intitule ?? item.contenu)}
-            peutMonter={index > 0}
-            peutDescendre={index < tries.length - 1}
+            peutMonter={index > 0 && !aProvisoire}
+            peutDescendre={index < tries.length - 1 && !aProvisoire}
             onMonter={() => deplacer(index, -1)}
             onDescendre={() => deplacer(index, 1)}
             onModifier={() => {
