@@ -182,7 +182,7 @@ export function PromessesPatientsHistorique({
             spellCheck={false}
             enterKeyHint="search"
             aria-busy={rechercheEnCours || undefined}
-            className={`w-full rounded-xl border border-transparent bg-surface py-2.5 pl-10 pr-11 text-[16px] text-ink shadow-card outline-none placeholder:text-muted focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-search-cancel-button]:appearance-none`}
+            className={`w-full rounded-xl border border-transparent bg-surface py-2.5 pl-10 pr-11 text-[16px] text-ink shadow-card placeholder:text-muted focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary [&::-webkit-search-cancel-button]:appearance-none`}
           />
           {terme && (
             <button

@@ -7,6 +7,7 @@ import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { useRetraitDiffere } from '@/lib/use-retrait-differe'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 // Icône propre à ce module (pas de tuile de nav dédiée à distinguer de
 // IconRupturesStock, voir la liste voisine sur la même page).
@@ -31,7 +32,7 @@ function IconRecommande({ className }: { className?: string }) {
 function EtatVide({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted" aria-hidden="true">
         <IconRecommande className="h-6 w-6" />
       </div>
       <p className="max-w-[220px] text-sm text-muted">{message}</p>
@@ -59,6 +60,9 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
     <div className="flex flex-1 flex-col gap-3">
       <form
         action={(formData) => {
+          // Bouton jamais `disabled` (il garderait le focus perdu après
+          // l'envoi) : la garde est ici, l'état passe par aria-disabled.
+          if (isPending || !nomProduit.trim()) return
           startTransition(async () => {
             try {
               await ajouterProduitARecommander(formData)
@@ -79,12 +83,14 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
           onChange={(e) => setNomProduit(e.target.value)}
           placeholder="Produit à recommander…"
           aria-label="Nom du produit à recommander"
-          className="flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          enterKeyHint="done"
+          className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
         <button
           type="submit"
-          disabled={isPending || !nomProduit.trim()}
-          className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+          aria-disabled={isPending || !nomProduit.trim() || undefined}
+          aria-busy={isPending || undefined}
+          className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
         >
           Ajouter
         </button>
@@ -109,7 +115,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
                   vibrer()
                   retirerApresAnimation(p.id, () => differer(p.id, p.nom_produit))
                 }}
-                aria-label={`${p.nom_produit} recommandé/reçu`}
+                aria-label={`${p.nom_produit} recommandé ou reçu`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
               <span className="line-clamp-2 min-w-0 flex-1 break-words text-[13.5px] font-medium text-ink">{p.nom_produit}</span>

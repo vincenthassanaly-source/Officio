@@ -15,7 +15,9 @@ import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted outline-none ${CHAMP_CLASS}`
+// Pas de `outline-none` ici : en Tailwind 4 il fixe --tw-outline-style à
+// `none`, ce qui annulait l'anneau `focus-visible:outline-2` de CHAMP_CLASS.
+const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted ${CHAMP_CLASS}`
 
 function IconFermer({ className }: { className?: string }) {
   return (
@@ -149,6 +151,9 @@ export function FormulairePromesse({
       aria-label={variante === 'carte' ? (edition ? 'Modifier la promesse patient' : 'Nouvelle promesse patient') : undefined}
       onSubmit={async (e) => {
         e.preventDefault()
+        // Bouton jamais `disabled` pendant l'envoi (le focus serait perdu) :
+        // la garde est ici, l'état passe par aria-disabled.
+        if (enCours) return
         setTentative(true)
         const erreursEnvoi = validerPromesse(champs)
         const premierChampEnErreur = (['nom_medicament', 'quantite', 'nom_patient', 'telephone_patient'] as const).find(
@@ -281,8 +286,9 @@ export function FormulairePromesse({
 
       <button
         type="submit"
-        disabled={enCours}
-        className={`min-h-11 rounded-xl bg-primary px-4 py-3 text-[13.5px] font-semibold text-white hover:bg-primary-dark motion-safe:transition-colors disabled:opacity-50 ${CLASSE_FOCUS}`}
+        aria-disabled={enCours || undefined}
+        aria-busy={enCours || undefined}
+        className={`min-h-11 rounded-xl bg-primary px-4 py-3 text-[13.5px] font-semibold text-white hover:bg-primary-dark motion-safe:transition-colors aria-disabled:opacity-50 ${CLASSE_FOCUS}`}
       >
         {enCours ? 'Enregistrement…' : edition ? 'Enregistrer les modifications' : 'Enregistrer la promesse'}
       </button>

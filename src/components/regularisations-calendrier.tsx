@@ -122,7 +122,9 @@ export function RegularisationsCalendrier({
         </button>
       </div>
 
-      <div className="mx-auto grid w-full max-w-md grid-cols-7 gap-1 text-center lg:max-w-xl">
+      {/* En-têtes de colonne purement visuels : chaque jour porte déjà sa
+          date complète dans son nom accessible. */}
+      <div aria-hidden="true" className="mx-auto grid w-full max-w-md grid-cols-7 gap-1 text-center lg:max-w-xl">
         {grille.slice(0, 7).map((d) => (
           <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
@@ -156,7 +158,7 @@ export function RegularisationsCalendrier({
               aria-current={estAujourdhui ? 'date' : undefined}
               aria-label={`${formatDateLongue(iso)}${compteAFaire > 0 ? `, ${compteAFaire} régularisation${compteAFaire > 1 ? 's' : ''} à faire` : ''}`}
               className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${CLASSE_FOCUS} ${
-                !dansMoisAffiche ? 'text-muted/70' : 'text-ink'
+                !dansMoisAffiche ? 'text-muted' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
               {/* Marqueur « aujourd'hui » net : pastille pleine sous le
@@ -171,7 +173,8 @@ export function RegularisationsCalendrier({
               </span>
               {compteAFaire > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[11px] font-bold tabular-nums ${classeBadge}`}
+                  aria-hidden="true"
+                  className={`flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[12px] font-bold leading-none tabular-nums ${classeBadge}`}
                 >
                   {compteAFaire}
                 </span>
@@ -187,7 +190,7 @@ export function RegularisationsCalendrier({
           className="mt-2 flex scroll-mb-24 flex-col gap-2 rounded-[20px] bg-surface p-3.5 shadow-card"
         >
           <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
+            <h2 className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</h2>
             <button
               type="button"
               onClick={() => {
@@ -233,11 +236,12 @@ export function RegularisationsCalendrier({
                         }
                       })
                     }
+                    aria-label={`${facture ? 'Annuler le marquage' : 'Marquer facturé'} : ${r.patient_prenom} ${r.patient_nom}`}
                     className={`min-h-11 shrink-0 rounded-lg px-2.5 text-[12px] font-semibold ${CLASSE_FOCUS} ${
                       facture ? 'border border-border text-muted' : 'bg-primary text-white'
                     }`}
                   >
-                    {facture ? 'Annuler' : 'Marquer facturé'}
+                    {facture ? 'Annuler le marquage' : 'Marquer facturé'}
                   </button>
                 </div>
               )
@@ -247,6 +251,7 @@ export function RegularisationsCalendrier({
           {formOuvert ? (
             <form
               action={(formData) => {
+                if (isPending) return
                 startTransition(async () => {
                   try {
                     await ajouterRegularisation(formData)
@@ -266,8 +271,9 @@ export function RegularisationsCalendrier({
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  disabled={isPending}
-                  className={`min-h-11 flex-1 rounded-xl bg-primary text-[13px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+                  aria-disabled={isPending || undefined}
+                  aria-busy={isPending || undefined}
+                  className={`min-h-11 flex-1 rounded-xl bg-primary text-[13px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
                 >
                   Ajouter
                 </button>

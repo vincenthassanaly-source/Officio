@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useId, useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   ajouterRegularisation,
   marquerAFaire,
@@ -49,7 +49,11 @@ export function ChampsFormulaire({
   regularisation?: Regularisation
   dateRegularisationParDefaut?: string
 }) {
-  const idBase = regularisation?.id ?? 'nouveau'
+  // Identifiant unique par instance : le formulaire d'ajout peut coexister
+  // avec celui de la sheet de création rapide (FAB), un id fixe « nouveau »
+  // y était alors dupliqué.
+  const idAuto = useId()
+  const idBase = regularisation?.id ?? idAuto
   const idPrenom = `${idBase}-prenom`
   const idNom = `${idBase}-nom`
   const idNote = `${idBase}-note`
@@ -132,6 +136,7 @@ export function ChampsFormulaire({
 function IconChevron({ className }: { className?: string }) {
   return (
     <svg
+      aria-hidden="true"
       className={className}
       viewBox="0 0 24 24"
       fill="none"
@@ -169,15 +174,18 @@ function CarteRegularisation({
   if (enEdition) {
     return (
       <form
-        action={onEnregistrer}
-        className="flex flex-col gap-2 rounded-[20px] border border-primary bg-surface p-3.5 shadow-card"
+        action={(formData) => {
+          if (!isPending) onEnregistrer(formData)
+        }}
+        className="flex flex-col gap-2 rounded-[20px] border border-primary bg-surface p-3.5"
       >
         <ChampsFormulaire regularisation={r} />
         <div className="flex gap-2">
           <button
             type="submit"
-            disabled={isPending}
-            className={`min-h-11 flex-1 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending || undefined}
+            aria-busy={isPending || undefined}
+            className={`min-h-11 flex-1 rounded-xl bg-primary text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Enregistrer
           </button>
@@ -208,7 +216,7 @@ function CarteRegularisation({
         facture
           ? 'border-border bg-bg'
           : enRetard
-            ? 'border-rec bg-rec-soft shadow-card'
+            ? 'border-rec bg-rec-soft'
             : 'border-transparent bg-surface shadow-card'
       }`}
     >
@@ -239,9 +247,12 @@ function CarteRegularisation({
       <div className="mt-2.5 flex items-center gap-2">
         <button
           type="button"
-          onClick={onBasculerFacture}
-          disabled={isPending}
-          className={`min-h-11 flex-1 rounded-xl text-[12.5px] font-semibold disabled:opacity-60 ${CLASSE_FOCUS} ${
+          onClick={() => {
+            if (!isPending) onBasculerFacture()
+          }}
+          aria-disabled={isPending || undefined}
+          aria-label={`${facture ? 'Annuler le marquage' : 'Marquer facturé'} : ${r.patient_prenom} ${r.patient_nom}`}
+          className={`min-h-11 flex-1 rounded-xl text-[12.5px] font-semibold aria-disabled:opacity-60 ${CLASSE_FOCUS} ${
             facture ? 'border border-border text-muted' : 'bg-primary text-white'
           }`}
         >
@@ -359,11 +370,14 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
         <input
+          type="search"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher un patient…"
           aria-label="Rechercher un patient"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          enterKeyHint="search"
+          autoComplete="off"
+          className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
         <button
           type="button"
@@ -382,6 +396,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
       {formOuvert && (
         <form
           action={(formData) => {
+            if (isPending) return
             startTransition(async () => {
               try {
                 await ajouterRegularisation(formData)
@@ -400,8 +415,9 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           <ChampsFormulaire />
           <button
             type="submit"
-            disabled={isPending}
-            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending || undefined}
+            aria-busy={isPending || undefined}
+            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -410,7 +426,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
 
       {regularisationsOptimistes.length === 0 && (
         <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted" aria-hidden="true">
             <IconRegularisation className="h-6 w-6" />
           </div>
           <p className="max-w-[220px] text-sm text-muted">
@@ -420,14 +436,16 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
       )}
 
       {regularisationsOptimistes.length > 0 && visibles.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">Aucun patient ne correspond à la recherche.</p>
+        <p role="status" className="py-10 text-center text-sm text-muted">
+          Aucun patient ne correspond à la recherche.
+        </p>
       )}
 
       {enRetard.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="text-[12px] font-bold uppercase tracking-wide tabular-nums text-rec">
+          <h2 className="text-[12px] font-bold uppercase tracking-wide tabular-nums text-rec">
             En retard · {enRetard.length}
-          </div>
+          </h2>
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {enRetard.map((r) => renderCarte(r, true))}
           </div>
@@ -437,7 +455,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
       {reste.length > 0 && (
         <div className="flex flex-col gap-2">
           {enRetard.length > 0 && (
-            <div className="text-[12px] font-bold uppercase tracking-wide text-muted">À venir</div>
+            <h2 className="text-[12px] font-bold uppercase tracking-wide text-muted">À venir</h2>
           )}
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {reste.map((r) => renderCarte(r, false))}
@@ -458,7 +476,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
               Régularisations archivées ({archivees.length})
             </span>
             <IconChevron
-              className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform duration-200 ${
+              className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform motion-safe:duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
               }`}
             />
@@ -466,7 +484,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           <div
             id="regularisations-archivees"
             inert={!archiveOuverte}
-            className={`grid motion-safe:transition-[grid-template-rows] duration-200 ease-out ${
+            className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-out ${
               archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             }`}
           >

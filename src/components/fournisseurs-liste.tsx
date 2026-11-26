@@ -47,6 +47,9 @@ function formatEuro(montant: number) {
   return `${montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 }
 
+// `autoFocus` : le formulaire s'ouvre sur un geste (bouton + ou Modifier, ce
+// dernier disparaissant avec la carte) — le focus part sur le premier champ
+// au lieu de retomber sur la page.
 function ChampsFormulaire({ fournisseur }: { fournisseur?: Fournisseur }) {
   return (
     <>
@@ -54,6 +57,7 @@ function ChampsFormulaire({ fournisseur }: { fournisseur?: Fournisseur }) {
         name="nom"
         defaultValue={fournisseur?.nom}
         required
+        autoFocus
         placeholder="Nom du fournisseur"
         aria-label="Nom du fournisseur"
         autoComplete="organization"
@@ -153,6 +157,12 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
     setASupprimer({ id, nom })
   }
 
+  // Le bouton « Modifier » revient avec la carte : on lui rend le focus.
+  function fermerEdition(id: string) {
+    setEnEdition(null)
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-action-modifier="${id}"]`)?.focus())
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -206,6 +216,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
       {formOuvert && (
         <form
           action={(formData) => {
+            if (isPending) return
             startTransition(async () => {
               try {
                 await ajouterFournisseur(formData)
@@ -224,8 +235,9 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
           <ChampsFormulaire />
           <button
             type="submit"
-            disabled={isPending}
-            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending || undefined}
+            aria-busy={isPending || undefined}
+            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -246,10 +258,11 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
               <form
                 key={f.id}
                 action={(formData) => {
+                  if (isPending) return
                   startTransition(async () => {
                     try {
                       await modifierFournisseur(f.id, formData)
-                      setEnEdition(null)
+                      fermerEdition(f.id)
                       toast({ type: 'succes', message: 'Fournisseur modifié.' })
                     } catch (err) {
                       toast({
@@ -265,15 +278,16 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    disabled={isPending}
-                    className={`flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+                    aria-disabled={isPending || undefined}
+                    aria-busy={isPending || undefined}
+                    className={`min-h-11 flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
                   >
                     Enregistrer
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEnEdition(null)}
-                    className={`rounded-xl border border-border px-4 py-3 text-[13.5px] font-semibold text-muted ${CLASSE_FOCUS}`}
+                    onClick={() => fermerEdition(f.id)}
+                    className={`min-h-11 rounded-xl border border-border px-4 py-3 text-[13.5px] font-semibold text-muted ${CLASSE_FOCUS}`}
                   >
                     Annuler
                   </button>
@@ -312,7 +326,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                       className={`-m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
                     >
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
                         </svg>
                       </span>
@@ -326,7 +340,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                       className={`-m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
                     >
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="2" y="4" width="20" height="16" rx="2" />
                           <path d="M22 6l-10 7L2 6" />
                         </svg>
@@ -340,10 +354,11 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                       setFormOuvert(false)
                     }}
                     aria-label={`Modifier ${f.nom}`}
+                    data-action-modifier={f.id}
                     className={`-m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
                   >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
@@ -358,9 +373,9 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                   <a
                     href={`tel:${f.telephone_commandes}`}
                     aria-label={`Appeler le service commandes de ${f.nom}`}
-                    className={`flex min-h-11 items-center rounded-lg font-semibold text-primary ${CLASSE_FOCUS}`}
+                    className={`chiffres-tabulaires flex min-h-11 items-center rounded-lg font-semibold text-primary ${CLASSE_FOCUS}`}
                   >
-                    {f.telephone_commandes}
+                    {formaterTelephone(f.telephone_commandes) ?? f.telephone_commandes}
                   </a>
                 </div>
               )}
@@ -373,7 +388,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                     </span>
                   )}
                   {f.remises && (
-                    <span className="wrap-anywhere rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-semibold text-muted">
+                    <span className="wrap-anywhere whitespace-pre-line rounded-lg bg-neutral-soft px-2 py-0.5 text-[12px] font-semibold text-muted">
                       {f.remises}
                     </span>
                   )}

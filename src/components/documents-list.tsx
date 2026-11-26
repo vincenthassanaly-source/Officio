@@ -5,6 +5,7 @@ import { ajouterDocument, obtenirUrlDocument } from '@/app/actions/documents'
 import type { CategorieDocument, Document } from '@/lib/data/documents'
 import { ouvrirDocumentDansOnglet } from '@/lib/ouvrir-document-onglet'
 import { useToast } from '@/components/ui/toast-provider'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CATEGORIES: { value: CategorieDocument; label: string; className: string }[] = [
   { value: 'factures_fournisseurs', label: 'Factures fournisseurs', className: 'bg-primary-soft text-primary' },
@@ -12,7 +13,9 @@ const CATEGORIES: { value: CategorieDocument; label: string; className: string }
   { value: 'contrats', label: 'Contrats', className: 'bg-purple-soft text-purple' },
   { value: 'documents_rh', label: 'Documents RH', className: 'bg-purple-soft text-purple' },
   { value: 'procedures_internes', label: 'Procédures internes', className: 'bg-primary-soft text-primary' },
-  { value: 'reglementaire', label: 'Réglementaire', className: 'bg-rec-soft text-rec' },
+  // Pas de rouge ici : `rec` est réservé à l'alerte et à la suppression
+  // (DESIGN.md, règle du rouge unique).
+  { value: 'reglementaire', label: 'Réglementaire', className: 'bg-brun-soft text-brun' },
   { value: 'autre', label: 'Autre', className: 'bg-neutral-soft text-muted' },
 ]
 
@@ -125,10 +128,12 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
       {formOuvert && (
         <form
           action={(formData) => {
+            if (isPending) return
             startTransition(async () => {
               try {
                 await ajouterDocument(formData)
                 setFormOuvert(false)
+                toast({ type: 'succes', message: 'Document ajouté.' })
               } catch (err) {
                 toast({
                   type: 'erreur',
@@ -156,13 +161,13 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             name="nom"
             placeholder="Nom du document (optionnel)"
             aria-label="Nom du document"
-            className={`rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+            className={CHAMP_CLASS}
           />
           <select
             name="categorie"
             defaultValue="autre"
             aria-label="Catégorie du document"
-            className={`rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+            className={CHAMP_CLASS}
           >
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
@@ -172,8 +177,9 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           </select>
           <button
             type="submit"
-            disabled={isPending}
-            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending || undefined}
+            aria-busy={isPending || undefined}
+            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             {isPending ? 'Envoi…' : 'Ajouter'}
           </button>
@@ -182,7 +188,11 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
 
       <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:content-start lg:items-start lg:gap-3">
         {visibles.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted lg:col-span-2">Aucun document pour l&rsquo;instant.</p>
+          <p className="py-10 text-center text-sm text-muted lg:col-span-2">
+            {documents.length === 0
+              ? 'Aucun document pour l’instant — ajoute le premier avec le bouton +.'
+              : 'Aucun document dans cette catégorie.'}
+          </p>
         )}
         {visibles.map((d) => (
           <button
@@ -214,11 +224,15 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
                   {labelCategorie(d.categorie)}
                 </span>
                 <span>{estImage(d.type_fichier) ? 'Image' : 'PDF'}</span>
-                <span>·</span>
-                <span className="chiffres-tabulaires">{formatTaille(d.taille_octets)}</span>
-                <span>·</span>
+                {d.taille_octets ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="chiffres-tabulaires">{formatTaille(d.taille_octets)}</span>
+                  </>
+                ) : null}
+                <span aria-hidden="true">·</span>
                 <span>{d.ajoute_par?.nom_complet ?? 'Ancien collègue'}</span>
-                <span>·</span>
+                <span aria-hidden="true">·</span>
                 <span className="chiffres-tabulaires">{formatDate(d.created_at)}</span>
               </div>
             </div>

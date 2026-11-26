@@ -35,12 +35,12 @@ export function Regularisations({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
+      <div role="group" aria-label="Affichage des régularisations" className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => allerVersVue('liste')}
           aria-pressed={vue === 'liste'}
-          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold motion-safe:transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'liste' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -50,7 +50,7 @@ export function Regularisations({
           type="button"
           onClick={() => allerVersVue('calendrier')}
           aria-pressed={vue === 'calendrier'}
-          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold motion-safe:transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'calendrier' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
