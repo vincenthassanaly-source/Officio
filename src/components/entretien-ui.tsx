@@ -14,9 +14,18 @@ export const CLASSE_FOCUS =
 // Champ de saisie : 16 px (sous ce seuil, iOS Safari zoome la page au focus).
 export const CLASSE_CHAMP = `w-full placeholder:text-muted ${CHAMP_CLASS}`
 
-export const CLASSE_BOUTON_PRIMAIRE = `flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50 ${CLASSE_FOCUS}`
+// `aria-disabled:` : pendant un envoi, le bouton reste focusable
+// (aria-disabled + garde dans le gestionnaire) au lieu de passer en
+// `disabled`, qui renverrait le focus clavier sur <body>.
+export const CLASSE_BOUTON_PRIMAIRE = `flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50 aria-disabled:opacity-50 ${CLASSE_FOCUS}`
 
-export const CLASSE_BOUTON_SECONDAIRE = `flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-ink disabled:opacity-50 ${CLASSE_FOCUS}`
+export const CLASSE_BOUTON_SECONDAIRE = `flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-ink disabled:opacity-50 aria-disabled:opacity-50 ${CLASSE_FOCUS}`
+
+// Élément ajouté de façon optimiste, pas encore créé côté serveur : son id
+// provisoire (`temp-…`) ne peut être ni ouvert, ni modifié, ni supprimé.
+export function estIdTemporaire(id: string): boolean {
+  return id.startsWith('temp-')
+}
 
 export type NomIcone =
   | 'crayon'

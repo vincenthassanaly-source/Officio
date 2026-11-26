@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from 'react'
 import { modifierEligibiliteTypeEntretien } from '@/app/actions/entretiens'
 import { MAX_LONGUEUR_ELIGIBILITE, erreurEligibilite, lignesEligibilite, normaliserEligibilite } from '@/lib/eligibilite'
 import { useToast } from '@/components/ui/toast-provider'
@@ -38,6 +38,23 @@ export function EntretienEligibilite({
   const idTitre = useId()
   const idCorps = useId()
   const idChamp = useId()
+  // Bouton « Modifier » ou « Ajouter » : le formulaire le remplace, le focus
+  // y revient à la sortie de l'édition (sinon il retombe sur <body>).
+  // Effet plutôt qu'un focus immédiat : la sortie peut survenir dans une
+  // transition, le bouton n'existe qu'une fois le rendu validé.
+  const declencheurRef = useRef<HTMLButtonElement>(null)
+  const rendreFocusRef = useRef(false)
+
+  useEffect(() => {
+    if (enEdition || !rendreFocusRef.current) return
+    rendreFocusRef.current = false
+    declencheurRef.current?.focus()
+  }, [enEdition])
+
+  function quitterEdition() {
+    rendreFocusRef.current = true
+    setEnEdition(false)
+  }
 
   function commencer() {
     setBrouillon(texteAffiche ?? '')
@@ -46,6 +63,7 @@ export function EntretienEligibilite({
   }
 
   function enregistrer() {
+    if (isPending) return
     const normalise = normaliserEligibilite(brouillon)
     const erreur = erreurEligibilite(normalise)
     if (erreur) {
@@ -58,7 +76,7 @@ export function EntretienEligibilite({
       setTexteAffiche(normalise === '' ? null : normalise)
       try {
         await modifierEligibiliteTypeEntretien(typeEntretienId, normalise)
-        setEnEdition(false)
+        quitterEdition()
         toast({ type: 'succes', message: 'Conditions d’éligibilité enregistrées.' })
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de l’enregistrement.' })
@@ -72,6 +90,9 @@ export function EntretienEligibilite({
         onSubmit={(e) => {
           e.preventDefault()
           enregistrer()
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape' && !isPending) quitterEdition()
         }}
         className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card"
       >
@@ -89,10 +110,17 @@ export function EntretienEligibilite({
           className={`${CLASSE_CHAMP} min-h-36 resize-y leading-relaxed`}
         />
         <div className="flex gap-2">
-          <button type="button" onClick={() => setEnEdition(false)} disabled={isPending} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+          <button
+            type="button"
+            onClick={() => {
+              if (!isPending) quitterEdition()
+            }}
+            aria-disabled={isPending}
+            className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}
+          >
             Annuler
           </button>
-          <button type="submit" disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+          <button type="submit" aria-disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
             {isPending ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
@@ -103,7 +131,7 @@ export function EntretienEligibilite({
   if (texteAffiche === null) {
     if (!peutAjouter) return null
     return (
-      <button type="button" onClick={commencer} className={`${CLASSE_BOUTON_SECONDAIRE} min-h-11 self-start text-[13px]`}>
+      <button ref={declencheurRef} type="button" onClick={commencer} className={`${CLASSE_BOUTON_SECONDAIRE} min-h-11 self-start text-[13px]`}>
         <Icone nom="plus" taille={16} />
         Ajouter les conditions d’éligibilité
       </button>
@@ -133,6 +161,7 @@ export function EntretienEligibilite({
           </button>
         </h2>
         <button
+          ref={declencheurRef}
           type="button"
           onClick={commencer}
           aria-label="Modifier les conditions d’éligibilité"
@@ -144,8 +173,9 @@ export function EntretienEligibilite({
       </div>
       {ouvert && (
         <ul id={idCorps} className="flex flex-col gap-2 px-4 pb-4 pt-1 text-[13.5px] leading-snug text-ink">
-          {criteres.map((critere) => (
-            <li key={critere} className="flex gap-2.5">
+          {criteres.map((critere, i) => (
+            // Index dans la clé : deux lignes identiques ne doivent pas entrer en collision.
+            <li key={`${i}-${critere}`} className="flex gap-2.5">
               <span aria-hidden="true" className="mt-[7px] size-1.5 shrink-0 rounded-full bg-primary" />
               <span>{critere}</span>
             </li>

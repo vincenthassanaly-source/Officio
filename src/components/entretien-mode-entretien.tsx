@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useMemo, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import type { ItemEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { LigneItem } from '@/components/entretien-ligne-item'
@@ -46,6 +46,7 @@ export function ScriptModeEntretien({
   const [confirmerReinit, setConfirmerReinit] = useState(false)
   const [annonce, setAnnonce] = useState('')
   const [pasAPasOuvert, setPasAPasOuvert] = useState(false)
+  const boutonDemarrerRef = useRef<HTMLButtonElement>(null)
 
   const { groupes, aPhases } = useMemo(() => regrouperScript(items), [items])
   const nbCoches = useMemo(() => compterCoches(items, coches), [items, coches])
@@ -107,6 +108,10 @@ export function ScriptModeEntretien({
     onChangerPhasesOuvertes(null)
     setAnnonce('Progression réinitialisée.')
     setConfirmerReinit(false)
+    // Le bouton « Réinitialiser » disparaît (plus rien de coché) : la modale
+    // ne peut pas lui rendre le focus. Il va au bouton « Démarrer l'entretien »,
+    // après le rendu qui retire la modale.
+    requestAnimationFrame(() => boutonDemarrerRef.current?.focus())
   }
 
   if (total === 0) {
@@ -123,6 +128,7 @@ export function ScriptModeEntretien({
   return (
     <div className="flex flex-col gap-3 pb-2">
       <button
+        ref={boutonDemarrerRef}
         type="button"
         onClick={() => setPasAPasOuvert(true)}
         className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-[15px] font-bold text-white ${CLASSE_FOCUS}`}

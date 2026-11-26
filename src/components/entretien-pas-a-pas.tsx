@@ -154,7 +154,7 @@ export function EntretienPasAPas({
 
   function enregistrerAuJournal() {
     const nom = patientNom.trim()
-    if (!nom || !dateEntretien) return
+    if (!nom || !dateEntretien || isPending || enregistre) return
     const formData = new FormData()
     formData.set('type_entretien_id', typeEntretienId)
     formData.set('patient_nom', nom)
@@ -285,7 +285,7 @@ export function EntretienPasAPas({
                     value={patientNom}
                     onChange={(e) => setPatientNom(e.target.value)}
                     autoComplete="off"
-                    disabled={enregistre}
+                    readOnly={enregistre}
                     className={CLASSE_CHAMP}
                   />
                 </div>
@@ -298,16 +298,27 @@ export function EntretienPasAPas({
                     type="date"
                     value={dateEntretien}
                     onChange={(e) => setDateEntretien(e.target.value)}
-                    disabled={enregistre}
+                    readOnly={enregistre}
                     className={CLASSE_CHAMP}
                   />
                 </div>
+                {/* aria-disabled plutôt que disabled : le bouton garde le focus
+                    pendant l'envoi et une fois l'entrée enregistrée. */}
                 <button
                   type="submit"
-                  disabled={isPending || enregistre || !patientNom.trim() || !dateEntretien}
+                  aria-disabled={isPending || enregistre || !patientNom.trim() || !dateEntretien}
                   className={CLASSE_BOUTON_PRIMAIRE}
                 >
-                  {enregistre ? 'Enregistré' : isPending ? 'Enregistrement…' : 'Enregistrer dans le journal'}
+                  {enregistre ? (
+                    <>
+                      <Icone nom="coche" taille={16} />
+                      Enregistré dans le journal
+                    </>
+                  ) : isPending ? (
+                    'Enregistrement…'
+                  ) : (
+                    'Enregistrer dans le journal'
+                  )}
                 </button>
               </form>
             </>

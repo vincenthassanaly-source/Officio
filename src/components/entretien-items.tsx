@@ -16,6 +16,7 @@ import {
   CLASSE_BOUTON_PRIMAIRE,
   CLASSE_BOUTON_SECONDAIRE,
   CLASSE_CHAMP,
+  estIdTemporaire,
   extraitPourLabel,
 } from '@/components/entretien-ui'
 
@@ -39,10 +40,13 @@ export function EntretienItems({
 
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
   const tries = useMemo(() => [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre), [itemsOptimistes])
+  // Un ajout pas encore confirmé par le serveur fige l'ordre de la liste :
+  // Monter/Descendre restent indisponibles jusqu'à sa création.
+  const aProvisoire = tries.some((i) => estIdTemporaire(i.id))
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
-    if (!contenu) return
+    if (!contenu || isPending) return
     const intitule = intituleNouveau.trim() || null
 
     startTransition(async () => {
@@ -73,7 +77,7 @@ export function EntretienItems({
 
   function modifier(id: string) {
     const contenu = contenuEnEdition.trim()
-    if (!contenu) return
+    if (!contenu || isPending) return
     const intitule = intituleEnEdition.trim() || null
 
     startTransition(async () => {
@@ -105,6 +109,9 @@ export function EntretienItems({
     const nouveauxTries = [...tries]
     ;[nouveauxTries[index], nouveauxTries[cible]] = [nouveauxTries[cible], nouveauxTries[index]]
     const ids = nouveauxTries.map((i) => i.id)
+    // Jamais d'id provisoire (`temp-…`) envoyé au serveur, ni de second
+    // réordonnancement pendant qu'un envoi est en cours.
+    if (isPending || ids.some(estIdTemporaire)) return
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids })
@@ -176,7 +183,7 @@ export function EntretienItems({
               </button>
               <button
                 type="submit"
-                disabled={isPending || !contenuEnEdition.trim()}
+                aria-disabled={isPending || !contenuEnEdition.trim()}
                 className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
               >
                 {isPending ? 'Enregistrement…' : 'Enregistrer'}
@@ -190,19 +197,25 @@ export function EntretienItems({
     return (
       <li key={item.id} className="rounded-xl bg-bg p-3">
         {contenu}
-        <BarreActionsItem
-          extrait={extraitPourLabel(item.intitule ?? item.contenu)}
-          peutMonter={index > 0}
-          peutDescendre={index < tries.length - 1}
-          onMonter={() => deplacer(index, -1)}
-          onDescendre={() => deplacer(index, 1)}
-          onModifier={() => {
-            setEnEdition(item.id)
-            setContenuEnEdition(item.contenu)
-            setIntituleEnEdition(item.intitule ?? '')
-          }}
-          onSupprimer={() => setASupprimer(item.id)}
-        />
+        {estIdTemporaire(item.id) ? (
+          <p aria-busy="true" className="mt-2 border-t border-border pt-2 text-[12.5px] text-muted">
+            Ajout en cours…
+          </p>
+        ) : (
+          <BarreActionsItem
+            extrait={extraitPourLabel(item.intitule ?? item.contenu)}
+            peutMonter={index > 0 && !aProvisoire}
+            peutDescendre={index < tries.length - 1 && !aProvisoire}
+            onMonter={() => deplacer(index, -1)}
+            onDescendre={() => deplacer(index, 1)}
+            onModifier={() => {
+              setEnEdition(item.id)
+              setContenuEnEdition(item.contenu)
+              setIntituleEnEdition(item.intitule ?? '')
+            }}
+            onSupprimer={() => setASupprimer(item.id)}
+          />
+        )}
       </li>
     )
   }
@@ -263,7 +276,7 @@ export function EntretienItems({
                 className={`${CLASSE_CHAMP} resize-y`}
               />
             </div>
-            <button type="submit" disabled={isPending || !contenuNouveau.trim()} className={CLASSE_BOUTON_PRIMAIRE}>
+            <button type="submit" aria-disabled={isPending || !contenuNouveau.trim()} className={CLASSE_BOUTON_PRIMAIRE}>
               {isPending ? 'Ajout…' : 'Ajouter'}
             </button>
           </form>

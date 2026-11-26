@@ -121,9 +121,9 @@ function LigneDocument({
       <button
         type="button"
         onClick={onOuvrir}
-        disabled={ouvertureEnCours}
+        aria-disabled={ouvertureEnCours}
         aria-busy={ouvertureEnCours}
-        className={`flex min-h-16 w-full items-center gap-3 rounded-xl p-2.5 text-left disabled:opacity-70 ${CLASSE_FOCUS}`}
+        className={`flex min-h-16 w-full items-center gap-3 rounded-xl p-2.5 text-left aria-disabled:opacity-70 ${CLASSE_FOCUS}`}
       >
         <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-neutral-soft text-ink">
           <Icone nom={image ? 'image' : 'fichier'} taille={20} />
@@ -154,7 +154,10 @@ function LigneDocument({
             <form
               onSubmit={(e) => {
                 e.preventDefault()
-                onEnregistrerTag()
+                if (!enCours) onEnregistrerTag()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') onAnnulerTag()
               }}
               className="flex flex-col gap-2 py-1"
             >
@@ -172,8 +175,8 @@ function LigneDocument({
                 <button type="button" onClick={onAnnulerTag} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
                   Annuler
                 </button>
-                <button type="submit" disabled={enCours} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
-                  Enregistrer le tag
+                <button type="submit" aria-disabled={enCours} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+                  {enCours ? 'Enregistrement…' : 'Enregistrer le tag'}
                 </button>
               </div>
             </form>
@@ -215,7 +218,10 @@ export function EntretienDocuments({
   modeEdition: boolean
 }) {
   const [formOuvert, setFormOuvert] = useState(false)
-  const [aSupprimer, setASupprimer] = useState<string | null>(null)
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
+  // Dernier nom demandé, gardé après la fermeture : le titre de la modale reste
+  // lisible pendant son animation de sortie.
+  const [nomASupprimer, setNomASupprimer] = useState('')
   const [enEditionTag, setEnEditionTag] = useState<string | null>(null)
   const [tagEnEdition, setTagEnEdition] = useState('')
   const [filtreTag, setFiltreTag] = useState('')
@@ -264,6 +270,9 @@ export function EntretienDocuments({
   }
 
   async function ouvrirDocument(id: string, chemin: string) {
+    // Garde synchrone : un second tap pendant l'ouverture n'ouvre pas un
+    // second onglet vide (le bouton reste focusable, voir aria-disabled).
+    if (ouvertureEnCours === id) return
     setOuvertureEnCours(id)
     try {
       const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocumentEntretien(chemin))
@@ -288,6 +297,7 @@ export function EntretienDocuments({
   }
 
   function enregistrerTag(id: string) {
+    if (isPending) return
     const tag = tagEnEdition.trim() || null
 
     startTransition(async () => {
@@ -321,7 +331,10 @@ export function EntretienDocuments({
             onTagChange={setTagEnEdition}
             onEnregistrerTag={() => enregistrerTag(d.id)}
             onAnnulerTag={() => setEnEditionTag(null)}
-            onSupprimer={() => setASupprimer(d.id)}
+            onSupprimer={() => {
+              setASupprimer({ id: d.id, nom: d.nom })
+              setNomASupprimer(d.nom)
+            }}
           />
         ))}
       </ul>
@@ -385,6 +398,11 @@ export function EntretienDocuments({
       {modeEdition && formOuvert && (
         <form
           id="formulaire-document"
+          // Envoi déjà en cours : bloque un second envoi du même fichier (le
+          // bouton reste focusable, voir aria-disabled).
+          onSubmit={(e) => {
+            if (isPending) e.preventDefault()
+          }}
           action={(formData) => {
             formData.set('type_entretien_id', typeEntretienId)
             startTransition(async () => {
@@ -443,7 +461,7 @@ export function EntretienDocuments({
               className={CLASSE_CHAMP}
             />
           </div>
-          <button type="submit" disabled={isPending} className={CLASSE_BOUTON_PRIMAIRE}>
+          <button type="submit" aria-disabled={isPending} className={CLASSE_BOUTON_PRIMAIRE}>
             {isPending ? 'Envoi…' : 'Ajouter le document'}
           </button>
         </form>
@@ -520,9 +538,9 @@ export function EntretienDocuments({
 
       <ModaleConfirmation
         ouvert={aSupprimer !== null}
-        titre="Supprimer ce document ?"
+        titre={`Supprimer le document « ${nomASupprimer} » ?`}
         onConfirmer={() => {
-          if (aSupprimer) supprimer(aSupprimer)
+          if (aSupprimer) supprimer(aSupprimer.id)
           setASupprimer(null)
         }}
         onAnnuler={() => setASupprimer(null)}

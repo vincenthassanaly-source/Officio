@@ -19,6 +19,7 @@ import {
   CLASSE_BOUTON_PRIMAIRE,
   CLASSE_BOUTON_SECONDAIRE,
   CLASSE_CHAMP,
+  estIdTemporaire,
   extraitPourLabel,
 } from '@/components/entretien-ui'
 import { useEcranAllume } from '@/lib/use-ecran-allume'
@@ -60,7 +61,7 @@ export function EntretienMethodologie({
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
-    if (!contenu) return
+    if (!contenu || isPending) return
     const phase = phaseNouvelle.trim() || null
     const typeItem = typeItemDepuisValeur(typeNouveau)
 
@@ -93,7 +94,7 @@ export function EntretienMethodologie({
 
   function modifier(id: string) {
     const contenu = contenuEnEdition.trim()
-    if (!contenu) return
+    if (!contenu || isPending) return
     const phase = phaseEnEdition.trim() || null
     const typeItem = typeItemDepuisValeur(typeEnEdition)
 
@@ -128,6 +129,9 @@ export function EntretienMethodologie({
     const nouveauGroupe = [...groupe]
     ;[nouveauGroupe[index], nouveauGroupe[cible]] = [nouveauGroupe[cible], nouveauGroupe[index]]
     const ids = nouveauGroupe.map((i) => i.id)
+    // Jamais d'id provisoire (`temp-…`) envoyé au serveur, ni de second
+    // réordonnancement pendant qu'un envoi est en cours.
+    if (isPending || ids.some(estIdTemporaire)) return
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids })
@@ -140,6 +144,8 @@ export function EntretienMethodologie({
   }
 
   function ligneItem(item: ItemEntretien, index: number, groupe: ItemEntretien[]) {
+    // Un ajout pas encore confirmé fige l'ordre de son groupe (voir deplacer).
+    const groupeProvisoire = groupe.some((i) => estIdTemporaire(i.id))
     if (enEdition === item.id) {
       const idContenu = `contenu-${item.id}`
       const idPhase = `phase-${item.id}`
@@ -186,7 +192,7 @@ export function EntretienMethodologie({
             </button>
             <button
               type="submit"
-              disabled={isPending || !contenuEnEdition.trim()}
+              aria-disabled={isPending || !contenuEnEdition.trim()}
               className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
             >
               {isPending ? 'Enregistrement…' : 'Enregistrer'}
@@ -202,20 +208,26 @@ export function EntretienMethodologie({
           {item.type_item && <BadgeTypeItem type={item.type_item} />}
           <p className="w-full whitespace-pre-wrap break-words text-[15px] leading-normal text-ink">{item.contenu}</p>
         </div>
-        <BarreActionsItem
-          extrait={extraitPourLabel(item.contenu)}
-          peutMonter={index > 0}
-          peutDescendre={index < groupe.length - 1}
-          onMonter={() => deplacer(groupe, index, -1)}
-          onDescendre={() => deplacer(groupe, index, 1)}
-          onModifier={() => {
-            setEnEdition(item.id)
-            setContenuEnEdition(item.contenu)
-            setPhaseEnEdition(item.phase ?? '')
-            setTypeEnEdition(item.type_item ?? '')
-          }}
-          onSupprimer={() => setASupprimer(item.id)}
-        />
+        {estIdTemporaire(item.id) ? (
+          <p aria-busy="true" className="mt-2 border-t border-border pt-2 text-[12.5px] text-muted">
+            Ajout en cours…
+          </p>
+        ) : (
+          <BarreActionsItem
+            extrait={extraitPourLabel(item.contenu)}
+            peutMonter={index > 0 && !groupeProvisoire}
+            peutDescendre={index < groupe.length - 1 && !groupeProvisoire}
+            onMonter={() => deplacer(groupe, index, -1)}
+            onDescendre={() => deplacer(groupe, index, 1)}
+            onModifier={() => {
+              setEnEdition(item.id)
+              setContenuEnEdition(item.contenu)
+              setPhaseEnEdition(item.phase ?? '')
+              setTypeEnEdition(item.type_item ?? '')
+            }}
+            onSupprimer={() => setASupprimer(item.id)}
+          />
+        )}
       </div>
     )
   }
@@ -286,7 +298,7 @@ export function EntretienMethodologie({
               />
             </div>
             <SelecteurTypeItem id="type-nouvel-item" valeur={typeNouveau} onChange={setTypeNouveau} />
-            <button type="submit" disabled={isPending || !contenuNouveau.trim()} className={CLASSE_BOUTON_PRIMAIRE}>
+            <button type="submit" aria-disabled={isPending || !contenuNouveau.trim()} className={CLASSE_BOUTON_PRIMAIRE}>
               {isPending ? 'Ajout…' : 'Ajouter l’étape'}
             </button>
           </form>
