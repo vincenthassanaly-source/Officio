@@ -8,7 +8,11 @@
   --color-primary-dark: oklch(38% 0.16 275);
   --color-primary-soft: oklch(94% 0.03 275);
   --color-ink: oklch(21% 0.02 265);
-  --color-muted: oklch(52% 0.02 265);
+  /* 51 % (et non 52 %) : à 52 %, le texte atténué tombait à 4,48:1 sur
+     `neutral-soft`/`track` (onglets segmentés inactifs, pastilles de filtre),
+     juste sous le seuil AA de 4,5:1. À 51 % : 4,7:1 sur ces fonds, 4,8:1 sur
+     `primary-soft`, 5,4:1 sur `bg`, 5,8:1 sur blanc — écart imperceptible. */
+  --color-muted: oklch(51% 0.02 265);
   --color-border: oklch(91% 0.006 260);
   /* Contour des champs de saisie : 3,4:1 sur bg et 3,6:1 sur surface (WCAG 1.4.11).
      `border` (1,2:1) reste réservé aux cartes et séparateurs décoratifs. */
@@ -96,6 +100,17 @@ html {
   overscroll-behavior-y: contain;
 }
 
+/* Focus jamais masqué par la bottom nav (WCAG 2.4.11) : quand Tab amène le
+   focus sur un élément en bas de page, ou qu'une ancre/un scrollIntoView
+   cible un élément, le navigateur garde cette marge libre en bas de la zone
+   visible au lieu de le caler sous la nav `fixed` (z-20). Mobile seulement :
+   la bottom nav est `lg:hidden`. */
+@media (max-width: 63.999rem) {
+  html {
+    scroll-padding-bottom: calc(var(--hauteur-bottom-nav) + env(safe-area-inset-bottom) + 0.5rem);
+  }
+}
+
 /* Dans @layer base (et non en dehors de toute couche) : une règle hors couche
    l'emporte sur TOUTES les utilitaires Tailwind, ce qui écrasait en silence
    `transition-colors` & co. sur les liens/boutons. Ici, une utilitaire
@@ -121,6 +136,15 @@ html {
   :focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+
+  /* Placeholder des champs : le défaut de Tailwind 4 (currentColor à 50 %)
+     donne ~3:1 sur `bg`, sous le seuil de 4,5:1 attendu pour un texte
+     d'aide. `muted` tient 5,4:1. Une utilitaire `placeholder:*` posée sur
+     un champ reste prioritaire. */
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
   }
 
   /* Surfaces navigateur thémées sur la palette. */

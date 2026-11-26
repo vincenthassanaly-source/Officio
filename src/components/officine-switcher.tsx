@@ -40,7 +40,7 @@ export function OfficineSwitcher({
   const officineActive = adhesions.find((a) => a.officine_id === officineActiveId)
 
   const logo = avecLogo ? (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[linear-gradient(155deg,var(--color-primary-light),var(--color-primary))] text-[13px] font-bold text-white shadow-[0_2px_6px_-2px_var(--color-primary)]">
+    <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-[linear-gradient(155deg,var(--color-primary-light),var(--color-primary))] text-[13px] font-bold text-white shadow-[0_2px_6px_-2px_var(--color-primary)]">
       O
     </span>
   ) : null
@@ -132,6 +132,10 @@ export function OfficineSwitcher({
             largeur flexible plutôt qu'un plafond fixe, line-clamp-2
             plutôt que truncate. */}
         <span className={`min-w-0 flex-1 line-clamp-2 wrap-anywhere leading-tight font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
+          {/* Contexte pour les lecteurs d'écran : sans lui, le bouton
+              n'annonçait que le nom de l'officine, sans dire qu'il permet
+              d'en changer. */}
+          {!isPending && <span className="sr-only">Changer d&rsquo;officine, officine active : </span>}
           {isPending ? 'Changement…' : officineActive?.officine_nom}
         </span>
         <svg
@@ -157,6 +161,8 @@ export function OfficineSwitcher({
           <div aria-hidden="true" onClick={() => setOuvert(false)} className="fixed inset-0 z-40" />
           <div
             id="panneau-officines"
+            role="group"
+            aria-label="Officines"
             style={{ top: position.top, left: position.left }}
             className="fixed z-50 w-[220px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-1.5 shadow-lg"
           >

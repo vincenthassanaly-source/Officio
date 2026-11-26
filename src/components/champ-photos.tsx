@@ -40,15 +40,22 @@ function IconFermer({ className }: { className?: string }) {
 export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void }) {
   const [apercus, setApercus] = useState<{ fichier: File; url: string }[]>([])
   const [agrandie, setAgrandie] = useState<number | null>(null)
+  // Compression en cours : même signal que ChampPhoto (champ-photo.tsx).
+  const [traitement, setTraitement] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function ajouter(fichier: File) {
-    const compressee = await comprimerImage(fichier)
-    setApercus((etat) => {
-      const nouveaux = [...etat, { fichier: compressee, url: URL.createObjectURL(compressee) }]
-      onChange(nouveaux.map((a) => a.fichier))
-      return nouveaux
-    })
+    setTraitement(true)
+    try {
+      const compressee = await comprimerImage(fichier)
+      setApercus((etat) => {
+        const nouveaux = [...etat, { fichier: compressee, url: URL.createObjectURL(compressee) }]
+        onChange(nouveaux.map((a) => a.fichier))
+        return nouveaux
+      })
+    } finally {
+      setTraitement(false)
+    }
   }
 
   function retirer(index: number) {
@@ -79,7 +86,9 @@ export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void
           <button
             type="button"
             onClick={() => setAgrandie(index)}
-            aria-label="Agrandir la photo"
+            // Numérotées : avec plusieurs vignettes, un « Agrandir la photo »
+            // répété à l'identique ne disait pas laquelle.
+            aria-label={`Agrandir la photo ${index + 1}`}
             className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL),
@@ -91,7 +100,7 @@ export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void
           <button
             type="button"
             onClick={() => retirer(index)}
-            aria-label="Retirer la photo"
+            aria-label={`Retirer la photo ${index + 1}`}
             className="absolute -right-2.5 -top-2.5 flex h-11 w-11 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rec text-white">
@@ -103,11 +112,16 @@ export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        aria-label="Ajouter une photo"
-        className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        disabled={traitement}
+        aria-label={traitement ? 'Préparation de la photo…' : 'Ajouter une photo'}
+        className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
-          <IconAppareilPhoto className="h-[18px] w-[18px]" />
+          {traitement ? (
+            <span aria-hidden="true" className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white motion-safe:animate-spin" />
+          ) : (
+            <IconAppareilPhoto className="h-[18px] w-[18px]" />
+          )}
         </span>
       </button>
       {agrandie !== null && apercus[agrandie] && (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useId, useRef, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
@@ -60,6 +60,10 @@ export function ModaleConfirmation({
   const boiteRef = useRef<HTMLDivElement>(null)
   const declencheurRef = useRef<HTMLElement | null>(null)
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+  // Ids uniques par instance : une modale de confirmation peut s'ouvrir
+  // par-dessus un panneau qui en contient déjà une (ids fixes = doublons).
+  const idTitre = useId()
+  const idDescription = useId()
 
   useFermerAvecRetour(ouvert, onAnnuler)
 
@@ -117,13 +121,16 @@ export function ModaleConfirmation({
   if (!ouvert || !monte) return null
 
   const classeBoutonConfirmer = destructif
-    ? 'bg-rec text-white'
-    : 'bg-primary text-white'
+    ? 'bg-rec text-white hover:bg-[color-mix(in_oklch,var(--color-rec),black_12%)]'
+    : 'bg-primary text-white hover:bg-primary-dark'
   const classeBoutonChoix = destructif
-    ? 'bg-rec-soft text-rec'
-    : 'bg-primary-soft text-primary'
+    ? 'bg-rec-soft text-rec hover:bg-[color-mix(in_oklch,var(--color-rec-soft),var(--color-rec)_8%)]'
+    : 'bg-primary-soft text-primary hover:bg-[color-mix(in_oklch,var(--color-primary-soft),var(--color-primary)_8%)]'
+  const classeAnnuler = 'border border-border text-muted hover:bg-bg hover:text-ink'
+  // min-h-11 : py-3 + 13,5 px atteint ~44 px, le plancher est explicité
+  // pour qu'une police système agrandie ne le fasse pas descendre en dessous.
   const classeFocus =
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+    'min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
   return createPortal(
     <div
@@ -134,15 +141,22 @@ export function ModaleConfirmation({
         ref={boiteRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modale-confirmation-titre"
+        aria-labelledby={idTitre}
+        aria-describedby={description ? idDescription : undefined}
         onClick={(e) => e.stopPropagation()}
-        className="panneau-entree flex w-full flex-col gap-3 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        // pb : sur mobile la sheet touche le bas de l'écran, la safe-area
+        // (barre gestuelle iOS/Android) recouvrait sinon le bas des boutons.
+        className="panneau-entree flex max-h-[90dvh] w-full flex-col gap-3 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-card sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
         <div>
-          <h2 id="modale-confirmation-titre" className="text-sm font-bold text-ink">
+          <h2 id={idTitre} className="text-sm font-bold text-ink">
             {titre}
           </h2>
-          {description && <p className="mt-1 text-[13px] leading-relaxed text-muted">{description}</p>}
+          {description && (
+            <p id={idDescription} className="mt-1 text-[13px] leading-relaxed text-muted">
+              {description}
+            </p>
+          )}
         </div>
 
         {choix && choix.length > 0 ? (
@@ -161,7 +175,7 @@ export function ModaleConfirmation({
               ref={boutonAnnulerRef}
               type="button"
               onClick={onAnnuler}
-              className={`rounded-xl border border-border py-3 text-[13.5px] font-semibold text-muted ${classeFocus}`}
+              className={`rounded-xl py-3 text-[13.5px] font-semibold ${classeAnnuler} ${classeFocus}`}
             >
               {texteAnnuler}
             </button>
@@ -172,7 +186,7 @@ export function ModaleConfirmation({
               ref={boutonAnnulerRef}
               type="button"
               onClick={onAnnuler}
-              className={`flex-1 rounded-xl border border-border py-3 text-[13.5px] font-semibold text-muted ${classeFocus}`}
+              className={`flex-1 rounded-xl py-3 text-[13.5px] font-semibold ${classeAnnuler} ${classeFocus}`}
             >
               {texteAnnuler}
             </button>

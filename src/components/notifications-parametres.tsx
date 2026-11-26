@@ -48,17 +48,27 @@ export function NotificationsParametres({
   function toggleActivation() {
     setErreur(null)
     startTransition(async () => {
-      if (actif) {
-        await desactiverNotificationsPush()
-        setActif(false)
-        return
-      }
+      // Un rejet (réseau, service worker indisponible) laissait jusqu'ici le
+      // bouton revenir à son état précédent sans aucun message.
+      try {
+        if (actif) {
+          await desactiverNotificationsPush()
+          setActif(false)
+          return
+        }
 
-      const resultat = await activerNotificationsPush()
-      if (resultat.succes) {
-        setActif(true)
-      } else {
-        setErreur(resultat.erreur)
+        const resultat = await activerNotificationsPush()
+        if (resultat.succes) {
+          setActif(true)
+        } else {
+          setErreur(resultat.erreur)
+        }
+      } catch {
+        setErreur(
+          actif
+            ? 'Impossible de désactiver les notifications sur cet appareil. Réessaie dans un instant.'
+            : 'Impossible d’activer les notifications sur cet appareil. Réessaie dans un instant.'
+        )
       }
     })
   }

@@ -58,13 +58,23 @@ export function ChampPhoto({
 }) {
   const [apercu, setApercu] = useState<string | null>(photoInitiale)
   const [agrandie, setAgrandie] = useState(false)
+  // Compression en cours (souvent ~1 s sur une photo d'appareil récent) :
+  // jusqu'ici rien ne signalait que le choix avait été pris en compte, ce
+  // qui invitait à retaper le bouton. comprimerImage ne rejette jamais (elle
+  // renvoie le fichier d'origine en cas d'échec), le `finally` suffit.
+  const [traitement, setTraitement] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function choisir(fichier: File) {
-    const compressee = await comprimerImage(fichier)
-    if (apercu?.startsWith('blob:')) URL.revokeObjectURL(apercu)
-    setApercu(URL.createObjectURL(compressee))
-    onChange(compressee)
+    setTraitement(true)
+    try {
+      const compressee = await comprimerImage(fichier)
+      if (apercu?.startsWith('blob:')) URL.revokeObjectURL(apercu)
+      setApercu(URL.createObjectURL(compressee))
+      onChange(compressee)
+    } finally {
+      setTraitement(false)
+    }
   }
 
   function retirer() {
@@ -120,11 +130,16 @@ export function ChampPhoto({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          aria-label="Ajouter une photo"
-          className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          disabled={traitement}
+          aria-label={traitement ? 'Préparation de la photo…' : 'Ajouter une photo'}
+          className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
-            <IconAppareilPhoto className="h-[18px] w-[18px]" />
+            {traitement ? (
+              <span aria-hidden="true" className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white motion-safe:animate-spin" />
+            ) : (
+              <IconAppareilPhoto className="h-[18px] w-[18px]" />
+            )}
           </span>
         </button>
       )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/actions/notifications'
 import { useNotificationsInApp } from '@/components/notifications-provider'
@@ -26,6 +26,7 @@ function IconCloche({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -43,6 +44,9 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
   const [, startTransition] = useTransition()
   const router = useRouter()
   const boutonRef = useRef<HTMLButtonElement>(null)
+  // Deux cloches montées (header mobile + sidebar desktop) : id par instance.
+  const idPanneau = useId()
+  const idTitrePanneau = useId()
 
   const signalerNavigation = useFermerAvecRetour(ouvert, () => setOuvert(false))
 
@@ -124,6 +128,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
         type="button"
         onClick={toggle}
         aria-expanded={ouvert}
+        aria-controls={ouvert ? idPanneau : undefined}
         aria-label={nombreNonLues > 0 ? `Notifications, ${nombreNonLues} non lue${nombreNonLues > 1 ? 's' : ''}` : 'Notifications'}
         // Cercle visible inchangé (36 px, cohérent avec les boutons voisins du
         // header/de la sidebar) ; cible tactile 44 px via -m-1 + p-1 (marge
@@ -158,11 +163,16 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
               useFermerAvecRetour ci-dessus. */}
           <div aria-hidden="true" onClick={() => setOuvert(false)} className="fixed inset-0 z-40" />
           <div
+            id={idPanneau}
+            role="region"
+            aria-labelledby={idTitrePanneau}
             style={{ top: position.top, right: position.right }}
             className="fixed z-50 max-h-[70dvh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface shadow-lg"
           >
             <div className="border-b border-border px-3.5 py-2.5">
-              <span className="text-[13px] font-semibold text-ink">Notifications</span>
+              <h2 id={idTitrePanneau} className="text-[13px] font-semibold text-ink">
+                Notifications
+              </h2>
             </div>
 
             {notifications.length === 0 ? (
@@ -175,11 +185,14 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
                     type="button"
                     onClick={() => ouvrirNotification(n)}
                     className={`flex min-h-11 flex-col gap-0.5 border-b border-border px-3.5 py-3 text-left last:border-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary ${
-                      n.lu ? '' : 'bg-primary-soft'
+                      n.lu ? 'hover:bg-bg' : 'bg-primary-soft hover:bg-[color-mix(in_oklch,var(--color-primary-soft),var(--color-primary)_6%)]'
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      {!n.lu && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                      {/* Pastille purement visuelle : l'état « non lue » est
+                          aussi donné en texte aux lecteurs d'écran. */}
+                      {!n.lu && <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
+                      {!n.lu && <span className="sr-only">Non lue : </span>}
                       <span className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">{n.titre}</span>
                     </div>
                     <p className="line-clamp-2 wrap-anywhere text-[12px] text-muted">{n.corps}</p>
