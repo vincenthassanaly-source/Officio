@@ -25,7 +25,7 @@ export default async function EntretienDetailPage({ params }: { params: Promise<
     getDocumentsEntretien(id),
     type.modele === 'bpm'
       ? getFichesBpm(id)
-      : type.modele === 'opioides'
+      : type.modele === 'opioides' || type.modele === 'prevention'
         ? getFichesEntretien(id)
         : Promise.resolve([]),
   ])

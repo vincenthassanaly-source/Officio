@@ -23,18 +23,29 @@ const CLASSE_ACTION = `flex size-11 shrink-0 items-center justify-center rounded
 // (un patient revient à chaque renouvellement : « Nouvel entretien » copie
 // l'identité et la prescription d'une fiche existante), ouverte en saisie pas à
 // pas, imprimable à tout moment.
+//
+// Réutilisé par les autres types à fiche générique (bilan de prévention) via
+// `segment` (dossier de la route) et les libellés.
 export function OpioidesFiches({
   typeEntretienId,
   fiches,
+  segment = 'opioides',
+  libelleNouvelle = 'Nouvelle fiche opioïdes',
+  texteVide = 'Aucune fiche pour l’instant. Une fiche reprend l’identité et la prescription du patient, les règles de bon usage abordées, le questionnaire POMI et les conclusions de l’entretien, et s’imprime à la fin.',
+  titreDuplication = 'Nouvel entretien (copie l’identité et la prescription)',
 }: {
   typeEntretienId: string
   fiches: FicheEntretienResume[]
+  segment?: string
+  libelleNouvelle?: string
+  texteVide?: string
+  titreDuplication?: string
 }) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [aSupprimer, setASupprimer] = useState<FicheEntretienResume | null>(null)
-  const base = `/entretiens-pharmaceutiques/${typeEntretienId}/opioides`
+  const base = `/entretiens-pharmaceutiques/${typeEntretienId}/${segment}`
 
   function ouvrirApres(action: () => Promise<string>, messageErreur: string) {
     startTransition(async () => {
@@ -68,13 +79,12 @@ export function OpioidesFiches({
         className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
       >
         <Icone nom="plus" taille={18} />
-        {isPending ? 'Un instant…' : 'Nouvelle fiche opioïdes'}
+        {isPending ? 'Un instant…' : libelleNouvelle}
       </button>
 
       {fiches.length === 0 ? (
         <p className="rounded-[20px] bg-surface p-4 text-[13.5px] leading-relaxed text-muted shadow-card">
-          Aucune fiche pour l’instant. Une fiche reprend l’identité et la prescription du patient, les règles de bon usage
-          abordées, le questionnaire POMI et les conclusions de l’entretien, et s’imprime à la fin.
+          {texteVide}
         </p>
       ) : (
         <ul className="flex flex-col gap-2.5">
@@ -93,7 +103,7 @@ export function OpioidesFiches({
                   }
                   disabled={isPending}
                   aria-label={`Nouvel entretien pour ${nom}`}
-                  title="Nouvel entretien (copie l’identité et la prescription)"
+                  title={titreDuplication}
                   className={`${CLASSE_ACTION} disabled:opacity-50`}
                 >
                   <Icone nom="plus" taille={18} />

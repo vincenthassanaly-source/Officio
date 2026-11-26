@@ -126,6 +126,16 @@ export function EntretienDetail({
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
         {surFiches && type.modele === 'bpm' && <BpmFiches typeEntretienId={type.id} fiches={fiches} />}
         {surFiches && type.modele === 'opioides' && <OpioidesFiches typeEntretienId={type.id} fiches={fiches} />}
+        {surFiches && type.modele === 'prevention' && (
+          <OpioidesFiches
+            typeEntretienId={type.id}
+            fiches={fiches}
+            segment="prevention"
+            libelleNouvelle="Nouveau bilan de prévention"
+            texteVide="Aucun bilan pour l’instant. Un bilan reprend les réponses de la personne aux questions de prévention, les thèmes à travailler et ses objectifs, puis génère le plan personnalisé à imprimer."
+            titreDuplication="Nouveau bilan (copie l’identité de la personne)"
+          />
+        )}
         {onglet === 'methodologie' && !aFiches && (
           <EntretienMethodologie
             typeEntretienId={type.id}
