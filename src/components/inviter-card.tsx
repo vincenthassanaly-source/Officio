@@ -86,11 +86,17 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
 
       {/* Action destructive (tous les liens déjà partagés cessent de
           fonctionner) : confirmation, comme les autres suppressions de l'app. */}
+      {/* aria-disabled + garde plutôt que `disabled` : la modale de
+          confirmation rend le focus à ce bouton à sa fermeture, au moment
+          même où la régénération démarre — désactivé, il le perdait. */}
       <button
         type="button"
-        disabled={isPending}
-        onClick={() => setConfirmationOuverte(true)}
-        className="min-h-11 rounded-xl px-3 py-2 text-center text-[12.5px] font-semibold text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+        aria-disabled={isPending}
+        aria-busy={isPending}
+        onClick={() => {
+          if (!isPending) setConfirmationOuverte(true)
+        }}
+        className="min-h-11 rounded-xl px-3 py-2 text-center text-[12.5px] font-semibold text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
       >
         {isPending ? 'Régénération…' : 'Régénérer le code (l’ancien lien cessera de fonctionner)'}
       </button>

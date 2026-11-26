@@ -10,6 +10,7 @@ import { regrouperParJour } from '@/lib/journal-regroupement'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { useToast } from '@/components/ui/toast-provider'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const MEMBRE_TOUS = 'tous'
 
@@ -107,9 +108,14 @@ export function JournalActivite({
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      {/* py-1 compensé par -my-1 sur le conteneur qui défile (règle de la
+          compensation négative) : l'anneau de focus des pastilles n'est plus
+          rogné en haut/bas par l'overflow. */}
       <div
         ref={rangeeRef}
-        className="flex snap-x gap-1.5 overflow-x-auto pr-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
+        role="group"
+        aria-label="Filtrer par module"
+        className="-my-1 flex snap-x gap-1.5 overflow-x-auto py-1 pl-0.5 pr-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]"
       >
         {modules.map((m) => {
           const actif = modulesSelectionnes.has(m.value)
@@ -138,7 +144,7 @@ export function JournalActivite({
             id="membre-journal-activite"
             value={membreSelectionne}
             onChange={(e) => changerMembre(e.target.value)}
-            className="w-full max-w-xs rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={`w-full max-w-xs ${CHAMP_CLASS}`}
           >
             <option value={MEMBRE_TOUS}>Toute l&rsquo;équipe</option>
             {membres.map((m) => (
@@ -151,7 +157,13 @@ export function JournalActivite({
       )}
 
       {entrees.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-muted">Aucune activité pour le moment.</p>
+        <p aria-busy={rechargementFiltres} className="py-8 text-center text-[13px] text-muted">
+          {rechargementFiltres
+            ? 'Chargement…'
+            : modulesSelectionnes.size > 0 || membreSelectionne !== MEMBRE_TOUS
+              ? 'Aucune activité ne correspond à ces filtres.'
+              : 'Aucune activité pour le moment.'}
+        </p>
       ) : (
         <div
           aria-busy={rechargementFiltres}
@@ -161,7 +173,7 @@ export function JournalActivite({
         >
           {groupes.map((groupe) => (
             <div key={groupe.cle} className="flex flex-col gap-2">
-              <span className="text-[12px] font-semibold uppercase tracking-wide text-muted">{groupe.label}</span>
+              <h2 className="text-[12px] font-semibold uppercase tracking-wide text-muted">{groupe.label}</h2>
               <div className="flex flex-col gap-2">
                 {groupe.entrees.map((entree) => (
                   <EntreeJournalItem
@@ -180,11 +192,16 @@ export function JournalActivite({
       )}
 
       {curseurSuivant && (
+        // aria-disabled + garde plutôt que `disabled` : le bouton garde le
+        // focus clavier pendant le chargement de la page suivante.
         <button
           type="button"
-          disabled={isPending}
-          onClick={chargerPlus}
-          className="min-h-11 self-center rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          aria-disabled={isPending}
+          aria-busy={isPending}
+          onClick={() => {
+            if (!isPending) chargerPlus()
+          }}
+          className="min-h-11 self-center rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
         >
           {isPending ? 'Chargement…' : 'Charger plus'}
         </button>

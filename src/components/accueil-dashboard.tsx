@@ -107,7 +107,7 @@ export function AccueilDashboard({
           </svg>
         </p>
         <p className="mt-0.5 text-[12px] text-muted">
-          Rien de prévu aujourd&rsquo;hui, aucune tâche ni message en attente.
+          Aucune tâche à faire ni message non lu.
         </p>
       </div>
     )
@@ -117,7 +117,7 @@ export function AccueilDashboard({
     <div className="mt-4 flex flex-col gap-3">
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[12px] font-bold uppercase tracking-wide text-muted">Tâches</span>
+          <h2 className="text-[12px] font-bold uppercase tracking-wide text-muted">Tâches</h2>
         </div>
         {tachesOptimistes.length === 0 ? (
           <p className="py-2 text-center text-[12.5px] text-muted">Aucune tâche en attente</p>
@@ -139,8 +139,12 @@ export function AccueilDashboard({
                   <button
                     type="button"
                     onClick={() => basculerStatut(t)}
-                    aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-                    className="flex w-11 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    // Nom contextualisé : dans une liste, « Marquer comme fait »
+                    // seul ne dit pas quelle tâche est concernée.
+                    aria-label={`${t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'} : ${t.titre}`}
+                    // Anneau de focus à l'intérieur (offset négatif) : la liste
+                    // défile (overflow-y-auto) et rognait l'anneau extérieur.
+                    className="flex w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
                   >
                     <span
                       className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
@@ -157,7 +161,7 @@ export function AccueilDashboard({
                   <button
                     type="button"
                     onClick={() => setTacheEnEdition(t)}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg pr-1 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
                   >
                     {t.assigne && (
                       <span
@@ -193,7 +197,7 @@ export function AccueilDashboard({
 
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[12px] font-bold uppercase tracking-wide text-muted">Messages non lus</span>
+          <h2 className="text-[12px] font-bold uppercase tracking-wide text-muted">Messages non lus</h2>
           {totalMessagesNonLus > messagesNonLusApercu.length && (
             <Link
               href="/liaison"
@@ -203,6 +207,7 @@ export function AccueilDashboard({
               className="-my-3.5 -mr-3.5 inline-flex min-h-11 items-center rounded-lg px-3.5 text-[12px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Voir tout ({totalMessagesNonLus})
+              <span className="sr-only"> messages non lus</span>
             </Link>
           )}
         </div>

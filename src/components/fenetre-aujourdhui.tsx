@@ -49,12 +49,17 @@ export function FenetreAujourdhui() {
     if (!doitOuvrirFenetreAujourdhui(dateAujourdhuiISO)) return
 
     let annule = false
-    getProgrammeDuJour(dateAujourdhuiISO).then((resultat) => {
-      if (annule) return
-      setProgramme(resultat)
-      setOuvert(true)
-      marquerFenetreAujourdhuiAffichee(dateAujourdhuiISO)
-    })
+    getProgrammeDuJour(dateAujourdhuiISO)
+      .then((resultat) => {
+        if (annule) return
+        setProgramme(resultat)
+        setOuvert(true)
+        marquerFenetreAujourdhuiAffichee(dateAujourdhuiISO)
+      })
+      // Échec réseau/serveur : la fenêtre ne s'ouvre simplement pas (et
+      // retentera à la prochaine ouverture, rien n'étant marqué comme
+      // affiché), plutôt qu'une promesse rejetée non gérée.
+      .catch(() => {})
 
     return () => {
       annule = true
@@ -92,21 +97,27 @@ export function FenetreAujourdhui() {
         aria-modal="true"
         aria-labelledby="fenetre-aujourdhui-titre"
         onClick={(e) => e.stopPropagation()}
-        className="panneau-entree flex max-h-[80dvh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        // pb : safe-area de la barre de geste sous la sheet mobile, même
+        // motif que ModaleConfirmation/MenuPlusPanel.
+        className="panneau-entree flex max-h-[80dvh] w-full flex-col gap-3 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
-        <div className="mb-1 flex items-center justify-between">
-          <h2 id="fenetre-aujourdhui-titre" className="text-sm font-bold text-ink">
+        {/* Titre de sheet en font-heading text-lg et bouton Fermer rond de
+            36 px visibles (cible 44 px), comme MenuPlusPanel. */}
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 id="fenetre-aujourdhui-titre" className="font-heading text-lg font-semibold text-ink">
             Aujourd&rsquo;hui
           </h2>
           <button
             type="button"
             onClick={() => setOuvert(false)}
             aria-label="Fermer"
-            className="-my-3 -mr-3 flex h-11 w-11 items-center justify-center text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-soft">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </span>
           </button>
         </div>
 
