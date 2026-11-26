@@ -153,7 +153,7 @@ export function PreventionImpression({ donnees }: { donnees: DonneesPrevention }
           )}
         </Bloc>
 
-        <footer className="mt-5 text-[11.5px] leading-snug text-ink">
+        <footer className="mt-5 text-[12px] leading-snug text-ink print:text-[11.5px]">
           <p>
             Ce plan a été construit avec vous lors de votre bilan prévention
             {tranche ? ` (tranche d’âge ${tranche} ans)` : ''}. Il ne remplace pas un avis médical : en cas de symptôme ou
@@ -182,7 +182,7 @@ export function PreventionImpression({ donnees }: { donnees: DonneesPrevention }
               {reponses.map((r) => (
                 <tr key={r.texte} className="bpm-ligne">
                   <th scope="row" className={`${CELLULE} text-left text-[12.5px] font-normal text-ink`}>
-                    <span className="block text-[11.5px] font-semibold uppercase">{r.section}</span>
+                    <span className="block text-[12px] font-semibold uppercase print:text-[11.5px]">{r.section}</span>
                     {r.texte}
                   </th>
                   <td className={`${CELLULE} text-[13px] text-ink ${TEXTE}`}>

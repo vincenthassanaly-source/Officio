@@ -227,8 +227,8 @@ export function OpioidesSaisie({
             <button
               type="button"
               onClick={() => void quitter()}
-              disabled={sortie !== null}
-              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
+              aria-disabled={sortie !== null}
+              className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
             >
               {sortie === 'quitter' ? 'Enregistrement…' : 'Quitter'}
             </button>
@@ -330,8 +330,8 @@ export function OpioidesSaisie({
             <button
               type="button"
               onClick={() => void quitter()}
-              disabled={sortie !== null}
-              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}
+              aria-disabled={sortie !== null}
+              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1 aria-disabled:opacity-50`}
             >
               {sortie === 'quitter' ? 'Enregistrement…' : 'Fermer'}
             </button>
@@ -636,10 +636,11 @@ function EtapeFin({
   const toast = useToast()
   const [enregistre, setEnregistre] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const idAideJournal = useId()
   const nom = `${donnees.patient.nom.trim()} ${donnees.patient.prenom.trim()}`.trim()
 
   function ajouterAuJournal() {
-    if (!nom) return
+    if (!nom || isPending || enregistre) return
     const formData = new FormData()
     formData.set('type_entretien_id', typeEntretienId)
     formData.set('patient_nom', nom)
@@ -662,8 +663,8 @@ function EtapeFin({
       <button
         type="button"
         onClick={onImprimer}
-        disabled={ouvertureEnCours}
-        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+        aria-disabled={ouvertureEnCours}
+        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px] aria-disabled:opacity-50`}
       >
         <Icone nom="imprimante" taille={18} />
         {imprimerEnCours ? 'Ouverture…' : 'Voir et imprimer le compte rendu'}
@@ -706,12 +707,13 @@ function EtapeFin({
         <button
           type="button"
           onClick={ajouterAuJournal}
-          disabled={isPending || enregistre || !nom}
-          className={CLASSE_BOUTON_SECONDAIRE}
+          aria-disabled={isPending || enregistre || !nom}
+          aria-describedby={nom ? undefined : idAideJournal}
+          className={`${CLASSE_BOUTON_SECONDAIRE} aria-disabled:opacity-50`}
         >
           {enregistre ? 'Ajouté au journal' : isPending ? 'Enregistrement…' : 'Ajouter au journal'}
         </button>
-        {!nom && <p className="text-[12px] text-muted">Renseignez le nom du patient pour l’ajouter au journal.</p>}
+        {!nom && <p id={idAideJournal} className="text-[12px] text-muted">Renseignez le nom du patient pour l’ajouter au journal.</p>}
       </div>
     </div>
   )

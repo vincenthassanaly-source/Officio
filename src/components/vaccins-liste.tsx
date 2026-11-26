@@ -51,6 +51,7 @@ function IconLoupe({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <circle cx="11" cy="11" r="7" />
       <path d="m21 21-4.3-4.3" />
@@ -68,6 +69,7 @@ function IconCroix({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M18 6 6 18" />
       <path d="M6 6l12 12" />
@@ -85,6 +87,7 @@ function IconChevron({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -101,6 +104,7 @@ function IconCalendrier({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="3" y="4.5" width="18" height="16" rx="2.5" />
       <path d="M3 9.5h18" />
@@ -119,9 +123,29 @@ function IconPrescripteur({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <circle cx="12" cy="8" r="3.5" />
       <path d="M4.5 20c1.2-4 4-6 7.5-6s6.3 2 7.5 6" />
+    </svg>
+  )
+}
+
+// Remplace le glyphe « € » dans la pastille Remboursement (icônes dessinées en trait, cf. DESIGN.md).
+function IconEuro({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6.5A7 7 0 1 0 18 17.5" />
+      <path d="M4 10h10M4 14h10" />
     </svg>
   )
 }
@@ -136,6 +160,7 @@ function IconAlerte({ className }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M12 3 2 20h20L12 3Z" />
       <path d="M12 10v4" />
@@ -190,7 +215,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
         <div className="flex shrink-0 items-center gap-1.5">
           <span className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${badge.className}`}>{badge.label}</span>
           <IconChevron
-            className={`h-4 w-4 text-muted transition-transform motion-safe:duration-200 ${ouvert ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-muted motion-safe:transition-transform motion-safe:duration-200 ${ouvert ? 'rotate-180' : ''}`}
           />
         </div>
       </button>
@@ -229,7 +254,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
               classesIcone="bg-accent-soft text-accent"
             />
             <LigneInfo
-              icone={<span className="text-[12px] font-bold leading-none">€</span>}
+              icone={<IconEuro className="h-3.5 w-3.5" />}
               label="Remboursement"
               texte={v.remboursement}
               classesIcone="bg-neutral-soft text-muted"
@@ -303,7 +328,8 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-1.5 overflow-x-auto">
+      {/* Marge compensée : l'anneau de focus des filtres n'est pas rogné par le défilement horizontal. */}
+      <div className="-m-1 flex gap-1.5 overflow-x-auto p-1">
         {FILTRES.map((f) => (
           <button
             type="button"

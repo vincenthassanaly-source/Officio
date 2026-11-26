@@ -7,11 +7,22 @@ import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
 
 // Calculateur et posologie ne servent qu'une fois leur onglet ouvert : chargés
 // à la demande pour alléger le JS initial de /huiles-essentielles.
-const HuilesEssentiellesCalculateur = dynamic(() =>
-  import('./huiles-essentielles-calculateur').then((m) => m.HuilesEssentiellesCalculateur)
+// Pendant le chargement du module, le panneau annonce l'attente au lieu de rester vide.
+function ChargementOnglet() {
+  return (
+    <p role="status" className="py-6 text-center text-sm text-muted">
+      Chargement…
+    </p>
+  )
+}
+
+const HuilesEssentiellesCalculateur = dynamic(
+  () => import('./huiles-essentielles-calculateur').then((m) => m.HuilesEssentiellesCalculateur),
+  { loading: ChargementOnglet }
 )
-const HuilesEssentiellesPosologie = dynamic(() =>
-  import('./huiles-essentielles-posologie').then((m) => m.HuilesEssentiellesPosologie)
+const HuilesEssentiellesPosologie = dynamic(
+  () => import('./huiles-essentielles-posologie').then((m) => m.HuilesEssentiellesPosologie),
+  { loading: ChargementOnglet }
 )
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -65,7 +76,8 @@ export function HuilesEssentiellesOnglets({ huiles }: { huiles: HuileEssentielle
             role="tab"
             id={idOnglet(o.value)}
             aria-selected={onglet === o.value}
-            aria-controls={idPanneau(o.value)}
+            // Seul le panneau de l'onglet actif est rendu : aria-controls ne pointe jamais vers un id absent.
+            aria-controls={onglet === o.value ? idPanneau(o.value) : undefined}
             tabIndex={onglet === o.value ? 0 : -1}
             onClick={() => setOnglet(o.value)}
             onKeyDown={(e) => surKeyDown(e, index)}

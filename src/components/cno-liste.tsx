@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { ajouterPatientCno, modifierQuantiteCno, supprimerPatientCno } from '@/app/actions/cno'
 import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
@@ -47,6 +47,17 @@ function QuantiteEditable({
 }) {
   const [enEdition, setEnEdition] = useState(false)
   const [valeur, setValeur] = useState(String(patient.quantite_restante))
+  const boutonRef = useRef<HTMLButtonElement>(null)
+  // Sortie de l'édition au clavier (Entrée, Échap) : le focus revient sur le
+  // bouton au lieu de retomber en haut de la page quand le champ disparaît.
+  const rendreFocusRef = useRef(false)
+
+  useEffect(() => {
+    if (!enEdition && rendreFocusRef.current) {
+      rendreFocusRef.current = false
+      boutonRef.current?.focus()
+    }
+  }, [enEdition])
 
   function enregistrer() {
     const nombre = Math.round(Number(valeur.replace(',', '.')))
@@ -79,8 +90,12 @@ function QuantiteEditable({
           onFocus={(e) => e.currentTarget.select()}
           onBlur={enregistrer}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Enter') {
+              rendreFocusRef.current = true
+              e.currentTarget.blur()
+            }
             if (e.key === 'Escape') {
+              rendreFocusRef.current = true
               setValeur(String(patient.quantite_restante))
               setEnEdition(false)
             }
@@ -94,6 +109,7 @@ function QuantiteEditable({
 
   return (
     <button
+      ref={boutonRef}
       type="button"
       onClick={() => setEnEdition(true)}
       aria-label={`Modifier les compléments restants de ${patient.nom_patient}, actuellement ${patient.quantite_restante}`}
@@ -231,8 +247,12 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           <ChampsFormulaire />
           <button
             type="submit"
-            disabled={isPending}
-            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending}
+            // Envoi déjà en cours : le second appui ne soumet pas le formulaire.
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Créer la fiche
           </button>
@@ -246,7 +266,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           </div>
           <p className="max-w-[220px] text-sm text-muted">
             {patientsOptimistes.length === 0
-              ? 'Aucune fiche pour l’instant — crée la première avec le bouton d’ajout.'
+              ? 'Aucune fiche pour l’instant. Créez la première avec le bouton d’ajout.'
               : 'Aucun patient ne correspond à la recherche.'}
           </p>
           {patientsOptimistes.length === 0 && !formOuvert && (

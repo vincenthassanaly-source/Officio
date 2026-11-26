@@ -22,6 +22,7 @@ export function TrodAngineIdentite({ identite }: { identite: IdentiteOfficine })
   const [valeurs, setValeurs] = useState<IdentiteOfficine>(identite)
 
   function enregistrer() {
+    if (isPending) return
     startTransition(async () => {
       try {
         await enregistrerIdentiteTrodAngine(valeurs)
@@ -79,7 +80,7 @@ export function TrodAngineIdentite({ identite }: { identite: IdentiteOfficine })
           <p className="text-[12.5px] leading-snug text-muted">
             Le nom du pharmacien se saisit sur chaque fiche. Le tampon et la signature restent à apposer à la main.
           </p>
-          <button type="submit" disabled={isPending} className={CLASSE_BOUTON_PRIMAIRE}>
+          <button type="submit" aria-disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} aria-disabled:opacity-50`}>
             {isPending ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </form>

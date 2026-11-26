@@ -185,24 +185,35 @@ export function TrodAngineSaisie({
 
   // Aperçu (onglet), téléchargement ou impression d'un document. La fiche est
   // d'abord enregistrée : le PDF est toujours généré d'après la dernière saisie.
-  async function sortiePdf(chemin: 'compte-rendu' | 'bon' | 'dossier', mode: 'apercu' | 'telecharger' | 'imprimer') {
+  // Un seul document à la fois : un second appui pendant la génération est ignoré
+  // (le bouton reste focalisable, signalé par aria-busy / aria-disabled).
+  const [pdfEnCours, setPdfEnCours] = useState<{ chemin: CheminPdf; mode: ModePdf } | null>(null)
+  const pdfEnCoursRef = useRef(false)
+
+  async function sortiePdf(chemin: CheminPdf, mode: ModePdf) {
+    if (pdfEnCoursRef.current) return
+    pdfEnCoursRef.current = true
+    setPdfEnCours({ chemin, mode })
     const url = `/trod-angine/${ficheId}/${chemin}`
-    if (mode === 'apercu') {
-      const resultat = await ouvrirDocumentDansOnglet(async () => {
-        const ok = await sauvegarder()
-        if (!ok) throw new Error('La fiche n’a pas pu être enregistrée : le document ne peut pas être généré.')
-        return url
-      })
-      if (!resultat.succes) toast({ type: 'erreur', message: resultat.message })
-      return
-    }
     try {
+      if (mode === 'apercu') {
+        const resultat = await ouvrirDocumentDansOnglet(async () => {
+          const ok = await sauvegarder()
+          if (!ok) throw new Error('La fiche n’a pas pu être enregistrée : le document ne peut pas être généré.')
+          return url
+        })
+        if (!resultat.succes) toast({ type: 'erreur', message: resultat.message })
+        return
+      }
       const ok = await sauvegarder()
       if (!ok) throw new Error('La fiche n’a pas pu être enregistrée : le document ne peut pas être généré.')
       if (mode === 'telecharger') await telechargerPdf(`${url}?telecharger=1`)
       else await imprimerPdf(url)
     } catch (err) {
       toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Impossible de générer le document.' })
+    } finally {
+      pdfEnCoursRef.current = false
+      setPdfEnCours(null)
     }
   }
 
@@ -231,8 +242,8 @@ export function TrodAngineSaisie({
               <button
                 type="button"
                 onClick={() => void quitter()}
-                disabled={sortie}
-                className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
+                aria-disabled={sortie}
+                className={`flex min-h-11 items-center rounded-xl border border-border bg-surface px-3.5 text-[13px] font-semibold text-ink aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
               >
                 {sortie ? 'Enregistrement…' : 'Quitter'}
               </button>
@@ -325,6 +336,7 @@ export function TrodAngineSaisie({
               onPharmacien={(v) => modifier((d) => ({ ...d, pharmacien: v }))}
               identiteRenseignee={identiteRenseignee}
               onSortie={(chemin, mode) => void sortiePdf(chemin, mode)}
+              pdfEnCours={pdfEnCours}
             />
           )}
         </div>
@@ -344,8 +356,8 @@ export function TrodAngineSaisie({
             <button
               type="button"
               onClick={() => void quitter()}
-              disabled={sortie}
-              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1`}
+              aria-disabled={sortie}
+              className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 flex-1 aria-disabled:opacity-50`}
             >
               {sortie ? 'Enregistrement…' : 'Terminer'}
             </button>
@@ -364,16 +376,17 @@ export function TrodAngineSaisie({
 
 // --- Briques ---------------------------------------------------------------------------------
 
+// Bandeau d'information : le ton passe par le fond -soft et une icône (jamais
+// par une bordure latérale colorée, proscrite par DESIGN.md), pour que l'alerte
+// ne repose pas sur la seule couleur.
 function Bandeau({ ton, children }: { ton: 'alerte' | 'info' | 'ok'; children: ReactNode }) {
-  const classes =
-    ton === 'alerte'
-      ? 'bg-rec-soft text-ink border-rec'
-      : ton === 'ok'
-        ? 'bg-green-soft text-ink border-green'
-        : 'bg-primary-soft text-ink border-primary'
+  const fond = ton === 'alerte' ? 'bg-rec-soft' : ton === 'ok' ? 'bg-green-soft' : 'bg-primary-soft'
+  const icone = ton === 'alerte' ? 'alerte' : ton === 'ok' ? 'coche' : 'explication'
+  const teinteIcone = ton === 'alerte' ? 'text-rec' : ton === 'ok' ? 'text-green' : 'text-primary'
   return (
-    <div role="status" className={`rounded-2xl border-l-4 px-4 py-3 text-[13.5px] leading-snug ${classes}`}>
-      {children}
+    <div role="status" className={`flex gap-3 rounded-2xl px-4 py-3 text-[13.5px] leading-snug text-ink ${fond}`}>
+      <Icone nom={icone} taille={18} className={`mt-px shrink-0 ${teinteIcone}`} />
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   )
 }
@@ -793,37 +806,47 @@ function BoutonsDocument({
   chemin,
   disponible,
   onSortie,
+  enCours,
   principal = false,
 }: {
   titre: string
   chemin: CheminPdf
   disponible: boolean
   onSortie: (chemin: CheminPdf, mode: ModePdf) => void
+  enCours: { chemin: CheminPdf; mode: ModePdf } | null
   principal?: boolean
 }) {
   const classe = (primaire: boolean) =>
-    `${primaire ? CLASSE_BOUTON_PRIMAIRE : CLASSE_BOUTON_SECONDAIRE} min-h-12 flex-1 px-2 text-[13px]`
+    `${primaire ? CLASSE_BOUTON_PRIMAIRE : CLASSE_BOUTON_SECONDAIRE} min-h-12 flex-1 px-2 text-[13px] aria-disabled:opacity-50`
+  // Pendant une génération, les boutons restent focalisables (aria-disabled) :
+  // le focus clavier ne saute pas au début de la page.
+  const occupe = enCours !== null
+  const props = (mode: ModePdf) => ({
+    type: 'button' as const,
+    disabled: !disponible,
+    'aria-disabled': disponible && occupe ? true : undefined,
+    'aria-busy': enCours?.chemin === chemin && enCours.mode === mode ? true : undefined,
+    onClick: () => onSortie(chemin, mode),
+  })
   return (
     <div className="flex flex-col gap-2" role="group" aria-label={titre}>
       <p className="text-[13.5px] font-semibold text-ink">{titre}</p>
       <div className="flex gap-2">
-        <button type="button" disabled={!disponible} onClick={() => onSortie(chemin, 'apercu')} className={classe(false)}>
+        <button {...props('apercu')} className={classe(false)}>
           <Icone nom="fichier" taille={16} />
           Aperçu
         </button>
-        <button
-          type="button"
-          disabled={!disponible}
-          onClick={() => onSortie(chemin, 'telecharger')}
-          className={classe(principal)}
-        >
+        <button {...props('telecharger')} className={classe(principal)}>
           Télécharger
         </button>
-        <button type="button" disabled={!disponible} onClick={() => onSortie(chemin, 'imprimer')} className={classe(false)}>
+        <button {...props('imprimer')} className={classe(false)}>
           <Icone nom="imprimante" taille={16} />
           Imprimer
         </button>
       </div>
+      <p role="status" className="text-[12.5px] font-semibold text-primary empty:hidden">
+        {enCours?.chemin === chemin ? 'Préparation du document…' : ''}
+      </p>
     </div>
   )
 }
@@ -836,6 +859,7 @@ function EtapeDocuments({
   onPharmacien,
   identiteRenseignee,
   onSortie,
+  pdfEnCours,
   choix,
   onAllerTrod,
 }: {
@@ -848,6 +872,7 @@ function EtapeDocuments({
   onPharmacien: (v: string) => void
   identiteRenseignee: boolean
   onSortie: (chemin: CheminPdf, mode: ModePdf) => void
+  pdfEnCours: { chemin: CheminPdf; mode: ModePdf } | null
 }) {
   const effectifs = blocsEffectifs(donnees)
   const proposes = blocsProposes(donnees)
@@ -928,10 +953,17 @@ function EtapeDocuments({
           chemin="dossier"
           disponible
           onSortie={onSortie}
+          enCours={pdfEnCours}
           principal
         />
-        <BoutonsDocument titre="Compte rendu de prise en charge" chemin="compte-rendu" disponible onSortie={onSortie} />
-        <BoutonsDocument titre="Bon de prise en charge" chemin="bon" disponible={bon} onSortie={onSortie} />
+        <BoutonsDocument
+          titre="Compte rendu de prise en charge"
+          chemin="compte-rendu"
+          disponible
+          onSortie={onSortie}
+          enCours={pdfEnCours}
+        />
+        <BoutonsDocument titre="Bon de prise en charge" chemin="bon" disponible={bon} onSortie={onSortie} enCours={pdfEnCours} />
         {!bon && (
           <p className="text-[12.5px] leading-snug text-muted">
             Le bon n’est disponible que si un antibiotique est délivré (bloc 1 coché, TROD positif et antibiotique choisi).

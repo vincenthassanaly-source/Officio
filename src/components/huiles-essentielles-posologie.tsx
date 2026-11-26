@@ -185,7 +185,7 @@ export function HuilesEssentiellesPosologie() {
           </div>
         ) : (
           <p className="py-6 text-center text-sm text-muted">
-            Renseigne tous les champs pour voir le volume nécessaire.
+            Renseignez tous les champs pour voir le volume nécessaire.
           </p>
         )}
       </div>

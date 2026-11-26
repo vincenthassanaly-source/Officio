@@ -69,6 +69,17 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
   const [valeur, setValeur] = useState(chaussure.prix?.toString() ?? '')
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
+  const boutonRef = useRef<HTMLButtonElement>(null)
+  // Sortie de l'édition au clavier (Entrée, Échap) : le focus revient sur le
+  // bouton du prix au lieu de retomber en haut de la page.
+  const rendreFocusRef = useRef(false)
+
+  useEffect(() => {
+    if (!enEdition && rendreFocusRef.current) {
+      rendreFocusRef.current = false
+      boutonRef.current?.focus()
+    }
+  }, [enEdition])
 
   function enregistrer() {
     const nombre = valeur.trim() === '' ? null : Number(valeur.replace(',', '.'))
@@ -106,8 +117,12 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
         onChange={(e) => setValeur(e.target.value)}
         onBlur={enregistrer}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') e.currentTarget.blur()
+          if (e.key === 'Enter') {
+            rendreFocusRef.current = true
+            e.currentTarget.blur()
+          }
           if (e.key === 'Escape') {
+            rendreFocusRef.current = true
             setValeur(chaussure.prix?.toString() ?? '')
             setEnEdition(false)
           }
@@ -124,6 +139,7 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
 
   return (
     <button
+      ref={boutonRef}
       type="button"
       onClick={() => setEnEdition(true)}
       aria-label={`Modifier le prix de ${chaussure.nom_modele}${prixFormate ? `, actuellement ${prixFormate} euros` : ''}`}
@@ -181,7 +197,7 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
         <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
           <PrixEditable chaussure={chaussure} />
           {depassement !== null && (
-            <span className="text-[12px] font-semibold tabular-nums text-rec">+{formatPrix(depassement)} € à charge</span>
+            <span className="text-[12px] font-semibold tabular-nums text-accent">+{formatPrix(depassement)} € à charge</span>
           )}
         </div>
       </div>
@@ -229,7 +245,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
   const photoAffichee = photos ? photos[couleurIndex]?.photo_url : chaussure.photo_url
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 lg:items-center">
       {/* Backdrop non focusable : un <button> resterait un arrêt de
           tabulation sans retour visuel (voir DESIGN.md, Backdrop de
           sheet/panneau). */}
@@ -275,7 +291,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
           )}
         </div>
 
-        <div className="flex flex-col gap-3 p-4">
+        <div className="flex flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div>
             <h2 id="chaussure-detail-titre" className="font-heading text-lg text-ink text-balance">
               {chaussure.nom_modele}
@@ -293,7 +309,8 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
               <div className="text-[12px] font-bold uppercase tracking-wide text-muted">
                 Couleurs · <span className="text-ink">{groupeActif?.couleurs.join(' / ')}</span>
               </div>
-              <div className="flex gap-2 overflow-x-auto">
+              {/* Marge compensée : l'anneau de focus des vignettes n'est pas rogné par le défilement. */}
+              <div className="-m-1 flex gap-2 overflow-x-auto p-1">
                 {groupesCouleurs.map((groupe) => {
                   const variante = photos[groupe.premierIndex]
                   const nomCouleur = groupe.couleurs.join(' / ')
@@ -350,7 +367,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
             <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-muted">Prix</div>
             <PrixEditable chaussure={chaussure} />
             {depassement !== null && (
-              <p className="mt-1.5 rounded-lg bg-rec-soft px-2.5 py-1.5 text-[12px] font-medium tabular-nums text-rec">
+              <p className="mt-1.5 rounded-lg bg-accent-soft px-2.5 py-1.5 text-[12px] font-medium tabular-nums text-accent">
                 Dépassement de {formatPrix(depassement)} € à charge du patient (au-delà des {MONTANT_REMBOURSEMENT_SECU} € remboursés par la sécurité sociale)
               </p>
             )}
@@ -410,7 +427,7 @@ function OngletsGenre({
       ref={rangeeRef}
       role="group"
       aria-label="Filtrer par genre"
-      className="flex snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-my-1 flex snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       style={fondu.gauche || fondu.droite ? { maskImage: masque, WebkitMaskImage: masque } : undefined}
     >
       {tabs.map((g) => (
@@ -510,7 +527,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
       )}
 
       {vue === 'catalogue' && chaussures.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">Aucune chaussure au catalogue pour l&apos;instant</p>
+        <p className="py-10 text-center text-sm text-muted">Aucune chaussure au catalogue pour l&apos;instant.</p>
       )}
 
       {vue === 'catalogue' && chaussures.length > 0 && (
