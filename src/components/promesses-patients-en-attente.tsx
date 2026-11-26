@@ -33,7 +33,7 @@ const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 foc
 
 // Pas de `outline-none` ici : en Tailwind 4 il fixe --tw-outline-style à
 // `none`, ce qui annulait l'anneau `focus-visible:outline-2` de CHAMP_CLASS.
-const CHAMP_PROMESSE_CLASS = `w-full ${CHAMP_CLASS}`
+const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted ${CHAMP_CLASS}`
 
 // Préfixe des identifiants temporaires des promesses ajoutées de façon
 // optimiste : leurs actions restent désactivées tant que le serveur n'a pas

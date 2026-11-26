@@ -460,7 +460,6 @@ export function FilDeMessages({
                   setMessageEnEdition(message)
                   setIdIconesVisibles(null)
                 }}
-                onIconesFermees={() => setIdIconesVisibles(null)}
               />
             </Fragment>
           )
@@ -568,10 +567,33 @@ export function FilDeMessages({
         texteConfirmer="Supprimer"
         onConfirmer={() => {
           if (!idMessageASupprimer) return
-          supprimerMessageOptimiste(idMessageASupprimer)
+          const id = idMessageASupprimer
+          // Le déclencheur (corbeille) disparaît avec la carte : le focus va
+          // au message voisin (suivant, sinon précédent), à défaut au champ
+          // de saisie, plutôt que de retomber sur document.body. Posé après
+          // le retour de focus de ModaleConfirmation (effet de fermeture).
+          const index = messagesFiltres.findIndex((m) => m.id === id)
+          const voisin = messagesFiltres[index + 1] ?? messagesFiltres[index - 1]
+          supprimerMessageOptimiste(id)
           setIdMessageASupprimer(null)
+          setIdIconesVisibles(null)
+          requestAnimationFrame(() => {
+            const cible = voisin ? document.getElementById(`message-${voisin.id}`) : null
+            ;(cible ?? textareaRef.current)?.focus()
+          })
         }}
-        onAnnuler={() => setIdMessageASupprimer(null)}
+        onAnnuler={() => {
+          const id = idMessageASupprimer
+          setIdMessageASupprimer(null)
+          // Les icônes restent révélées tant que la décision n'est pas prise
+          // (la corbeille sert de déclencheur à la modale) ; à l'annulation on
+          // les referme et le focus revient au bouton « Voir les actions du
+          // message » de la même carte, qui réapparaît à leur place.
+          setIdIconesVisibles(null)
+          requestAnimationFrame(() =>
+            document.querySelector<HTMLElement>(`[data-action-options="${id}"]`)?.focus()
+          )
+        }}
       />
 
       {messageEnEdition && (
@@ -632,7 +654,6 @@ function MessageItem({
   enSortie,
   onAppuiLong,
   onEditer,
-  onIconesFermees,
 }: {
   message: MessageAvecDetails
   profilActuelId: string
@@ -652,7 +673,6 @@ function MessageItem({
   enSortie: boolean
   onAppuiLong: (id: string) => void
   onEditer: (message: MessageAvecDetails) => void
-  onIconesFermees: () => void
 }) {
   const estAuteur = m.auteur?.id === profilActuelId
   const [enMaintien, setEnMaintien] = useState(false)
@@ -677,15 +697,20 @@ function MessageItem({
     setEnMaintien(false)
   }
 
+  // Les icônes ne sont pas refermées ici : la corbeille doit rester dans le
+  // DOM pour servir de déclencheur à ModaleConfirmation. Le parent les
+  // referme à la décision (onAnnuler/onConfirmer) et place le focus.
   function supprimer() {
     onSupprimer(m.id)
-    onIconesFermees()
   }
 
   return (
     <div
       id={`message-${m.id}`}
-      className={`select-none rounded-2xl border p-4 motion-safe:transition motion-safe:duration-300 ${
+      // Cible de focus programmatique après la suppression d'un message
+      // voisin (hors ordre de tabulation).
+      tabIndex={-1}
+      className={`select-none rounded-2xl border p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-safe:transition motion-safe:duration-300 ${
         urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
       } ${idSurligne === m.id ? 'ring-2 ring-primary' : ''} ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
@@ -725,6 +750,7 @@ function MessageItem({
             type="button"
             onClick={() => onAppuiLong(m.id)}
             aria-label="Voir les actions du message"
+            data-action-options={m.id}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <IconOptions className="h-4 w-4" />
