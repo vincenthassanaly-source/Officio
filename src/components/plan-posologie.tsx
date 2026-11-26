@@ -221,18 +221,18 @@ export function PlanPosologie({
                 <dl className="mt-2 grid grid-cols-4 gap-1.5 text-center">
                   {MOMENTS.map(([champ, libelle]) => (
                     <div key={champ} className="min-w-0">
-                      <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">{libelle}</dt>
+                      <dt className="text-[12px] font-semibold uppercase tracking-wide text-muted">{libelle}</dt>
                       <dd className="mt-0.5 break-words text-[13px] text-ink">{ligne[champ].trim() || '—'}</dd>
                     </div>
                   ))}
                 </dl>
                 <dl className="mt-2.5 flex flex-col gap-1.5 border-t border-border pt-2.5 text-[13px]">
                   <div>
-                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">Instructions</dt>
+                    <dt className="text-[12px] font-semibold uppercase tracking-wide text-muted">Instructions</dt>
                     <dd className="text-ink">{ligne.instructions.trim() || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted">Durée</dt>
+                    <dt className="text-[12px] font-semibold uppercase tracking-wide text-muted">Durée</dt>
                     <dd className="text-ink">{ligne.duree.trim() || '—'}</dd>
                   </div>
                 </dl>

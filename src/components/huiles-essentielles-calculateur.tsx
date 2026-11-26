@@ -166,6 +166,8 @@ function SelecteurHuile({
               <li key={h.id} id={idOption(index)} role="option" aria-selected={h.id === valeur}>
                 <button
                   type="button"
+                  // Hors de l'ordre de tabulation : la liste se pilote aux flèches depuis le champ.
+                  tabIndex={-1}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => selectionner(h)}
                   className={`block w-full rounded-lg px-3 py-2.5 text-left text-[13px] ${
@@ -203,9 +205,11 @@ function CompteurGelules({
         <button
           type="button"
           onClick={() => onChange(Math.max(0, quantite - 1))}
-          disabled={quantite <= 0}
+          // aria-disabled (et non disabled) : arrivé à 0 au clavier, le bouton
+          // garde le focus au lieu de le rendre au haut de la page.
+          aria-disabled={quantite <= 0}
           aria-label={`Retirer un paquet — ${libelle}`}
-          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 disabled:opacity-30 ${CLASSE_FOCUS}`}
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 aria-disabled:opacity-30 ${CLASSE_FOCUS}`}
         >
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-track text-ink">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

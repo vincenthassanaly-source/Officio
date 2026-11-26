@@ -66,6 +66,7 @@ export function TrodAngineDocuments({ documents }: { documents: TrodAngineDocume
   }
 
   function ajouter(formData: FormData) {
+    if (isPending) return
     const fichier = formData.get('fichier')
     if (fichier instanceof File && fichier.size > TAILLE_MAX_OCTETS) {
       toast({ type: 'erreur', message: 'Fichier trop volumineux (4 Mo maximum).' })
@@ -130,7 +131,15 @@ export function TrodAngineDocuments({ documents }: { documents: TrodAngineDocume
             aria-label="Nom du document"
             className={CLASSE_CHAMP}
           />
-          <button type="submit" disabled={isPending} className={CLASSE_BOUTON_PRIMAIRE}>
+          <button
+            type="submit"
+            aria-disabled={isPending}
+            // Envoi déjà en cours : le second appui ne soumet pas le formulaire.
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className={`${CLASSE_BOUTON_PRIMAIRE} aria-disabled:opacity-50`}
+          >
             {isPending ? 'Envoi…' : 'Ajouter le document'}
           </button>
         </form>
@@ -144,11 +153,12 @@ export function TrodAngineDocuments({ documents }: { documents: TrodAngineDocume
           </p>
           <button
             type="button"
-            disabled={isPending}
-            onClick={() =>
+            aria-disabled={isPending}
+            onClick={() => {
+              if (isPending) return
               executer(chargerDocumentsOfficiels, 'Documents officiels ajoutés.', 'Chargement impossible.')
-            }
-            className={CLASSE_BOUTON_PRIMAIRE}
+            }}
+            className={`${CLASSE_BOUTON_PRIMAIRE} aria-disabled:opacity-50`}
           >
             {isPending ? 'Un instant…' : 'Charger les documents officiels'}
           </button>
@@ -167,7 +177,7 @@ export function TrodAngineDocuments({ documents }: { documents: TrodAngineDocume
               >
                 <span
                   aria-hidden="true"
-                  className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-rec-soft text-[12px] font-bold text-rec"
+                  className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-[12px] font-bold text-primary"
                 >
                   PDF
                 </span>

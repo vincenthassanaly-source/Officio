@@ -47,7 +47,10 @@ export function OpioidesFiches({
   const [aSupprimer, setASupprimer] = useState<FicheEntretienResume | null>(null)
   const base = `/entretiens-pharmaceutiques/${typeEntretienId}/${segment}`
 
+  // Les boutons restent focalisables pendant l'action (aria-disabled, pas
+  // disabled) : un second appui est simplement ignoré ici.
   function ouvrirApres(action: () => Promise<string>, messageErreur: string) {
+    if (isPending) return
     startTransition(async () => {
       try {
         const id = await action()
@@ -75,8 +78,8 @@ export function OpioidesFiches({
       <button
         type="button"
         onClick={() => ouvrirApres(() => creerFicheEntretien(typeEntretienId), 'Impossible de créer la fiche.')}
-        disabled={isPending}
-        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+        aria-disabled={isPending}
+        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px] aria-disabled:opacity-50`}
       >
         <Icone nom="plus" taille={18} />
         {isPending ? 'Un instant…' : libelleNouvelle}
@@ -101,10 +104,10 @@ export function OpioidesFiches({
                   onClick={() =>
                     ouvrirApres(() => dupliquerFicheEntretien(f.id), 'Impossible de créer le nouvel entretien.')
                   }
-                  disabled={isPending}
+                  aria-disabled={isPending}
                   aria-label={`Nouvel entretien pour ${nom}`}
                   title={titreDuplication}
-                  className={`${CLASSE_ACTION} disabled:opacity-50`}
+                  className={`${CLASSE_ACTION} aria-disabled:opacity-50`}
                 >
                   <Icone nom="plus" taille={18} />
                 </button>

@@ -59,7 +59,7 @@ export function ModaleAjoutDepuisStock({
 
   return createPortal(
     <div
-      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-ink/40 sm:items-center"
       onClick={onFerme}
     >
       <div
@@ -68,7 +68,7 @@ export function ModaleAjoutDepuisStock({
         aria-modal="true"
         aria-labelledby="modale-ajout-stock-titre"
         onClick={(e) => e.stopPropagation()}
-        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-card sm:w-96 sm:rounded-[20px]"
       >
         {/* Le champ de recherche précède le bandeau titre/fermer dans le
             DOM (mais pas visuellement, via `order-*`) : usePiegeFocus place
@@ -85,7 +85,7 @@ export function ModaleAjoutDepuisStock({
         />
 
         <div className="order-1 mb-1 flex items-center justify-between">
-          <h2 id="modale-ajout-stock-titre" className="text-sm font-bold text-ink">
+          <h2 id="modale-ajout-stock-titre" className="font-heading text-lg font-semibold text-ink">
             Ajouter une huile
           </h2>
           <button
@@ -98,7 +98,8 @@ export function ModaleAjoutDepuisStock({
           </button>
         </div>
 
-        <div className="order-3 flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain">
+        {/* Marge compensée : l'anneau de focus des lignes n'est pas rogné par le défilement. */}
+        <div className="order-3 -mx-1 flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain p-1">
           {huilesEnStock.length === 0 && (
             <p className="py-10 text-center text-sm text-muted">
               {rechercheNormalisee

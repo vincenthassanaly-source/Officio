@@ -95,6 +95,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
   const inputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const boutonReprendreRef = useRef<HTMLButtonElement>(null)
 
   // Calculé une seule fois via l'initialiseur paresseux de useState : évite un
   // setState synchrone dans l'effet ci-dessous pour ce cas (voir etatCameraEffectif).
@@ -165,6 +166,13 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
   useEffect(() => {
     if (!photoApercu) return
     return () => URL.revokeObjectURL(photoApercu)
+  }, [photoApercu])
+
+  // Après la capture, le bouton « Capturer » (ou celui du repli) disparaît avec
+  // le viseur : si le focus clavier est tombé sur <body>, il passe à
+  // « Reprendre une photo », le contrôle qui le remplace.
+  useEffect(() => {
+    if (photoApercu && document.activeElement === document.body) boutonReprendreRef.current?.focus()
   }, [photoApercu])
 
   function analyser(fichierOriginal: File, dejaRedimensionnee: boolean) {
@@ -300,10 +308,15 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
 
       {photoApercu && (
         <button
+          ref={boutonReprendreRef}
           type="button"
-          onClick={reprendrePhoto}
-          disabled={isPending}
-          className={`min-h-11 rounded-xl border border-border bg-surface px-4 py-3 text-center text-sm font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
+          onClick={() => {
+            if (!isPending) reprendrePhoto()
+          }}
+          // aria-disabled (et non disabled) pendant l'analyse : le bouton peut
+          // recevoir le focus dès la capture.
+          aria-disabled={isPending}
+          className={`min-h-11 rounded-xl border border-border bg-surface px-4 py-3 text-center text-sm font-semibold text-ink aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
         >
           Reprendre une photo
         </button>

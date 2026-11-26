@@ -96,6 +96,8 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
       <input
         name="nom"
         defaultValue={huile?.nom}
+        // Le formulaire remplace le bouton qui l'a ouvert : le focus y entre.
+        autoFocus
         required
         placeholder="Nom de l'huile"
         aria-label="Nom de l'huile"
@@ -232,7 +234,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="-mr-4 flex gap-1.5 overflow-x-auto pr-4">
+      <div className="-my-1 -ml-1 -mr-4 flex gap-1.5 overflow-x-auto py-1 pl-1 pr-4">
         {STATUTS.map((s) => (
           <button
             type="button"
@@ -345,8 +347,12 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           <ChampsFormulaire />
           <button
             type="submit"
-            disabled={isPending}
-            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending}
+            // Envoi déjà en cours : le second appui ne soumet pas le formulaire.
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -382,8 +388,11 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    disabled={isPending}
-                    className={`flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+                    aria-disabled={isPending}
+                    onClick={(e) => {
+                      if (isPending) e.preventDefault()
+                    }}
+                    className={`flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
                   >
                     Enregistrer
                   </button>
@@ -566,8 +575,13 @@ function CarteHuile({
           <button
             ref={boutonPoubelleRef}
             type="button"
-            disabled={isPending}
-            onClick={() => onDemanderSuppression(() => setSelectionneePourSuppression(false))}
+            // aria-disabled (et non disabled) : ce bouton reçoit le focus à son
+            // apparition, un bouton désactivé le perdrait.
+            aria-disabled={isPending}
+            onClick={() => {
+              if (isPending) return
+              onDemanderSuppression(() => setSelectionneePourSuppression(false))
+            }}
             aria-label={`Supprimer l'huile ${huile.nom}`}
             className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
           >

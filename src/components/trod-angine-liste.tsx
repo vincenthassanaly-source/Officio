@@ -28,6 +28,7 @@ export function TrodAngineListe({ fiches }: { fiches: TrodAngineResume[] }) {
   const [aSupprimer, setASupprimer] = useState<TrodAngineResume | null>(null)
 
   function nouveau() {
+    if (isPending) return
     startTransition(async () => {
       try {
         const id = await creerTrodAngine()
@@ -55,8 +56,8 @@ export function TrodAngineListe({ fiches }: { fiches: TrodAngineResume[] }) {
       <button
         type="button"
         onClick={nouveau}
-        disabled={isPending}
-        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}
+        aria-disabled={isPending}
+        className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px] aria-disabled:opacity-50`}
       >
         <Icone nom="plus" taille={18} />
         {isPending ? 'Un instant…' : 'Nouveau TROD angine'}

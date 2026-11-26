@@ -31,6 +31,7 @@ export function BpmFiches({
   const [aSupprimer, setASupprimer] = useState<FicheBpmResume | null>(null)
 
   function nouvelleFiche() {
+    if (isPending) return
     startTransition(async () => {
       try {
         const id = await creerFicheBpm(typeEntretienId)
@@ -56,7 +57,12 @@ export function BpmFiches({
   return (
     <div className="flex flex-col gap-3">
       {peutEcrire && (
-        <button type="button" onClick={nouvelleFiche} disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px]`}>
+        <button
+          type="button"
+          onClick={nouvelleFiche}
+          aria-disabled={isPending}
+          className={`${CLASSE_BOUTON_PRIMAIRE} min-h-14 text-[15px] aria-disabled:opacity-50`}
+        >
           <Icone nom="plus" taille={18} />
           {isPending ? 'Création…' : 'Nouvelle fiche BPM'}
         </button>
