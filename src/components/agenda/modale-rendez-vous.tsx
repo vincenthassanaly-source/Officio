@@ -293,17 +293,34 @@ export default function ModaleRendezVous({
           className={`resize-none ${CHAMP_CLASS}`}
         />
 
-        <p role="alert" aria-live="polite" className="text-[12.5px] text-rec empty:hidden">
+        <p role="alert" className="text-[12.5px] text-rec empty:hidden">
           {erreur}
         </p>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
-        >
-          {isPending ? 'Enregistrement…' : rdv ? 'Enregistrer' : 'Ajouter à l’agenda'}
-        </button>
+        {/* Annuler explicite à côté de l'action principale : la croix de
+            l'en-tête restait la seule sortie visible de la sheet. */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onFerme}
+            className="min-h-11 flex-1 rounded-xl border border-border py-3 text-[13.5px] font-semibold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Annuler
+          </button>
+          {/* aria-disabled + garde plutôt que disabled : un bouton désactivé
+              pendant l'envoi perd le focus clavier (renvoyé sur <body>). */}
+          <button
+            type="submit"
+            aria-disabled={isPending}
+            aria-busy={isPending}
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className="min-h-11 flex-[2] rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
+          >
+            {isPending ? 'Enregistrement…' : rdv ? 'Enregistrer' : 'Ajouter à l’agenda'}
+          </button>
+        </div>
       </form>
     </div>,
     document.body

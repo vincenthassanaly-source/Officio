@@ -87,14 +87,14 @@ export function PlanningEquipeMois({
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
           <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
+            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
             <span className="text-[12px] font-normal tabular-nums text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div aria-hidden="true" className="grid grid-cols-7 gap-1 text-center">
         {grille.slice(0, 7).map((d) => (
           <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
@@ -111,12 +111,24 @@ export function PlanningEquipeMois({
           const estSelectionne = jourSelectionne === iso
           const pastilles = creneauxJour.slice(0, NB_PASTILLES_MAX)
           const reste = creneauxJour.length - pastilles.length
+          // Les pastilles de couleur ne portent aucun texte : sans libellé, la
+          // cellule ne se lisait que par son quantième.
+          const libelle = `${formatDateLongue(iso)}${estAujourdhui ? ', aujourd’hui' : ''}, ${
+            creneauxJour.length === 0
+              ? 'aucun créneau'
+              : creneauxJour.length === 1
+                ? '1 créneau'
+                : `${creneauxJour.length} créneaux`
+          }`
 
           return (
             <button
               type="button"
               key={iso}
               onClick={() => setJourSelectionne(iso)}
+              aria-label={libelle}
+              aria-current={estAujourdhui ? 'date' : undefined}
+              aria-haspopup="dialog"
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-1 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 !dansMoisAffiche ? 'text-neutral-text' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
@@ -210,7 +222,7 @@ function ModaleDetailJour({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <div
@@ -219,7 +231,7 @@ function ModaleDetailJour({
         aria-modal="true"
         aria-label={`Planning du ${formatDateLongue(iso)}`}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85dvh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-3 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
         <div className="flex items-center justify-between">
           <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(iso)}</span>
