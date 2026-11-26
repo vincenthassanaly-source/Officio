@@ -61,7 +61,7 @@ export function AgendaVueGlobale({
   // compacte dans ItemLigne) — même pattern que TachesList (taches-list.tsx).
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const toast = useToast()
-  const sectionsRef = useRef<Record<string, HTMLDivElement | null>>({})
+  const sectionsRef = useRef<Record<string, HTMLElement | null>>({})
   const aujourdhuiIso = toISODate(new Date())
 
   // Retrait optimiste d'un rendez-vous supprimé : la carte quitte la liste
@@ -123,7 +123,10 @@ export function AgendaVueGlobale({
 
   function selectionnerJour(iso: string) {
     setDateSelectionnee(iso)
-    sectionsRef.current[iso]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Défilement instantané si l'utilisateur a demandé à réduire les
+    // animations (le CSS global ne couvre pas scrollIntoView en JS).
+    const reduireAnimations = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    sectionsRef.current[iso]?.scrollIntoView({ behavior: reduireAnimations ? 'auto' : 'smooth', block: 'start' })
   }
 
   return (
@@ -136,11 +139,20 @@ export function AgendaVueGlobale({
           const iso = toISODate(d)
           const actif = iso === dateSelectionnee
           const charge = joursCharges.has(iso)
+          const estAujourdhui = iso === aujourdhuiIso
+          // Le nom lu se limitait à « lun. 3 » : ni l'état sélectionné, ni la
+          // pastille « éléments prévus » (purement visuelle) n'étaient annoncés.
+          const libelle = `${formatDateLongue(iso)}${estAujourdhui ? ', aujourd’hui' : ''}${
+            charge ? ', éléments prévus' : ', rien de prévu'
+          }`
           return (
             <button
               type="button"
               key={iso}
               onClick={() => selectionnerJour(iso)}
+              aria-label={libelle}
+              aria-pressed={actif}
+              aria-current={estAujourdhui ? 'date' : undefined}
               className={`flex min-h-11 min-w-0 flex-col items-center justify-center rounded-2xl border py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-ink'
               }`}
@@ -150,6 +162,7 @@ export function AgendaVueGlobale({
               </span>
               <span className="mt-0.5 font-heading text-base">{d.getDate()}</span>
               <span
+                aria-hidden="true"
                 className={`mt-1 h-1 w-1 rounded-full ${
                   charge ? (actif ? 'bg-white' : 'bg-primary') : 'bg-transparent'
                 }`}
@@ -165,17 +178,20 @@ export function AgendaVueGlobale({
           const estAujourdhui = iso === aujourdhuiIso
           const itemsJour = itemsParJour.get(iso) ?? []
           return (
-            <div
+            <section
               key={iso}
               ref={(el) => {
                 sectionsRef.current[iso] = el
               }}
+              aria-labelledby={`jour-${iso}`}
               className={`rounded-2xl p-2.5 ${estAujourdhui ? 'bg-primary-soft' : ''}`}
             >
               <div className="mb-2 flex items-center gap-2 px-0.5">
-                <span className="text-[13px] font-semibold text-ink">
+                {/* h2 : les 7 journées deviennent navigables par titre au
+                    lecteur d'écran, sous le h1 « Agenda ». */}
+                <h2 id={`jour-${iso}`} className="text-[13px] font-semibold text-ink">
                   {formatJourCourt(d)} {d.getDate()}
-                </span>
+                </h2>
                 {estAujourdhui && (
                   <span className="rounded-full bg-primary px-2 py-0.5 text-[12px] font-bold text-white">
                     Aujourd&rsquo;hui
@@ -217,7 +233,7 @@ export function AgendaVueGlobale({
                   })}
                 </div>
               )}
-            </div>
+            </section>
           )
         })}
       </div>

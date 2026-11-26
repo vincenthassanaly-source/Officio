@@ -10,7 +10,7 @@ import Link from 'next/link'
 // Remplace le glyphe « × » du bouton de suppression d'un rendez-vous.
 function IconFermer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
@@ -19,7 +19,7 @@ function IconFermer({ className }: { className?: string }) {
 // Remplace le glyphe « ✓ » de la case cochée.
 function IconCoche({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M20 6 9 17l-5-5" />
     </svg>
   )
@@ -204,8 +204,10 @@ export function ItemLigne({
           <button
             type="button"
             onClick={() => onToggleTache(t)}
-            aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            // Titre de la tâche dans le libellé : plusieurs cases identiques
+            // se suivent dans la journée, « Marquer comme fait » seul ne
+            // disait pas laquelle.
+            aria-label={t.statut === 'fait' ? `Marquer « ${t.titre} » à faire` : `Marquer « ${t.titre} » comme fait`}            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <div
               className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${

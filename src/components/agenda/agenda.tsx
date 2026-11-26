@@ -33,7 +33,7 @@ const TOLERANCE_SWIPE_VERTICAL_PX = 60
 // Remplace les glyphes « ‹ »/« › » des flèches de période.
 function IconChevronGauche({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m15 18-6-6 6-6" />
     </svg>
   )
@@ -41,7 +41,7 @@ function IconChevronGauche({ className }: { className?: string }) {
 
 function IconChevronDroite({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m9 18 6-6-6-6" />
     </svg>
   )
@@ -269,7 +269,9 @@ export function Agenda({
           <IconChevronGauche className="h-5 w-5" />
         </button>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[12.5px] font-semibold text-ink">
+          {/* aria-live : flèches et swipe changent la période sans déplacer
+              le focus ; la nouvelle période est ainsi annoncée. */}
+          <span aria-live="polite" className="text-[12.5px] font-semibold text-ink">
             {vue === 'mois' ? formatMoisAnnee(moisAffiche) : formatPeriodeSemaine(weekDates)}
           </span>
           {!estPeriodeActuelle && (
@@ -300,10 +302,13 @@ export function Agenda({
         </button>
       </div>
 
-      <div className="mb-3 flex shrink-0 gap-1 rounded-xl bg-track p-1">
+      {/* aria-pressed : l'état actif n'était porté que par la couleur, rien
+          n'était annoncé au lecteur d'écran. */}
+      <div role="group" aria-label="Période affichée" className="mb-3 flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => allerVersVue('semaine')}
+          aria-pressed={vue === 'semaine'}
           className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'semaine' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
@@ -313,6 +318,7 @@ export function Agenda({
         <button
           type="button"
           onClick={() => allerVersVue('mois')}
+          aria-pressed={vue === 'mois'}
           className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'mois' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
@@ -321,10 +327,11 @@ export function Agenda({
         </button>
       </div>
 
-      <div className="mb-4 flex shrink-0 gap-1 rounded-xl bg-track p-1">
+      <div role="group" aria-label="Contenu affiché" className="mb-4 flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => setOnglet('globale')}
+          aria-pressed={onglet === 'globale'}
           className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'globale' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
@@ -334,6 +341,7 @@ export function Agenda({
         <button
           type="button"
           onClick={() => setOnglet('planning')}
+          aria-pressed={onglet === 'planning'}
           className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'planning' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}

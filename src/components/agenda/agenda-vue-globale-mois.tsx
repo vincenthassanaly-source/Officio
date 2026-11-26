@@ -104,7 +104,7 @@ export function AgendaVueGlobaleMois({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="grid grid-cols-7 gap-1 text-center">
+      <div aria-hidden="true" className="grid grid-cols-7 gap-1 text-center">
         {grille.slice(0, 7).map((d) => (
           <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
@@ -119,12 +119,20 @@ export function AgendaVueGlobaleMois({
           const items = itemsParJour.get(iso) ?? []
           const estAujourdhui = iso === aujourdhuiIso
           const estSelectionne = jourSelectionne === iso
+          // Sans libellé, la cellule se lisait « 12 3 » (quantième puis
+          // compteur), sans mois ni sens pour le nombre.
+          const libelle = `${formatDateLongue(iso)}${estAujourdhui ? ', aujourd’hui' : ''}, ${
+            items.length === 0 ? 'rien de prévu' : items.length === 1 ? '1 élément' : `${items.length} éléments`
+          }`
 
           return (
             <button
               type="button"
               key={iso}
               onClick={() => setJourSelectionne(iso)}
+              aria-label={libelle}
+              aria-current={estAujourdhui ? 'date' : undefined}
+              aria-haspopup="dialog"
               className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 !dansMoisAffiche ? 'text-neutral-text' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
@@ -240,7 +248,7 @@ function ModaleDetailJour({
 
   return createPortal(
     <div
-      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <div
@@ -249,7 +257,7 @@ function ModaleDetailJour({
         aria-modal="true"
         aria-label={`Rendez-vous du ${formatDateLongue(iso)}`}
         onClick={(e) => e.stopPropagation()}
-        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-3 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
         <div className="flex items-center justify-between">
           <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(iso)}</span>

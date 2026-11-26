@@ -18,11 +18,13 @@ export default function Loading() {
       <SqueletteOnglets />
       <SqueletteOnglets />
 
-      {/* Bande des 7 jours de la semaine (w-11, rounded-2xl dans
-          agenda-vue-globale.tsx). */}
-      <div className="flex gap-2">
+      {/* Bande des 7 jours de la semaine : même grille que
+          agenda-vue-globale.tsx (grid-cols-7 gap-1, rounded-2xl). L'ancienne
+          rangée de 7 blocs fixes de 44 px + gap-2 (356 px) débordait de la
+          zone de contenu à 360 px. */}
+      <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: 7 }, (_, i) => (
-          <div key={i} className="h-[68px] w-11 shrink-0 rounded-2xl bg-neutral-soft" />
+          <div key={i} className="h-[68px] min-w-0 rounded-2xl bg-neutral-soft" />
         ))}
       </div>
 

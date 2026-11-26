@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -16,7 +17,7 @@ import { useToast } from '@/components/ui/toast-provider'
 // Remplace le glyphe « + »/« × » du bouton qui ouvre/ferme le formulaire.
 function IconAjouter({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 5v14M5 12h14" />
     </svg>
   )
@@ -25,7 +26,7 @@ function IconAjouter({ className }: { className?: string }) {
 // Remplace le glyphe « × » du bouton de fermeture du panneau de détail.
 function IconFermer({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M18 6 6 18M6 6l12 12" />
     </svg>
   )
@@ -94,6 +95,13 @@ export function PlanningEquipe({
   const [edition, setEdition] = useState(false)
   const [typeEdition, setTypeEdition] = useState<TypeCreneau>('travail')
   const detailRef = useRef<HTMLDivElement>(null)
+
+  // Les blocs du planning restent focusables pendant un envoi (aria-disabled
+  // plutôt que disabled, qui renvoyait le focus sur <body>) : la garde est ici.
+  function ouvrirDetail(c: Creneau) {
+    if (isPending) return
+    setCreneauDetail(c)
+  }
 
   function fermerDetail() {
     setCreneauDetail(null)
@@ -272,7 +280,7 @@ export function PlanningEquipe({
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
           <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
+            <span aria-hidden="true" className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
             <span className="text-[12px] font-normal tabular-nums text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
@@ -304,8 +312,18 @@ export function PlanningEquipe({
         <form
           action={(formData) => {
             startTransition(async () => {
-              await creerCreneau(formData)
-              setFormOuvert(false)
+              // Sans try/catch, une erreur serveur remontait jusqu'à la
+              // frontière d'erreur et remplaçait tout l'Agenda. Le formulaire
+              // reste ouvert pour corriger puis réessayer.
+              try {
+                await creerCreneau(formData)
+                setFormOuvert(false)
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : 'Échec de l’ajout du créneau. Réessayez.',
+                })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -400,21 +418,33 @@ export function PlanningEquipe({
             </div>
           )}
           {typeForm === 'travail' && (
+            // Libellés visibles : deux champs « --:-- » côte à côte ne
+            // disaient pas lequel était le début et lequel la fin.
             <div className="flex gap-2">
-              <input
-                type="time"
-                name="heure_debut"
-                required
-                aria-label="Heure de début"
-                className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-              />
-              <input
-                type="time"
-                name="heure_fin"
-                required
-                aria-label="Heure de fin"
-                className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-              />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <label htmlFor="heure-debut-nouveau-creneau" className="mb-1 block text-[12px] font-semibold text-muted">
+                  Début
+                </label>
+                <input
+                  id="heure-debut-nouveau-creneau"
+                  type="time"
+                  name="heure_debut"
+                  required
+                  className="min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <label htmlFor="heure-fin-nouveau-creneau" className="mb-1 block text-[12px] font-semibold text-muted">
+                  Fin
+                </label>
+                <input
+                  id="heure-fin-nouveau-creneau"
+                  type="time"
+                  name="heure_fin"
+                  required
+                  className="min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                />
+              </div>
             </div>
           )}
           <label htmlFor="note-nouveau-creneau" className="sr-only">
@@ -426,12 +456,18 @@ export function PlanningEquipe({
             placeholder="Note (ex: motif du congé)"
             className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
+          {/* aria-disabled + garde plutôt que disabled : un bouton désactivé
+              pendant l'envoi perd le focus clavier. */}
           <button
             type="submit"
-            disabled={isPending}
-            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+            aria-disabled={isPending}
+            aria-busy={isPending}
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
           >
-            Ajouter
+            {isPending ? 'Ajout…' : 'Ajouter'}
           </button>
         </form>
       )}
@@ -472,10 +508,11 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => setCreneauDetail(c)}
-                    disabled={isPending}
+                    onClick={() => ouvrirDetail(c)}
+                    aria-disabled={isPending}
+                    aria-label={`${membre?.nom_complet ?? 'Membre'} — Repos, voir le détail`}
                     title={`${membre?.nom_complet ?? ''} — Repos (cliquer pour le détail)`}
-                    className="-m-1.5 flex h-11 w-11 items-center justify-center p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    className="-m-1.5 flex h-11 w-11 items-center justify-center p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-70"
                   >
                     <span className="rounded bg-neutral-soft px-1 py-0.5 text-[12px] font-bold text-muted">
                       {membre?.initiales ?? '?'}
@@ -510,11 +547,11 @@ export function PlanningEquipe({
                 <button
                   type="button"
                   key={b.cle}
-                  onClick={() => setCreneauDetail(b.creneauReference)}
-                  disabled={isPending}
+                  onClick={() => ouvrirDetail(b.creneauReference)}
+                  aria-disabled={isPending}
                   aria-label={`${membre?.nom_complet ?? ''} — Congé, ${plage}, voir le détail`}
                   title={`${membre?.nom_complet ?? ''} — Congé (${plage}, cliquer pour le détail)`}
-                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-70 ${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
+                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
                   style={{ gridColumn: `${b.colDebut + 2} / ${b.colFin + 3}`, gridRow: b.ligne + 1 }}
                 >
                   <span className="min-w-0 truncate">{nom}</span>
@@ -588,11 +625,11 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => setCreneauDetail(c)}
-                    disabled={isPending}
+                    onClick={() => ouvrirDetail(c)}
+                    aria-disabled={isPending}
                     aria-label={libelleComplet}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
+                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
                     style={{ top, height: hauteur, left: `calc(${index * largeur}% + 2px)`, width: `calc(${largeur}% - 4px)` }}
                   >
                     <div className="truncate">{initialesAffichees}</div>
@@ -609,12 +646,19 @@ export function PlanningEquipe({
         })}
       </div>
 
-      {creneauDetail && (
+      {creneauDetail &&
+        // Portail vers document.body : rendue en place, cette sheet `fixed
+        // inset-0` était confinée au conteneur .agenda-glisse-* (agenda.tsx),
+        // dont le transform maintenu par fill-mode `both` devient le
+        // référentiel des descendants fixed — même piège que ModaleDetailJour.
+        // Pas de garde de montage nécessaire : creneauDetail ne devient non
+        // nul qu'après un clic, donc jamais pendant le rendu serveur.
         // Ferme au clic sur l'arrière-plan : le <div> englobant porte le
         // onClick, le panneau interne l'arrête via stopPropagation — même
         // motif que MenuPlusPanel/FenetreAujourdhui (voir le rapport).
+        createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center"
+          className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
           onClick={fermerDetail}
         >
           <div
@@ -623,7 +667,7 @@ export function PlanningEquipe({
             aria-modal="true"
             aria-label="Détail du créneau"
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[85dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl"
+            className="panneau-entree relative max-h-[85dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:max-w-sm lg:rounded-3xl lg:pb-4"
           >
             <button
               type="button"
@@ -645,8 +689,16 @@ export function PlanningEquipe({
                   <form
                     action={(formData) => {
                       startTransition(async () => {
-                        await modifierCreneau(c.id, formData)
-                        fermerDetail()
+                        try {
+                          await modifierCreneau(c.id, formData)
+                          fermerDetail()
+                        } catch (err) {
+                          toast({
+                            type: 'erreur',
+                            message:
+                              err instanceof Error ? err.message : 'Échec de la modification du créneau. Réessayez.',
+                          })
+                        }
                       })
                     }}
                     className="flex flex-col gap-2 pt-2"
@@ -672,22 +724,32 @@ export function PlanningEquipe({
                     </select>
                     {typeEdition === 'travail' && (
                       <div className="flex gap-2">
-                        <input
-                          type="time"
-                          name="heure_debut"
-                          required
-                          aria-label="Heure de début"
-                          defaultValue={c.heure_debut ?? ''}
-                          className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-                        />
-                        <input
-                          type="time"
-                          name="heure_fin"
-                          required
-                          aria-label="Heure de fin"
-                          defaultValue={c.heure_fin ?? ''}
-                          className="flex-1 min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-                        />
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <label htmlFor="heure-debut-edition-creneau" className="mb-1 block text-[12px] font-semibold text-muted">
+                            Début
+                          </label>
+                          <input
+                            id="heure-debut-edition-creneau"
+                            type="time"
+                            name="heure_debut"
+                            required
+                            defaultValue={c.heure_debut ?? ''}
+                            className="min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                          />
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <label htmlFor="heure-fin-edition-creneau" className="mb-1 block text-[12px] font-semibold text-muted">
+                            Fin
+                          </label>
+                          <input
+                            id="heure-fin-edition-creneau"
+                            type="time"
+                            name="heure_fin"
+                            required
+                            defaultValue={c.heure_fin ?? ''}
+                            className="min-w-0 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+                          />
+                        </div>
                       </div>
                     )}
                     <label htmlFor="note-edition-creneau" className="sr-only">
@@ -710,10 +772,14 @@ export function PlanningEquipe({
                       </button>
                       <button
                         type="submit"
-                        disabled={isPending}
-                        className="min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                        aria-disabled={isPending}
+                        aria-busy={isPending}
+                        onClick={(e) => {
+                          if (isPending) e.preventDefault()
+                        }}
+                        className="min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
                       >
-                        Enregistrer
+                        {isPending ? 'Enregistrement…' : 'Enregistrer'}
                       </button>
                     </div>
                   </form>
@@ -748,18 +814,30 @@ export function PlanningEquipe({
                     </button>
                     <button
                       type="button"
-                      onClick={() => demanderSuppression(c)}
-                      disabled={isPending}
-                      className="min-h-11 flex-1 rounded-xl bg-rec-soft py-2.5 text-[13px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                      onClick={() => {
+                        if (!isPending) demanderSuppression(c)
+                      }}
+                      aria-disabled={isPending}
+                      className="min-h-11 flex-1 rounded-xl bg-rec-soft py-2.5 text-[13px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
                     >
                       Supprimer
                     </button>
                   </div>
+                  {/* Sortie explicite : la petite croix en haut à droite était
+                      la seule façon visible de fermer ce panneau. */}
+                  <button
+                    type="button"
+                    onClick={fermerDetail}
+                    className="-mt-1 min-h-11 rounded-xl text-[13px] font-semibold text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Fermer
+                  </button>
                 </div>
               )
             })()}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <ModaleConfirmation
