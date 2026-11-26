@@ -207,7 +207,8 @@ export function ItemLigne({
             // Titre de la tâche dans le libellé : plusieurs cases identiques
             // se suivent dans la journée, « Marquer comme fait » seul ne
             // disait pas laquelle.
-            aria-label={t.statut === 'fait' ? `Marquer « ${t.titre} » à faire` : `Marquer « ${t.titre} » comme fait`}            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label={t.statut === 'fait' ? `Marquer « ${t.titre} » à faire` : `Marquer « ${t.titre} » comme fait`}
+            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <div
               className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${

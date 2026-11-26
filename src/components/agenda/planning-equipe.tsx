@@ -551,7 +551,7 @@ export function PlanningEquipe({
                   aria-disabled={isPending}
                   aria-label={`${membre?.nom_complet ?? ''} — Congé, ${plage}, voir le détail`}
                   title={`${membre?.nom_complet ?? ''} — Congé (${plage}, cliquer pour le détail)`}
-                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
+                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70 ${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
                   style={{ gridColumn: `${b.colDebut + 2} / ${b.colFin + 3}`, gridRow: b.ligne + 1 }}
                 >
                   <span className="min-w-0 truncate">{nom}</span>
@@ -629,7 +629,7 @@ export function PlanningEquipe({
                     aria-disabled={isPending}
                     aria-label={libelleComplet}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
+                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary aria-disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
                     style={{ top, height: hauteur, left: `calc(${index * largeur}% + 2px)`, width: `calc(${largeur}% - 4px)` }}
                   >
                     <div className="truncate">{initialesAffichees}</div>
