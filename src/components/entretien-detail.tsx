@@ -168,10 +168,15 @@ function EntretienNavigation({
   compteurs: Record<OngletEntretien, number>
 }) {
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+    // Flèches + Origine/Fin : même clavier que les autres barres d'onglets de l'app.
+    let cibleIndex: number
+    if (e.key === 'ArrowRight') cibleIndex = (index + 1) % ONGLETS.length
+    else if (e.key === 'ArrowLeft') cibleIndex = (index - 1 + ONGLETS.length) % ONGLETS.length
+    else if (e.key === 'Home') cibleIndex = 0
+    else if (e.key === 'End') cibleIndex = ONGLETS.length - 1
+    else return
     e.preventDefault()
-    const direction = e.key === 'ArrowRight' ? 1 : -1
-    const cible = ONGLETS[(index + direction + ONGLETS.length) % ONGLETS.length]
+    const cible = ONGLETS[cibleIndex]
     onChanger(cible.id)
     document.getElementById(`onglet-${cible.id}`)?.focus()
   }

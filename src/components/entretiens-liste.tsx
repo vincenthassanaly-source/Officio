@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import {
   creerTypeEntretien,
   renommerTypeEntretien,
@@ -18,6 +18,7 @@ import {
   CLASSE_CHAMP,
   CLASSE_FOCUS,
   Icone,
+  estIdTemporaire,
   type NomIcone,
 } from '@/components/entretien-ui'
 
@@ -108,7 +109,10 @@ function CarteType({
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          onRenommer()
+          if (!enCours) onRenommer()
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onAnnulerRenommage()
         }}
         className="flex flex-col gap-2.5 rounded-[20px] border-2 border-primary bg-surface p-3.5"
       >
@@ -128,10 +132,10 @@ function CarteType({
           </button>
           <button
             type="submit"
-            disabled={enCours || !nomEnEdition.trim()}
+            aria-disabled={enCours || !nomEnEdition.trim()}
             className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
           >
-            Enregistrer
+            {enCours ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
       </form>
@@ -141,9 +145,23 @@ function CarteType({
   const aFiches = type.modele !== null
   const scriptVide = compteurs.methodologie === 0 && !aFiches
 
+  // Type tout juste ajouté (affichage optimiste) : pas encore de page à ouvrir
+  // ni d'id à renommer/supprimer côté serveur.
+  if (estIdTemporaire(type.id)) {
+    return (
+      <div aria-busy="true" className="flex min-h-[4.5rem] items-center gap-3 rounded-[20px] bg-surface p-4 shadow-card">
+        <div className="min-w-0 flex-1">
+          <div className="break-words text-[15px] font-semibold leading-snug text-ink">{type.nom}</div>
+          <p className="mt-1.5 text-[13px] text-muted">Création en cours…</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-[20px] bg-surface shadow-card">
       <Link
+        id={`lien-type-${type.id}`}
         href={`/entretiens-pharmaceutiques/${type.id}`}
         className={`flex min-h-[4.5rem] items-center gap-3 rounded-[20px] p-4 ${CLASSE_FOCUS}`}
       >
@@ -203,10 +221,36 @@ export function EntretiensListe({
     return { actifs: parOrdre.filter((t) => t.actif), archives: parOrdre.filter((t) => !t.actif) }
   }, [typesOptimistes])
   const [archiveOuverte, setArchiveOuverte] = useState(false)
+  // Le formulaire d'ajout disparaît à l'annulation ou après la création, le
+  // formulaire de renommage à sa fermeture : le focus revient au bouton
+  // « Ajouter un type » ou à la carte du type plutôt que de retomber sur
+  // <body>. Effets plutôt qu'un focus immédiat : la fermeture peut survenir
+  // dans une transition, l'élément n'existe qu'une fois le rendu validé.
+  const boutonAjouterRef = useRef<HTMLButtonElement>(null)
+  const focusApresFormRef = useRef(false)
+  const focusApresRenommageRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (formOuvert || !focusApresFormRef.current) return
+    focusApresFormRef.current = false
+    boutonAjouterRef.current?.focus()
+  }, [formOuvert])
+
+  useEffect(() => {
+    const id = focusApresRenommageRef.current
+    if (enEdition !== null || id === null) return
+    focusApresRenommageRef.current = null
+    document.getElementById(`lien-type-${id}`)?.focus()
+  }, [enEdition])
+
+  function fermerFormulaire() {
+    focusApresFormRef.current = true
+    setFormOuvert(false)
+  }
 
   function ajouter() {
     const nom = nomNouveau.trim()
-    if (!nom) return
+    if (!nom || isPending) return
 
     startTransition(async () => {
       appliquerOptimiste({
@@ -225,7 +269,7 @@ export function EntretiensListe({
       try {
         await creerTypeEntretien(nom)
         setNomNouveau('')
-        setFormOuvert(false)
+        fermerFormulaire()
         toast({ type: 'succes', message: 'Type d’entretien créé.' })
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de la création." })
@@ -235,12 +279,12 @@ export function EntretiensListe({
 
   function renommer(id: string) {
     const nom = nomEnEdition.trim()
-    if (!nom) return
+    if (!nom || isPending) return
 
     startTransition(async () => {
       try {
         await renommerTypeEntretien(id, nom)
-        setEnEdition(null)
+        terminerRenommage(id)
         toast({ type: 'succes', message: 'Type d’entretien renommé.' })
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec du renommage.' })
@@ -278,6 +322,11 @@ export function EntretiensListe({
     })
   }
 
+  function terminerRenommage(id: string) {
+    focusApresRenommageRef.current = id
+    setEnEdition(null)
+  }
+
   function basculerOrganiser() {
     setOrganiser((v) => !v)
     setEnEdition(null)
@@ -300,7 +349,7 @@ export function EntretiensListe({
             setEnEdition(type.id)
             setNomEnEdition(type.nom)
           }}
-          onAnnulerRenommage={() => setEnEdition(null)}
+          onAnnulerRenommage={() => terminerRenommage(type.id)}
           onRenommer={() => renommer(type.id)}
           onDeplacer={(direction) => deplacer(liste, index, direction)}
           onSupprimer={() => setASupprimer({ id: type.id, nom: type.nom })}
@@ -329,6 +378,7 @@ export function EntretiensListe({
           Organiser
         </button>
         <button
+          ref={boutonAjouterRef}
           type="button"
           aria-expanded={formOuvert}
           aria-controls="formulaire-nouveau-type"
@@ -347,6 +397,9 @@ export function EntretiensListe({
             e.preventDefault()
             ajouter()
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') fermerFormulaire()
+          }}
           className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card"
         >
           <label htmlFor="nom-nouveau-type" className="text-[13px] font-semibold text-muted">
@@ -360,10 +413,10 @@ export function EntretiensListe({
             className={CLASSE_CHAMP}
           />
           <div className="flex gap-2">
-            <button type="button" onClick={() => setFormOuvert(false)} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+            <button type="button" onClick={fermerFormulaire} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
               Annuler
             </button>
-            <button type="submit" disabled={isPending || !nomNouveau.trim()} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+            <button type="submit" aria-disabled={isPending || !nomNouveau.trim()} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
               {isPending ? 'Ajout…' : 'Ajouter'}
             </button>
           </div>
@@ -380,6 +433,10 @@ export function EntretiensListe({
             </button>
           )}
         </div>
+      )}
+
+      {actifs.length === 0 && archives.length > 0 && (
+        <p className="py-4 text-center text-sm text-muted">Aucun type d’entretien actif : tous sont archivés.</p>
       )}
 
       {actifs.length > 0 && (

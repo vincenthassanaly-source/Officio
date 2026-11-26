@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import {
   creerEntreeJournal,
@@ -52,12 +52,28 @@ export function EntretienJournal({
   const [isPending, startTransition] = useTransition()
   const [entreeEnEdition, setEntreeEnEdition] = useState<EntreeJournalEntretien | null>(null)
   const toast = useToast()
+  // À la fermeture du formulaire (Annuler ou ajout réussi), le focus revient
+  // au bouton « Ajouter une entrée » plutôt que de retomber sur <body>.
+  // Effet : la fermeture survient dans une transition.
+  const boutonAjouterRef = useRef<HTMLButtonElement>(null)
+  const focusApresFormRef = useRef(false)
+
+  useEffect(() => {
+    if (formOuvert || !focusApresFormRef.current) return
+    focusApresFormRef.current = false
+    boutonAjouterRef.current?.focus()
+  }, [formOuvert])
+
+  function fermerFormulaire() {
+    focusApresFormRef.current = true
+    setFormOuvert(false)
+  }
 
   function ajouter(formData: FormData) {
     startTransition(async () => {
       try {
         await creerEntreeJournal(formData)
-        setFormOuvert(false)
+        fermerFormulaire()
         toast({ type: 'succes', message: 'Entrée ajoutée au journal.' })
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout." })
@@ -74,6 +90,7 @@ export function EntretienJournal({
 
       <div className="flex items-center gap-2">
         <button
+          ref={boutonAjouterRef}
           type="button"
           aria-expanded={formOuvert}
           aria-controls="formulaire-nouvelle-entree-journal"
@@ -88,6 +105,11 @@ export function EntretienJournal({
       {formOuvert && (
         <form
           id="formulaire-nouvelle-entree-journal"
+          // Envoi déjà en cours : pas de second envoi (le bouton reste
+          // focusable, voir aria-disabled).
+          onSubmit={(e) => {
+            if (isPending) e.preventDefault()
+          }}
           action={ajouter}
           className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card"
         >
@@ -144,17 +166,23 @@ export function EntretienJournal({
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => setFormOuvert(false)}
+              onClick={fermerFormulaire}
               className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}
             >
               Annuler
             </button>
-            <button type="submit" disabled={isPending || typesActifs.length === 0} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+            <button
+              type="submit"
+              disabled={typesActifs.length === 0}
+              aria-disabled={isPending}
+              aria-describedby={typesActifs.length === 0 ? 'aide-aucun-type-journal' : undefined}
+              className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
+            >
               {isPending ? 'Ajout…' : 'Ajouter'}
             </button>
           </div>
           {typesActifs.length === 0 && (
-            <p className="text-[12px] text-muted">
+            <p id="aide-aucun-type-journal" className="text-[12px] text-muted">
               Aucun type d’entretien actif : créez d’abord un type d’entretien dans l’onglet Types.
             </p>
           )}
@@ -285,6 +313,7 @@ function ModaleEditionEntreeJournal({
   usePiegeFocus(true, formulaireRef)
 
   function supprimer() {
+    if (isPending) return
     startTransition(async () => {
       try {
         await supprimerEntreeJournal(entree.id)
@@ -309,6 +338,9 @@ function ModaleEditionEntreeJournal({
       <form
         ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => {
+          if (isPending) e.preventDefault()
+        }}
         action={(formData) => {
           startTransition(async () => {
             try {
@@ -396,15 +428,17 @@ function ModaleEditionEntreeJournal({
         <div className="mt-1 flex gap-2">
           <button
             type="button"
-            disabled={isPending}
-            onClick={() => setConfirmationOuverte(true)}
-            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border px-4 text-sm font-semibold text-rec disabled:opacity-50 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending}
+            onClick={() => {
+              if (!isPending) setConfirmationOuverte(true)
+            }}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border px-4 text-sm font-semibold text-rec aria-disabled:opacity-50 ${CLASSE_FOCUS}`}
           >
             <Icone nom="corbeille" taille={16} />
             Supprimer
           </button>
-          <button type="submit" disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
-            Enregistrer
+          <button type="submit" aria-disabled={isPending} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+            {isPending ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
       </form>
