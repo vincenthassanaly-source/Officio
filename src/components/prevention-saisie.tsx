@@ -253,15 +253,31 @@ export function PreventionSaisie({
               <Icone nom="script" taille={16} className="text-muted" />
               {estFin ? 'Terminé' : `${index + 1} / ${ETAPES.length - 1}`}
             </button>
-            <div aria-hidden="true" className="flex min-w-0 flex-1 gap-1">
-              {progression.map((p, i) => (
-                <span
-                  key={p.titre}
-                  className={`h-2 min-w-0 flex-1 rounded-full ${
-                    !estFin && i === sectionIndex ? 'bg-primary' : p.renseignees === p.total ? 'bg-green' : 'bg-track'
-                  }`}
-                />
-              ))}
+            {/* Une barre par section, cliquable : la zone de clic fait 44 px de haut
+                et occupe toute la largeur de sa part (les barres se touchent par leur
+                zone, pas par leur trait) ; le trait, lui, reste fin. */}
+            <div role="group" aria-label="Aller à une section" className="-mx-0.5 flex min-w-0 flex-1">
+              {progression.map((p, i) => {
+                const courante = !estFin && i === sectionIndex
+                return (
+                  <button
+                    key={p.titre}
+                    type="button"
+                    onClick={() => aller(INDEX_PREMIERE_ETAPE_SECTION[i])}
+                    aria-current={courante ? 'step' : undefined}
+                    aria-label={`${p.titre} : ${p.renseignees} étape${p.renseignees > 1 ? 's' : ''} renseignée${p.renseignees > 1 ? 's' : ''} sur ${p.total}`}
+                    title={p.titre}
+                    className={`group -my-2 flex min-h-11 min-w-0 flex-1 items-center rounded-lg px-0.5 ${CLASSE_FOCUS}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`h-2 w-full rounded-full motion-safe:transition-[height,background-color] motion-safe:duration-150 group-hover:h-3 group-active:h-3 ${
+                        courante ? 'bg-primary' : p.renseignees === p.total ? 'bg-green' : 'bg-track'
+                      }`}
+                    />
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
