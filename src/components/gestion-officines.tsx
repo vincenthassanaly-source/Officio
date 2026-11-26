@@ -46,12 +46,17 @@ export function GestionOfficines({
               {active && (
                 <button
                   type="button"
-                  disabled={isPending}
-                  onClick={() => setOfficineAQuitter({ id: a.officine_id, nom: a.officine_nom })}
+                  // aria-disabled + garde plutôt que `disabled` : la modale
+                  // rend le focus à ce bouton au moment où l'action démarre.
+                  aria-disabled={isPending}
+                  aria-busy={isPending}
+                  onClick={() => {
+                    if (!isPending) setOfficineAQuitter({ id: a.officine_id, nom: a.officine_nom })
+                  }}
                   // Cible 44 px par padding compensé (motif bouton-icône compact).
-                  className="-my-2 -mr-2 min-h-11 shrink-0 rounded-lg px-2 text-[12px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+                  className="-my-2 -mr-2 min-h-11 shrink-0 rounded-lg px-2 text-[12px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
                 >
-                  Quitter cette officine
+                  {isPending ? 'Départ…' : 'Quitter cette officine'}
                 </button>
               )}
             </div>

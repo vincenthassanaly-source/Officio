@@ -20,6 +20,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 import { LightboxImage } from '@/components/lightbox-image'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
@@ -318,10 +319,11 @@ export function TachesList({
         {/* Compensation de cible tactile posée sur le conteneur, pas sur les
             boutons enfants — voir DESIGN.md, règle de la compensation
             négative (même correctif que fil-de-messages.tsx). */}
-        <div className="-my-2 flex flex-1 gap-1.5 overflow-x-auto overflow-y-hidden">
+        <div role="group" aria-label="Filtrer par personne" className="-my-2 flex flex-1 gap-1.5 overflow-x-auto overflow-y-hidden">
           <button
             type="button"
             onClick={() => setFiltre('tous')}
+            aria-pressed={filtre === 'tous'}
             className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span
@@ -337,6 +339,7 @@ export function TachesList({
               type="button"
               key={m.id}
               onClick={() => setFiltre(m.id)}
+              aria-pressed={filtre === m.id}
               className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
@@ -389,7 +392,7 @@ export function TachesList({
             name="titre"
             required
             placeholder="Titre de la tâche"
-            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={CHAMP_CLASS}
           />
           <label htmlFor="assigne-nouvelle-tache" className="sr-only">
             Assigner à
@@ -398,7 +401,7 @@ export function TachesList({
             id="assigne-nouvelle-tache"
             name="assigne_id"
             defaultValue=""
-            className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={CHAMP_CLASS}
           >
             <option value="">Non assignée (toute l&rsquo;équipe)</option>
             {equipe.map((m) => (
@@ -412,7 +415,7 @@ export function TachesList({
               type="date"
               name="echeance"
               aria-label="Date d'échéance"
-              className="min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             />
             {/* Facultative : si renseignée, un rappel push + in-app arrive
                 pile à cette heure (au lieu du rappel générique "Échéance
@@ -423,19 +426,25 @@ export function TachesList({
               type="time"
               name="echeance_heure"
               aria-label="Heure d'échéance"
-              className="w-28 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              className={`w-28 ${CHAMP_CLASS}`}
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ChampPhoto onChange={setPhoto} />
             <ChampAudio onChange={setAudio} />
           </div>
+          {/* aria-disabled + garde plutôt que `disabled` : un bouton désactivé
+              pendant l'envoi perd le focus clavier. */}
           <button
             type="submit"
-            disabled={isPending}
-            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+            aria-disabled={isPending}
+            aria-busy={isPending}
+            onClick={(e) => {
+              if (isPending) e.preventDefault()
+            }}
+            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
           >
-            Ajouter la tâche
+            {isPending ? 'Ajout…' : 'Ajouter la tâche'}
           </button>
         </form>
       )}
@@ -586,7 +595,7 @@ function CarteTache({
       <button
         type="button"
         onClick={() => onBasculerStatut(tache)}
-        aria-label={tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
+        aria-label={`${tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'} : ${tache.titre}`}
         className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div
@@ -597,11 +606,16 @@ function CarteTache({
           {tache.statut === 'fait' && <IconCoche className="h-3 w-3 text-white" />}
         </div>
       </button>
+      {/* aria-disabled + garde plutôt que `disabled` : isPending est partagé
+          par toute la liste, et un bouton qui passe en `disabled` pendant
+          qu'il a le focus le perd. */}
       <button
         type="button"
-        onClick={() => onEditer(tache)}
-        disabled={isPending}
-        className="flex min-h-11 min-w-0 flex-1 items-center text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
+        onClick={() => {
+          if (!isPending) onEditer(tache)
+        }}
+        aria-disabled={isPending}
+        className="flex min-h-11 min-w-0 flex-1 items-center text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-70"
       >
         {/* Titre en pleine largeur (texte complet, jamais coupé) ; badge et
             assigné passent dessous pour ne pas lui voler de place : un titre
@@ -629,7 +643,12 @@ function CarteTache({
       </button>
       <div className="flex shrink-0 items-center gap-1">
         {tache.pouces.length > 0 && (
-          <div className="flex" title={`Pouce de ${tache.pouces.length} personne${tache.pouces.length > 1 ? 's' : ''}`}>
+          <div
+            role="img"
+            aria-label={`Pouce de ${tache.pouces.map((p) => p.initiales).join(', ')}`}
+            className="flex"
+            title={`Pouce de ${tache.pouces.length} personne${tache.pouces.length > 1 ? 's' : ''}`}
+          >
             {tache.pouces.map((p, i) => {
               const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
               return (
@@ -671,10 +690,12 @@ function CarteTache({
       </div>
       <button
         type="button"
-        disabled={isPending}
-        onClick={() => setConfirmationOuverte(true)}
-        aria-label="Supprimer la tâche"
-        className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+        aria-disabled={isPending}
+        onClick={() => {
+          if (!isPending) setConfirmationOuverte(true)
+        }}
+        aria-label={`Supprimer la tâche : ${tache.titre}`}
+        className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
       >
         <IconFermer className="h-4 w-4" />
       </button>

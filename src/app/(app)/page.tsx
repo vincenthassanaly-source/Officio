@@ -183,15 +183,29 @@ export default async function AccueilPage() {
   const tachesDuJour = tachesAFaireTous
 
   const prenom = profil?.nom_complet.split(' ')[0] ?? ''
+  // Rendu côté serveur (fuseau UTC sur Vercel) : seuls le libellé de date de
+  // l'en-tête et l'heure de la salutation ci-dessous sont calculés
+  // explicitement en heure de Paris (sinon la date affichée restait celle de
+  // la veille juste après minuit et « Bonsoir » n'arrivait qu'à 19 h/20 h).
+  // Le reste de la page (aujourdhuiIso pour le tri des tâches, comptage
+  // « activités récentes » via toDateString) reste dans le fuseau du serveur.
   const dateLabel = aujourdhui.toLocaleDateString('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    timeZone: 'Europe/Paris',
   })
+  // formatToParts plutôt que format() : en fr-FR, format() renvoie « 16 h »
+  // (suffixe), que Number() transformerait en NaN.
+  const heureParis = Number(
+    new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' })
+      .formatToParts(aujourdhui)
+      .find((p) => p.type === 'hour')?.value ?? 0
+  )
   // Salutation selon l'heure plutôt qu'un « Bonjour » fixe toute la journée
   // — un même titre, mais qui reflète le moment réel où l'équipe consulte
   // l'app (souvent en fin de journée après le comptoir).
-  const salutation = aujourdhui.getHours() < 18 ? 'Bonjour' : 'Bonsoir'
+  const salutation = heureParis < 18 ? 'Bonjour' : 'Bonsoir'
 
   return (
     <>
@@ -199,7 +213,9 @@ export default async function AccueilPage() {
         <h1 className="font-heading text-2xl font-bold tracking-tight text-ink">
           {salutation}, {prenom}
         </h1>
-        <p className="mt-0.5 text-[12.5px] capitalize text-muted">{dateLabel}</p>
+        {/* first-letter plutôt que capitalize : seule l'initiale du jour prend
+            une majuscule (« Jeudi 26 novembre », pas « Jeudi 26 Novembre »). */}
+        <p className="mt-0.5 text-[12.5px] text-muted first-letter:uppercase">{dateLabel}</p>
       </div>
 
       <div className="mt-4">
@@ -219,6 +235,9 @@ export default async function AccueilPage() {
       {/* pb-[4.5rem] : le FAB (fixe, 56 px, au-dessus de la bottom nav) recouvrait le
           bas de la dernière tuile ; le main du layout réserve déjà bottom nav
           + safe-area, il reste à dégager la hauteur du FAB. */}
+      <h2 className="sr-only">
+        Modules
+      </h2>
       <div className="mt-5 grid grid-cols-2 gap-2.5 pb-[4.5rem] lg:pb-0">
         <TuileModule
           href="/liaison"

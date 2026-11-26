@@ -189,6 +189,9 @@ export function SwitchIdentite({
         onClick={togglePanel}
         aria-expanded={panelOuvert}
         aria-controls="panneau-comptes-appareil"
+        // Le nom seul n'annonçait pas l'action : le bouton ouvre la liste des
+        // comptes mémorisés pour en changer.
+        aria-label={`${nomComplet} — changer de compte`}
         className="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-neutral-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <span

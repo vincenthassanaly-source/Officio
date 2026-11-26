@@ -77,10 +77,15 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
         {etatCreer?.error && (
           <p id="bienvenue-erreur-creer" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
         )}
+        {/* aria-disabled + garde plutôt que `disabled` : le bouton garde le
+            focus clavier pendant l'envoi. */}
         <button
           type="submit"
-          disabled={pendingCreer}
-          className={CLASSE_BOUTON_AUTH}
+          aria-disabled={pendingCreer}
+          onClick={(e) => {
+            if (pendingCreer) e.preventDefault()
+          }}
+          className={`${CLASSE_BOUTON_AUTH} aria-disabled:cursor-not-allowed aria-disabled:opacity-60`}
         >
           {pendingCreer ? 'Création…' : 'Créer mon officine'}
         </button>
@@ -124,8 +129,11 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
         )}
         <button
           type="submit"
-          disabled={pendingRejoindre}
-          className={CLASSE_BOUTON_AUTH}
+          aria-disabled={pendingRejoindre}
+          onClick={(e) => {
+            if (pendingRejoindre) e.preventDefault()
+          }}
+          className={`${CLASSE_BOUTON_AUTH} aria-disabled:cursor-not-allowed aria-disabled:opacity-60`}
         >
           {pendingRejoindre ? 'Connexion…' : 'Rejoindre cette officine'}
         </button>

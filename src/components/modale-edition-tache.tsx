@@ -9,6 +9,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { usePiegeFocus } from '@/lib/use-piege-focus'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 // Remplace le glyphe « × » du bouton de fermeture.
 function IconFermer({ className }: { className?: string }) {
@@ -82,15 +83,18 @@ export default function ModaleEditionTache({
   if (!monte) return null
 
   return createPortal(
+    // Fond non focusable porteur du clic de fermeture, rôle dialog sur la
+    // boîte elle-même (motif « Sheet/modale avec conteneur englobant » de
+    // DESIGN.md) : le lecteur d'écran annonce la boîte, pas tout l'écran.
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modale-edition-tache-titre"
       className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <form
         ref={formulaireRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modale-edition-tache-titre"
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
           if (photo) formData.set('photo', photo)
@@ -108,19 +112,26 @@ export default function ModaleEditionTache({
             }
           })
         }}
-        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        // pb : sur mobile la sheet touche le bas de l'écran, la safe-area
+        // (barre de geste) recouvrait le dernier bouton — même motif que
+        // ModaleConfirmation.
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
-        <div className="mb-1 flex items-center justify-between">
-          <h2 id="modale-edition-tache-titre" className="text-sm font-bold text-ink">
+        {/* Titre de sheet en font-heading text-lg et bouton Fermer rond de
+            36 px visibles (cible 44 px), comme MenuPlusPanel. */}
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 id="modale-edition-tache-titre" className="font-heading text-lg font-semibold text-ink">
             Modifier la tâche
           </h2>
           <button
             type="button"
             onClick={onFerme}
             aria-label="Fermer sans enregistrer"
-            className="-m-2.5 flex h-11 w-11 items-center justify-center rounded-full text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <IconFermer className="h-4 w-4" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-soft">
+              <IconFermer className="h-4 w-4" />
+            </span>
           </button>
         </div>
         {tache.createur && (
@@ -134,13 +145,13 @@ export default function ModaleEditionTache({
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
           aria-label="Titre de la tâche"
-          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={`min-h-24 max-h-48 resize-none overflow-y-auto ${CHAMP_CLASS}`}
         />
         <select
           name="assigne_id"
           defaultValue={tache.assigne?.id ?? ''}
           aria-label="Assigner à"
-          className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={CHAMP_CLASS}
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -155,14 +166,14 @@ export default function ModaleEditionTache({
             name="echeance"
             defaultValue={tache.echeance ?? ''}
             aria-label="Date d'échéance"
-            className="min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
           />
           <input
             type="time"
             name="echeance_heure"
             defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
             aria-label="Heure d'échéance"
-            className="w-28 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className={`w-28 ${CHAMP_CLASS}`}
           />
         </div>
         <ChampPhoto
@@ -177,12 +188,19 @@ export default function ModaleEditionTache({
             fichier) — pas de remplacement/retrait ici, contrairement à la
             photo. */}
         {tache.audioUrl && <audio controls src={tache.audioUrl} className="h-9 w-full" />}
+        {/* aria-disabled + garde plutôt que `disabled` pendant l'envoi : un
+            bouton désactivé perd le focus, qui sortirait alors du piège à
+            focus de la modale. */}
         <button
           type="submit"
-          disabled={isPending}
-          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          aria-disabled={isPending}
+          aria-busy={isPending}
+          onClick={(e) => {
+            if (isPending) e.preventDefault()
+          }}
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
         >
-          Enregistrer
+          {isPending ? 'Enregistrement…' : 'Enregistrer'}
         </button>
         {/* Fermeture immédiate, sans attendre le serveur : l'appelant applique
             la bascule en optimiste sur sa liste, la tâche est donc déjà dans
@@ -191,12 +209,13 @@ export default function ModaleEditionTache({
             par l'appelant. */}
         <button
           type="button"
-          disabled={isPending}
+          aria-disabled={isPending}
           onClick={() => {
+            if (isPending) return
             onBasculerStatut(tache)
             onFerme()
           }}
-          className="min-h-11 rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
         >
           {tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'}
         </button>

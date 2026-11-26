@@ -72,9 +72,14 @@ export function ProfilForm({
 
       <button
         type="submit"
-        disabled={pending}
+        // aria-disabled + garde plutôt que `disabled` : le bouton garde le
+        // focus clavier pendant l'enregistrement.
+        aria-disabled={pending}
         aria-busy={pending}
-        className="min-h-11 rounded-xl bg-primary py-3 lg:self-start lg:px-8 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+        onClick={(e) => {
+          if (pending) e.preventDefault()
+        }}
+        className="min-h-11 rounded-xl bg-primary py-3 lg:self-start lg:px-8 text-[14.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
       >
         {pending ? 'Enregistrement…' : 'Enregistrer'}
       </button>
