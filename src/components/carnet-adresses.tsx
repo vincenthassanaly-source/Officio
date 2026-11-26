@@ -12,7 +12,9 @@ const CATEGORIES: { value: CategorieContact; label: string; className: string }[
   { value: 'medecin', label: 'Médecins', className: 'bg-primary-soft text-primary' },
   { value: 'infirmier', label: 'Infirmiers', className: 'bg-accent-soft text-accent' },
   { value: 'kine', label: 'Kinés', className: 'bg-purple-soft text-purple' },
-  { value: 'laboratoire', label: 'Labos', className: 'bg-rec-soft text-rec' },
+  // Pas de rouge ici : `rec` est réservé à l'alerte et à la suppression
+  // (DESIGN.md, règle du rouge unique).
+  { value: 'laboratoire', label: 'Labos', className: 'bg-brun-soft text-brun' },
   { value: 'ehpad', label: 'EHPAD', className: 'bg-primary-soft text-primary' },
   { value: 'grossiste', label: 'Grossistes', className: 'bg-accent-soft text-accent' },
   { value: 'autre', label: 'Autres', className: 'bg-neutral-soft text-muted' },
@@ -44,6 +46,9 @@ function classNameCategorie(valeur: CategorieContact) {
   return CATEGORIES.find((c) => c.value === valeur)?.className ?? 'bg-neutral-soft text-muted'
 }
 
+// `autoFocus` : le formulaire s'ouvre sur un geste (bouton + ou Modifier, ce
+// dernier disparaissant avec la carte) — le focus part sur le premier champ
+// au lieu de retomber sur la page.
 function ChampsFormulaire({ contact }: { contact?: Contact }) {
   return (
     <>
@@ -51,6 +56,7 @@ function ChampsFormulaire({ contact }: { contact?: Contact }) {
         name="nom"
         defaultValue={contact?.nom}
         required
+        autoFocus
         placeholder="Nom"
         aria-label="Nom du contact"
         autoComplete="name"
@@ -128,6 +134,12 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
     setASupprimer({ id, nom })
   }
 
+  // Le bouton « Modifier » revient avec la carte : on lui rend le focus.
+  function fermerEdition(id: string) {
+    setEnEdition(null)
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-action-modifier="${id}"]`)?.focus())
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -174,6 +186,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
       {formOuvert && (
         <form
           action={(formData) => {
+            if (isPending) return
             startTransition(async () => {
               try {
                 await ajouterContact(formData)
@@ -189,8 +202,9 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
           <ChampsFormulaire />
           <button
             type="submit"
-            disabled={isPending}
-            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+            aria-disabled={isPending || undefined}
+            aria-busy={isPending || undefined}
+            className={`min-h-11 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -211,10 +225,11 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
               <form
                 key={c.id}
                 action={(formData) => {
+                  if (isPending) return
                   startTransition(async () => {
                     try {
                       await modifierContact(c.id, formData)
-                      setEnEdition(null)
+                      fermerEdition(c.id)
                       toast({ type: 'succes', message: 'Contact modifié.' })
                     } catch (err) {
                       toast({
@@ -230,14 +245,15 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    disabled={isPending}
-                    className={`min-h-11 flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
+                    aria-disabled={isPending || undefined}
+                    aria-busy={isPending || undefined}
+                    className={`min-h-11 flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white aria-disabled:opacity-60 ${CLASSE_FOCUS}`}
                   >
                     Enregistrer
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEnEdition(null)}
+                    onClick={() => fermerEdition(c.id)}
                     className={`min-h-11 rounded-xl border border-border px-4 py-3 text-[13.5px] font-semibold text-muted ${CLASSE_FOCUS}`}
                   >
                     Annuler
@@ -308,6 +324,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                     setFormOuvert(false)
                   }}
                   aria-label={`Modifier ${c.nom}`}
+                  data-action-modifier={c.id}
                   className={`-m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
                 >
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">

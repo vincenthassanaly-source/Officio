@@ -19,6 +19,7 @@ import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { vibrer } from '@/lib/haptics'
 import { ChampPhotos } from '@/components/champ-photos'
 import { LightboxImage } from '@/components/lightbox-image'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 // Remplace le glyphe « × » du bouton de suppression.
 function IconFermer({ className }: { className?: string }) {
@@ -137,6 +138,9 @@ export function Notes({
     <div className="flex flex-1 flex-col gap-4">
       <form
         action={(formData) => {
+          // Bouton jamais `disabled` (le focus serait perdu après l'envoi) :
+          // la garde est ici, l'état passe par aria-disabled.
+          if (isPending || !titre.trim() || !contenu.trim()) return
           photos.forEach((photo) => formData.append('photos', photo))
           startTransition(async () => {
             try {
@@ -165,7 +169,8 @@ export function Notes({
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           placeholder="Titre de la note"
-          className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          enterKeyHint="next"
+          className={`font-semibold ${CHAMP_CLASS}`}
         />
         <label htmlFor="contenu-nouvelle-note" className="sr-only">
           Contenu de la note
@@ -177,13 +182,14 @@ export function Notes({
           onChange={(e) => setContenu(e.target.value)}
           placeholder="Contenu de la note"
           rows={3}
-          className="resize-none rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={`resize-none ${CHAMP_CLASS}`}
         />
         <ChampPhotos onChange={setPhotos} />
         <button
           type="submit"
-          disabled={isPending || !titre.trim() || !contenu.trim()}
-          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+          aria-disabled={isPending || !titre.trim() || !contenu.trim() || undefined}
+          aria-busy={isPending || undefined}
+          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
         >
           Ajouter
         </button>
@@ -194,11 +200,13 @@ export function Notes({
       </label>
       <input
         id="recherche-notes"
-        type="text"
+        type="search"
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
-        placeholder="Rechercher une note..."
-        className="rounded-xl border border-champ-bord bg-surface px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+        placeholder="Rechercher une note…"
+        enterKeyHint="search"
+        autoComplete="off"
+        className={`${CHAMP_CLASS} bg-surface`}
       />
 
       <div className="flex flex-1 flex-col gap-3">
@@ -209,7 +217,7 @@ export function Notes({
         )}
 
         {notes.length > 0 && notesFiltrees.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">
+          <p role="status" className="py-10 text-center text-sm text-muted">
             Aucune note ne correspond à ta recherche.
           </p>
         )}
@@ -299,7 +307,7 @@ function CarteNote({
   return (
     <div
       id={`note-${note.id}`}
-      className={`select-none rounded-[20px] bg-surface shadow-card p-4 transition duration-300 ${
+      className={`select-none rounded-[20px] bg-surface shadow-card p-4 motion-safe:transition motion-safe:duration-300 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
       } ${estAuteur ? 'cursor-pointer' : ''} ${idSurligne === note.id ? 'ring-2 ring-primary' : ''} ${
         enSortie ? 'item-sortie' : 'item-entree'
@@ -316,6 +324,7 @@ function CarteNote({
     >
       <div className="mb-2 flex items-center gap-2.5">
         <div
+          aria-hidden="true"
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
         >
           {note.auteur?.initiales ?? '?'}
@@ -333,19 +342,23 @@ function CarteNote({
                 geste reste disponible en plus. */}
             <button
               type="button"
-              disabled={isPending}
-              onClick={() => onEditer(note)}
-              aria-label="Modifier la note"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+              aria-disabled={isPending || undefined}
+              onClick={() => {
+                if (!isPending) onEditer(note)
+              }}
+              aria-label={`Modifier la note « ${note.titre} »`}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
             >
               <IconOptions className="h-4 w-4" />
             </button>
             <button
               type="button"
-              disabled={isPending}
-              onClick={() => onSupprimer(note.id)}
-              aria-label="Supprimer la note"
-              className="-mr-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+              aria-disabled={isPending || undefined}
+              onClick={() => {
+                if (!isPending) onSupprimer(note.id)
+              }}
+              aria-label={`Supprimer la note « ${note.titre} »`}
+              className="-mr-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
             >
               <IconFermer className="h-4 w-4" />
             </button>
@@ -361,7 +374,11 @@ function CarteNote({
               key={url}
               type="button"
               onClick={() => setPhotoAgrandie(index)}
-              aria-label="Agrandir la photo"
+              aria-label={
+                note.photosUrls.length > 1
+                  ? `Agrandir la photo ${index + 1} sur ${note.photosUrls.length}`
+                  : 'Agrandir la photo'
+              }
               className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-inset ring-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
@@ -423,6 +440,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
         ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
+          if (isPending) return
           startTransition(async () => {
             try {
               await modifierNote(note.id, formData)
@@ -436,10 +454,12 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
             }
           })
         }}
-        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 id="modale-edition-note-titre" className="text-sm font-bold text-ink">Modifier la note</h2>
+          <h2 id="modale-edition-note-titre" className="font-heading text-lg font-semibold text-ink">
+            Modifier la note
+          </h2>
           <button
             type="button"
             onClick={onFerme}
@@ -459,7 +479,8 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
           required
           defaultValue={note.titre}
           placeholder="Titre de la note"
-          className="rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          enterKeyHint="next"
+          className={`font-semibold ${CHAMP_CLASS}`}
         />
         <label htmlFor="contenu-edition-note" className="sr-only">
           Contenu de la note
@@ -471,14 +492,15 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
           defaultValue={note.contenu}
           placeholder="Contenu de la note"
           rows={5}
-          className="resize-none rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={`resize-none ${CHAMP_CLASS}`}
         />
         <button
           type="submit"
-          disabled={isPending}
-          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          aria-disabled={isPending || undefined}
+          aria-busy={isPending || undefined}
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
         >
-          Enregistrer
+          {isPending ? 'Enregistrement…' : 'Enregistrer'}
         </button>
       </form>
     </div>,

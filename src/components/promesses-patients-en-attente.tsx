@@ -31,7 +31,9 @@ import { CHAMP_CLASS } from '@/components/ui/champ'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
-const CHAMP_PROMESSE_CLASS = `w-full placeholder:text-muted outline-none ${CHAMP_CLASS}`
+// Pas de `outline-none` ici : en Tailwind 4 il fixe --tw-outline-style à
+// `none`, ce qui annulait l'anneau `focus-visible:outline-2` de CHAMP_CLASS.
+const CHAMP_PROMESSE_CLASS = `w-full ${CHAMP_CLASS}`
 
 // Préfixe des identifiants temporaires des promesses ajoutées de façon
 // optimiste : leurs actions restent désactivées tant que le serveur n'a pas

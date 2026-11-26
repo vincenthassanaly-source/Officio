@@ -31,11 +31,15 @@ export function CahierDeLiaison({
   )
   const ongletFilRef = useRef<HTMLButtonElement>(null)
   const ongletTachesRef = useRef<HTMLButtonElement>(null)
-  // Flèches gauche/droite : déplacent sélection et focus (DESIGN.md → Onglets).
+  // Flèches gauche/droite et Origine/Fin : déplacent sélection et focus
+  // (DESIGN.md → Onglets).
   function surTouche(e: React.KeyboardEvent<HTMLButtonElement>) {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    let suivant: 'fil' | 'taches'
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') suivant = onglet === 'fil' ? 'taches' : 'fil'
+    else if (e.key === 'Home') suivant = 'fil'
+    else if (e.key === 'End') suivant = 'taches'
+    else return
     e.preventDefault()
-    const suivant = onglet === 'fil' ? 'taches' : 'fil'
     setOnglet(suivant)
     ;(suivant === 'fil' ? ongletFilRef : ongletTachesRef).current?.focus()
   }
@@ -65,9 +69,17 @@ export function CahierDeLiaison({
         >
           Fil de l&rsquo;équipe
           {messagesNonLus > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold text-white">
-              {messagesNonLus > 9 ? '9+' : messagesNonLus}
-            </span>
+            <>
+              <span
+                aria-hidden="true"
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold tabular-nums text-white"
+              >
+                {messagesNonLus > 9 ? '9+' : messagesNonLus}
+              </span>
+              <span className="sr-only">
+                , {messagesNonLus} non lu{messagesNonLus > 1 ? 's' : ''}
+              </span>
+            </>
           )}
         </button>
         <button
@@ -86,9 +98,15 @@ export function CahierDeLiaison({
         >
           Tâches
           {tachesEnAttente > 0 && (
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[12px] font-bold text-white">
-              {tachesEnAttente > 9 ? '9+' : tachesEnAttente}
-            </span>
+            <>
+              <span
+                aria-hidden="true"
+                className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[12px] font-bold tabular-nums text-white"
+              >
+                {tachesEnAttente > 9 ? '9+' : tachesEnAttente}
+              </span>
+              <span className="sr-only">, {tachesEnAttente} à faire</span>
+            </>
           )}
         </button>
       </div>

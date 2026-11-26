@@ -29,6 +29,8 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { useToast, type TypeToast } from '@/components/ui/toast-provider'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
@@ -167,6 +169,9 @@ export function FilDeMessages({
   // un appui long ; un seul message à la fois.
   const [idIconesVisibles, setIdIconesVisibles] = useState<string | null>(null)
   const [messageEnEdition, setMessageEnEdition] = useState<MessageAvecDetails | null>(null)
+  // Suppression irréversible : confirmée comme pour les notes, contacts et
+  // suggestions (ModaleConfirmation), plutôt qu'au premier tap sur la corbeille.
+  const [idMessageASupprimer, setIdMessageASupprimer] = useState<string | null>(null)
   const toast = useToast()
   // Pouce optimiste, transposition exacte de celui des tâches
   // (taches-list.tsx) : le pouce sur un message était la seule des deux
@@ -322,10 +327,13 @@ export function FilDeMessages({
             </label>
             <input
               id="recherche-messages"
+              type="search"
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher dans les messages…"
-              className="min-w-0 flex-1 rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+              enterKeyHint="search"
+              autoComplete="off"
+              className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             />
             {filtresActifs && (
               <button
@@ -403,7 +411,9 @@ export function FilDeMessages({
         )}
 
         {messages.length > 0 && messagesFiltres.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">Aucun message ne correspond aux filtres.</p>
+          <p role="status" className="py-10 text-center text-sm text-muted">
+            Aucun message ne correspond aux filtres.
+          </p>
         )}
 
         {messagesFiltres.map((m, index) => {
@@ -443,7 +453,7 @@ export function FilDeMessages({
                 startTransition={startTransition}
                 toast={toast}
                 onBasculerPouce={basculerPouce}
-                onSupprimer={supprimerMessageOptimiste}
+                onSupprimer={setIdMessageASupprimer}
                 enSortie={estEnSortie(m.id)}
                 onAppuiLong={setIdIconesVisibles}
                 onEditer={(message) => {
@@ -459,6 +469,9 @@ export function FilDeMessages({
 
       <form
         action={(formData) => {
+          // Bouton d'envoi jamais `disabled` (le focus serait perdu juste
+          // après l'envoi) : la garde est ici, l'état passe par aria-disabled.
+          if (isPending || (!contenu.trim() && !audio && photos.length === 0)) return
           if (audio) formData.set('audio', audio)
           photos.forEach((photo) => formData.append('photos', photo))
           startTransition(async () => {
@@ -504,7 +517,7 @@ export function FilDeMessages({
               className="-my-3.5 flex min-h-11 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
-                className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
+                className={`rounded-full px-3 py-1.5 text-[12px] font-semibold motion-safe:transition ${
                   categorie === c.value ? c.className : 'bg-neutral-soft text-muted'
                 }`}
               >
@@ -536,9 +549,10 @@ export function FilDeMessages({
           <ChampPhotos key={`photos-${cleFormulaire}`} onChange={setPhotos} />
           <button
             type="submit"
-            disabled={isPending || (!contenu.trim() && !audio && photos.length === 0)}
+            aria-disabled={isPending || (!contenu.trim() && !audio && photos.length === 0) || undefined}
+            aria-busy={isPending || undefined}
             aria-label="Envoyer le message"
-            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
           >
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
               <IconEnvoyer className="h-[18px] w-[18px]" />
@@ -546,6 +560,19 @@ export function FilDeMessages({
           </button>
         </div>
       </form>
+
+      <ModaleConfirmation
+        ouvert={idMessageASupprimer !== null}
+        titre="Supprimer ce message ?"
+        description="Il disparaîtra du fil pour toute l’équipe."
+        texteConfirmer="Supprimer"
+        onConfirmer={() => {
+          if (!idMessageASupprimer) return
+          supprimerMessageOptimiste(idMessageASupprimer)
+          setIdMessageASupprimer(null)
+        }}
+        onAnnuler={() => setIdMessageASupprimer(null)}
+      />
 
       {messageEnEdition && (
         <ModaleEditionMessage
@@ -658,7 +685,7 @@ function MessageItem({
   return (
     <div
       id={`message-${m.id}`}
-      className={`select-none rounded-2xl border p-4 transition duration-300 ${
+      className={`select-none rounded-2xl border p-4 motion-safe:transition motion-safe:duration-300 ${
         urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
       } ${idSurligne === m.id ? 'ring-2 ring-primary' : ''} ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
@@ -675,6 +702,7 @@ function MessageItem({
     >
       <div className="mb-2.5 flex items-center gap-2.5">
         <div
+          aria-hidden="true"
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
         >
           {m.auteur?.initiales ?? '?'}
@@ -706,19 +734,23 @@ function MessageItem({
           <div className="flex shrink-0 items-center">
             <button
               type="button"
-              disabled={isPending}
-              onClick={() => onEditer(m)}
+              aria-disabled={isPending || undefined}
+              onClick={() => {
+                if (!isPending) onEditer(m)
+              }}
               aria-label="Modifier le message"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
             >
               <IconStylo className="h-4 w-4" />
             </button>
             <button
               type="button"
-              disabled={isPending}
-              onClick={supprimer}
+              aria-disabled={isPending || undefined}
+              onClick={() => {
+                if (!isPending) supprimer()
+              }}
               aria-label="Supprimer le message"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
             >
               <IconCorbeille className="h-4 w-4" />
             </button>
@@ -728,7 +760,12 @@ function MessageItem({
 
       {m.contenu && <p className="wrap-anywhere text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>}
       {m.audioUrl && (
-        <audio controls src={m.audioUrl} className={`h-9 w-full max-w-xs ${m.contenu ? 'mt-2' : ''}`} />
+        <audio
+          controls
+          src={m.audioUrl}
+          aria-label={`Message vocal de ${m.auteur?.nom_complet ?? 'Ancien collègue'}`}
+          className={`h-9 w-full max-w-xs ${m.contenu ? 'mt-2' : ''}`}
+        />
       )}
       {m.photosUrls.length > 0 && (
         <div className={`flex flex-wrap gap-1.5 ${m.contenu || m.audioUrl ? 'mt-2' : ''}`}>
@@ -737,7 +774,11 @@ function MessageItem({
               key={url}
               type="button"
               onClick={() => setPhotoAgrandie(index)}
-              aria-label="Agrandir la photo"
+              aria-label={
+                m.photosUrls.length > 1
+                  ? `Agrandir la photo ${index + 1} sur ${m.photosUrls.length}`
+                  : 'Agrandir la photo'
+              }
               className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-inset ring-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
@@ -845,13 +886,14 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
       role="dialog"
       aria-modal="true"
       aria-labelledby="modale-edition-message-titre"
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <form
         ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
+          if (isPending) return
           startTransition(async () => {
             try {
               await modifierMessage(message.id, formData)
@@ -865,10 +907,12 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
             }
           })
         }}
-        className="flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-96 sm:rounded-[20px] sm:pb-4"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 id="modale-edition-message-titre" className="text-sm font-bold text-ink">Modifier le message</h2>
+          <h2 id="modale-edition-message-titre" className="font-heading text-lg font-semibold text-ink">
+            Modifier le message
+          </h2>
           <button
             type="button"
             onClick={onFerme}
@@ -880,7 +924,7 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
         </div>
         {message.audioUrl && (
           <div className="flex flex-col gap-1">
-            <audio controls src={message.audioUrl} className="h-9 w-full" />
+            <audio controls src={message.audioUrl} aria-label="Message vocal" className="h-9 w-full" />
             <p className="text-[12px] text-muted">L&rsquo;audio ne peut pas être modifié ici.</p>
           </div>
         )}
@@ -891,14 +935,15 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
           placeholder="Écrire un message…"
           aria-label="Contenu du message"
           rows={5}
-          className="resize-none rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={`resize-none ${CHAMP_CLASS}`}
         />
         <button
           type="submit"
-          disabled={isPending}
-          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          aria-disabled={isPending || undefined}
+          aria-busy={isPending || undefined}
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-60"
         >
-          Enregistrer
+          {isPending ? 'Enregistrement…' : 'Enregistrer'}
         </button>
       </form>
     </div>,

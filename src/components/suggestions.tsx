@@ -10,6 +10,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
+import { CHAMP_CLASS } from '@/components/ui/champ'
 
 // Même pattern que taches-list.tsx (non exportée là-bas non plus) : icône
 // propre à l'accordéon, dupliquée plutôt que partagée entre composants.
@@ -131,6 +132,9 @@ export function Suggestions({
     <div className="flex flex-1 flex-col gap-4">
       <form
         action={(formData) => {
+          // Bouton jamais `disabled` (le focus serait perdu après l'envoi) :
+          // la garde est ici, l'état passe par aria-disabled.
+          if (isPending || !message.trim()) return
           startTransition(async () => {
             try {
               await envoyerSuggestion(formData)
@@ -156,12 +160,13 @@ export function Suggestions({
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Une idée pour améliorer l'application ?"
           rows={3}
-          className="resize-none rounded-xl border border-champ-bord bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={`resize-none ${CHAMP_CLASS}`}
         />
         <button
           type="submit"
-          disabled={isPending || !message.trim()}
-          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+          aria-disabled={isPending || !message.trim() || undefined}
+          aria-busy={isPending || undefined}
+          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary aria-disabled:opacity-50"
         >
           Envoyer
         </button>
@@ -207,7 +212,7 @@ export function Suggestions({
             />
           </button>
           <div
-            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+            className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-out ${
               archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             }`}
           >
@@ -289,6 +294,7 @@ function CarteSuggestion({
           />
         </label>
         <div
+          aria-hidden="true"
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
         >
           {suggestion.auteur?.initiales ?? '?'}
