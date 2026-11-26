@@ -23,7 +23,7 @@ export type TypeEntretien = {
   // Type à fiche : le script est remplacé par une fiche saisie pas à pas.
   // 'bpm' (lib/bpm.ts, table bpm_fiches) ou 'opioides' (lib/opioides.ts, table
   // entretien_fiches). NULL pour les types à script.
-  modele: 'bpm' | 'opioides' | null
+  modele: 'bpm' | 'opioides' | 'prevention' | null
   // Conditions d'éligibilité de l'entretien : un critère par ligne (lib/eligibilite.ts).
   // NULL = pas d'encadré sur la page du type.
   eligibilite: string | null

@@ -14,8 +14,14 @@ import {
   normaliserOpioides,
   type DonneesOpioides,
 } from '@/lib/opioides'
+import {
+  donneesPreventionVides,
+  dupliquerPrevention,
+  normaliserPrevention,
+  type DonneesPrevention,
+} from '@/lib/prevention'
 
-export type ModeleFiche = 'opioides'
+export type ModeleFiche = 'opioides' | 'prevention'
 
 export type EnteteListe = { nom: string; prenom: string; date: string }
 
@@ -35,6 +41,15 @@ const MODELES: Record<ModeleFiche, DefinitionModele> = {
       return { nom: patient.nom, prenom: patient.prenom, date: patient.date }
     },
     dupliquer: (d) => dupliquerOpioides(d as DonneesOpioides),
+  },
+  prevention: {
+    vides: donneesPreventionVides,
+    normaliser: normaliserPrevention,
+    entete: (d) => {
+      const { patient } = d as DonneesPrevention
+      return { nom: patient.nom, prenom: patient.prenom, date: patient.date }
+    },
+    dupliquer: (d) => dupliquerPrevention(d as DonneesPrevention),
   },
 }
 
